@@ -5,7 +5,7 @@
 ### then it can be seen http://H-PC:600 or http://localhost:6006/ or etc., copy it and paste it online to see training graphs live or already executed
 ### CMD must be opened all the time, when is wanted to see graphs. 
 
-from training_models import ML_autoKERAS, ML_KERAS, training_data_loading, ML_optimization_TB
+from train.training_models import ML_autoKERAS, ML_KERAS, training_data_loading, ML_optimization_TB
 import os
 
 PATH = "C:\\Users\manta\Documents\Master thesis\Tr" #path to train files 
