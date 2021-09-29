@@ -3,6 +3,18 @@
 ### using Tensorboard: open CMD, where logs file or this code is, and type " tensorboard --logdir=logs/ " or " py -m tensorboard.main --logdir=logs/ " or etc.
 ### then it can be seen http://H-PC:600 or http://localhost:6006/ or etc., copy it and paste it online to see training graphs live or already executed
 ### CMD must be opened all the time, when is wanted to see graphs. 
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.tri as mtri
+from scipy.io import loadmat
+# from tensorflow.compat.v1 import ConfigProto
+# from tensorflow.compat.v1 import InteractiveSession
+import tensorflow as tf
+import tensorflow.keras as keras
+import sklearn.model_selection
+import time
+from data_preprocessing.load_mat_files import *
+from data_preprocessing.dataset import *
 
 import autokeras as ak
 import tensorflow as tf
@@ -10,18 +22,32 @@ from tensorflow.keras.callbacks import TensorBoard
 from scipy.io import loadmat
 import time
 import datetime
+from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Dropout, Input
 
-def training_data_loading(input_PATH, output_PATH):
+class ModelGenerator():
+    def __init__(self) -> None:
+        self.model= []
 
-    Xih = loadmat(input_PATH)
-    inputDATA = Xih["Xih"].T
-    print(inputDATA[0].size )
+    def select_model(input_size=256, output_size=990):
+    
+        inputs = Input(shape=(input_size,))
+        x = Dense(512, activation=tf.nn.relu)(inputs)
+        x = Dense(512, activation=tf.nn.relu)(x)
+        outputs = Dense(output_size, activation=tf.nn.sigmoid)(x)
 
-    Yih = loadmat(output_PATH)
-    outputDATA = Yih["Yih"].T
-    print(outputDATA[0].size)
+        return keras.Model(inputs, outputs)
 
-    return inputDATA, outputDATA
+    def get_compiled_model(input_size=256, output_size=990):
+
+        model= keras_model(input_size=input_size, output_size=output_size)
+        model.compile(
+            optimizer=keras.optimizers.Adam(),
+            loss=keras.losses.CategoricalCrossentropy(),
+            metrics=[keras.metrics.Accuracy()],
+        )
+        return model
+
+
 
 def ML_KERAS(input, output, nameMODEL):
     start_time = time.time()

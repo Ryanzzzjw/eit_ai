@@ -21,6 +21,17 @@ class MatlabDataSet():
         self.user_entry=dict()
         self.samples = dict()
 
+    def flex_load(self, path="", auto=False):
+        if self.verify_file(path, extension=".mat"):
+            self.mk_dataset_from_matlab(path=path, auto= auto)
+        elif self.verify_file(path, extension=".pkl"):
+            self.load_dataset_from_pickle(path)
+        else:
+            self.mk_dataset_from_matlab(auto= auto)
+            
+        
+
+
     def mk_dataset_from_matlab(self, path="", auto= False):
         """[summary]
 
@@ -32,7 +43,7 @@ class MatlabDataSet():
             self.filename, self.path ="test10_infos2py.mat", "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest"
         else:
             
-            if self.verify_file(path, extention=".mat"):
+            if self.verify_file(path, extension=".mat"):
                 self.path, self.filename= os.path.split(path)
             else:
                 self.path, self.filename =self.get_file()
@@ -54,7 +65,7 @@ class MatlabDataSet():
             loaded_dataset[MatlabDataSet]: obvious
         """
         
-        if not self.verify_file(path, extention=".pkl"):
+        if self.verify_file(path, extension=".pkl"):
             self.path, self.filename= os.path.split(path)
         else:
             self.path, self.filename= self.get_file(filetypes=[("pickle file","*.pkl")])
@@ -68,9 +79,14 @@ class MatlabDataSet():
         filename= os.path.join(self.path, self.filename)
         with open(filename, 'rb') as inp:
             loaded_dataset = pickle.load(inp)
-        loaded_dataset.load_samples(mode='reload')
 
-        return loaded_dataset
+        for key in loaded_dataset.__dict__.keys():
+            setattr(self, key, getattr(loaded_dataset,key))
+        self.load_samples(mode='reload')
+
+
+
+        
 
     def get_info_from_dataset(self, filename, path):
         """ extract the data  contained in the *info2py.mat to load the samples in python.
@@ -163,7 +179,7 @@ class MatlabDataSet():
             print('\nNumber of samples to load : {}'.format(number_samples2load))
         return number_samples2load
 
-    def get_keys_of_samples(self, path="", auto= False, keys_default= ["X","y"]):
+    def get_keys_of_samples(self, path="", auto= False, keys_default= ['X','y']):
         """ set the keys to load of the samples ()
 
         Args:
@@ -180,9 +196,9 @@ class MatlabDataSet():
         batch_file=loadmat(os.path.join(folder, filesnames[0]),)
         keys2load= [ key  for key in batch_file.keys() if "__" not in key]
 
-        if not self.verify_file(path, extention=".mat") and not auto:
+        if not self.verify_file(path, extension=".mat") and not auto:
             keys2load= keys_default
-        elif self.verify_file(path, extention=".mat") and not auto:
+        elif self.verify_file(path, extension=".mat") and not auto:
             batch_file=loadmat(path)
             keys= [ key  for key in batch_file.keys() if "__" not in key]
             input_valid= False
@@ -193,8 +209,6 @@ class MatlabDataSet():
                     # print('Enter pressed')
                     keys2load= keys
                     break
-
-
                 keys2load=input_user.split(sep=',')
                 input_valid= True
                 for k in keys2load:
@@ -255,20 +269,23 @@ class MatlabDataSet():
         """ save the MatlabDataSet under a pickle-file
                 (samples are cleared to avoid a big file)
         """
-        filename= os.path.join(self.path, self.filename.replace(".mat", ".pkl"))    
+        filename= os.path.join(self.path, self.filename.replace(".mat", ".pkl"))
+        tmp= self.samples    
         self.samples= dict() # clear that too big if not... wil be reloaded...
         with open(filename, 'wb') as outp:
             pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
+            
+        self.samples = tmp
 
         if self.verbose:
             print('\nMatlabDataSet saved in : ...{}'.format(filename[-50:]))
         
 
-    def verify_file(self, path, extention):
+    def verify_file(self, path, extension):
         path_out=""
         if os.path.isfile(path):
                 _, file_extension = os.path.splitext(path)
-                if file_extension==extention:
+                if file_extension==extension:
                     path_out= path
         return path_out
     
