@@ -13,8 +13,9 @@ class FeaturesLabelsSet():
         self.features=features
         self.labels = labels
 
+
 class EITDataset4ML():
-    def __init__(self) -> None:
+    def __init__(self, verbose=False) -> None:
         self.use_tf_dataset= False
         self.nb_samples =  0
         self.batch_size = 32
@@ -23,6 +24,11 @@ class EITDataset4ML():
         self.train=[]
         self.val=[]
         self.test=[]
+        self.train_len=[]
+        self.val_len=[]
+        self.test_len= []
+        self.verbose= verbose
+        self.fwd_model=dict()
         # self.use_tf_dataset= use_tf_dataset
         # if self.use_tf_dataset:
         #     self.train=tf.data.Dataset()
@@ -45,6 +51,11 @@ class EITDataset4ML():
         self.val_size = val_size
         self.features_size= np.shape(X)[1]
         self.labels_size= np.shape(Y)[1]
+
+        # if self.verbose:
+        #     print(self.train_len)
+        #     print(self.val_len )
+        #     print(self.test_len )
     
     def mk_std_dataset(self,X, Y, batch_size = 32, test_size= 0.20, val_size=0.20):
         self.use_tf_dataset= False
@@ -59,32 +70,52 @@ class EITDataset4ML():
         self.train.set_data(features=x_train, labels=y_train)
         self.val.set_data(features=x_val, labels=y_val)
         self.test.set_data(features=x_test, labels=y_test)
+        # To do
+        print('\n\nATTENTION self.train_len=[] / self.val_len=[] / self.test_len= []\n\n')
+        self.train_len=[]
+        self.val_len=[]
+        self.test_len= []
 
     def mk_tf_dataset(self, X, Y, batch_size = 32, test_size= 0.20, val_size=0.20):
         self.use_tf_dataset= True       
         self.set_sizes_dataset(X, Y, batch_size, test_size, val_size)
 
         samples= tf.data.Dataset.from_tensor_slices((X, Y))
-        train_tmp= samples.take(int((1-self.test_size+self.val_size)*self.nb_samples))
+        train_tmp= samples.take(int((1-self.test_size-self.val_size)*self.nb_samples))
         test_tmp= samples.take(int(self.test_size*self.nb_samples))
         val_tmp= samples.take(int(self.val_size*self.nb_samples))
+
+        self.train_len=tf.data.experimental.cardinality(train_tmp).numpy()
+        self.val_len=tf.data.experimental.cardinality(val_tmp).numpy()
+        self.test_len= tf.data.experimental.cardinality(test_tmp).numpy()
+        
+        if self.verbose:
+            print('\nLength of train', self.train_len)
+            print('Length of val',self.val_len )
+            print('Length of test',self.test_len )
 
         self.train= train_tmp.repeat().batch(self.batch_size)
         self.val= val_tmp.repeat().batch(self.batch_size)
         self.test=test_tmp.repeat().batch(self.batch_size)
 
-def dataloader(path="", data_sel= ['Xih','Yih'], batch_size = 32, test_size= 0.20, val_size=0.20, use_tf_dataset=True):
+    def get_sample(self):
+        # To do
+        pass
+
+def dataloader(path="", data_sel= ['Xih','Yih'], batch_size = 32, test_size= 0.20, val_size=0.20, use_tf_dataset=True, verbose=False):
 
     # data loading
-    raw_data=MatlabDataSet()
+    raw_data=MatlabDataSet(verbose=verbose)
     raw_data.flex_load(path)
+    raw_data.fwd_model
 
     # data selection
     tmp= dict()
 
     tmp['Xh'] = raw_data.samples['X'][:,:,0]
     tmp['Yh'] = raw_data.samples['y'][:,:,0]
-
+    # print(raw_data.samples['y'][:,0,0])
+    # print(raw_data.samples['y'][:,0,1])
     tmp['Xih'] = raw_data.samples['X'][:,:,1]
     tmp['Yih'] = raw_data.samples['y'][:,:,1]
 
@@ -104,8 +135,8 @@ def dataloader(path="", data_sel= ['Xih','Yih'], batch_size = 32, test_size= 0.2
 
     print('\nData {} used'.format(data_sel_tmp))
 
-    X= tmp['Xh']
-    Y= tmp['Yh']
+    X= tmp[data_sel_tmp[0]]
+    Y= tmp[data_sel_tmp[1]]
 
     # data transformation
     X = X.T
@@ -117,12 +148,13 @@ def dataloader(path="", data_sel= ['Xih','Yih'], batch_size = 32, test_size= 0.2
     
     # make the training dataset 
 
-    training_dataset= EITDataset4ML()
+    training_dataset= EITDataset4ML(verbose=verbose)
     if use_tf_dataset:
         training_dataset.mk_tf_dataset(X, Y, batch_size=batch_size, test_size=test_size, val_size=val_size)
     else:
         training_dataset.mk_std_dataset(X, Y, batch_size=batch_size, test_size=test_size, val_size=val_size)
     
+    training_dataset.fwd_model= raw_data.fwd_model
     # Reserve num_val_samples samples for validation
     return training_dataset
 
@@ -130,7 +162,7 @@ if __name__ == "__main__":
     path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
     training_dataset=dataloader(path= path, data_sel= ['Xh','Yh'])
     for inputs, outputs in training_dataset.train.as_numpy_iterator():
-            print(inputs[0].size, outputs[0].size)
+            print(inputs[0,:].size, outputs[0].size)
             # Print the first element and the label
             print(inputs[0,:])
             print('label of this input is', outputs[0])

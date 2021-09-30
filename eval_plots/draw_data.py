@@ -4,133 +4,103 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.tri as mtri
 from scipy.io import loadmat
-import tensorflow as tf
-import autokeras as ak
-import time
 
-def data_loading(input_PATH, output_PATH, trianglesDATA_fPATH, model_NAME):
-    start_time = time.time()
-    trianglesDATA = loadmat(trianglesDATA_fPATH)
-    inputDATA = loadmat(input_PATH)
-    outputDATA = loadmat(output_PATH)
-    model = tf.keras.models.load_model(model_NAME, custom_objects=ak.CUSTOM_OBJECTS)
-    print("Data loading time = ", time.time() - start_time, 's')
-    return inputDATA, outputDATA, trianglesDATA, model
+import eval_plots.interp2d as interp2d
 
-def Extract_tr_data(trianglesDATA):
+from eval_plots.utils import check_order
+
+# def data_loading(input_PATH, output_PATH, trianglesDATA_fPATH, model_NAME):
+#     start_time = time.time()
+#     trianglesDATA = loadmat(trianglesDATA_fPATH)
+#     inputDATA = loadmat(input_PATH)
+#     outputDATA = loadmat(output_PATH)
+#     model = tf.keras.models.load_model(model_NAME, custom_objects=ak.CUSTOM_OBJECTS)
+#     print("Data loading time = ", time.time() - start_time, 's')
+#     return inputDATA, outputDATA, trianglesDATA, model
+
+# def Extract_tr_data(fwd_model):
     
-    # Load nodes coordinates data and triangle nodes
-    triangles = np.array(trianglesDATA["tr_points"])
-    xy = np.array(trianglesDATA["nodes"])
-    x, y = xy.T 
+#     # Load nodes coordinates data and triangle nodes
+#     triangles = np.array(fwd_model['elems'])
+#     xy = np.array(fwd_model['nodes'])
+#     x, y = xy.T 
     
-    return x, y, triangles
+#     return x, y, triangles
 
-def convert(conduct_elem, triangles, x):
+# def convert(conduct_elem, triangles, x):
 
-    # Convert from each triangle element conductivity data to each node conductivity data.
-    m = np.array(conduct_elem).flatten()
-    n = np.array(triangles, dtype = float).flatten()
-    z = [0 for a in range(np.size(x))]
+#     # Convert from each triangle element conductivity data to each node conductivity data.
+#     m = np.array(conduct_elem).flatten()
+#     n = np.array(triangles, dtype = float).flatten()
+#     z = [0 for a in range(np.size(x))]
 
-    list = []
+#     list = []
 
-    for i in range (len(n)):
-        idx = n[int(i)] 
-        idx =int(idx)
-        #print(idx)
-        if idx not in list: 
-            j= int(i/3)
-            z[idx-1]=m[j]
-            list.append(idx)
+#     for i in range (len(n)):
+#         idx = n[int(i)] 
+#         idx =int(idx)
+#         #print(idx)
+#         if idx not in list: 
+#             j= int(i/3)
+#             z[idx-1]=m[j]
+#             list.append(idx)
+#     return z
+
+def get_elem_nodal_data(fwd_model, perm):
+
+    tri = np.array(fwd_model['elems'])
+    pts = np.array(fwd_model['nodes'])
     
-    return z
+    # perm= fwd_model['un2']    
+    perm= np.reshape(perm, (perm.shape[0],))
+
+    tri = tri-1 # matlab count from 1 python from 0
+    tri= check_order(pts, tri)
+    data=dict()
+
+    if perm.shape[0]==pts.shape[0]:
+        data['elems_data'] = interp2d.pts2sim(tri, perm)
+        data['nodes_data']= perm
+    elif perm.shape[0]==tri.shape[0]:
+        data['elems_data'] = perm
+        data['nodes_data']= interp2d.sim2pts(pts, tri, perm)
+
+    for key in data.keys():
+        data[key]= np.reshape(data[key], (data[key].shape[0],))
+
+    return tri, pts, data
+
+def plot_EIT_mesh(fwd_model, perm):
+    """[summary]
+
+    Args:
+        fwd_model ([type]): 
+        perm ([type]): can be nodal_data or elem_data
+    """
+    
+    tri, pts, data= get_elem_nodal_data(fwd_model, perm)
 
 
-def plot_mesh(trianglesDATA, conduct_elem):
-    
-    # Load nodes coordinates data and triangle nodes
-    print('Extracting mesh triangular data..')  
-    x, y, triangles = Extract_tr_data(trianglesDATA)
-    # Create triangulation.
-    triang = mtri.Triangulation(x, y)
-    z = convert(conduct_elem, triangles, x)
-    
-    # Plot the triangulation.
-    print('Ploting results..')
-    plt.plot()
-    plt.tricontourf(triang, z)
-    plt.triplot(triang, '-', alpha=.5)
-    plt.tight_layout()
-    tpc = plt.tripcolor(triang, z, shading='flat')
-    clb = plt.colorbar(tpc)
-    if z[0] <= 1:
-        clb.ax.set_ylabel('Normalized conductivity distribution')
-    else:
-        clb.ax.set_ylabel('Conductivity distribution')
-    plt.xlabel("X axis")
-    plt.ylabel("Y axis")
+    fig, ax = plt.subplots(1,2)
+    for i, key in enumerate(data.keys()):
+
+        im = ax[i].tripcolor(pts[:,0], pts[:,1], tri, np.real(data[key]),shading='flat', vmin=None,vmax=None)
+        title= key
+
+        if np.all(perm <= 1):
+            title= title +'\nNormalized conductivity distribution'
+        else:
+            title= title +'\nConductivity distribution'
+        ax[i].set_title(title)
+        ax[i].set_xlabel("X axis")
+        ax[i].set_ylabel("Y axis")
+          
+        ax[i].axis("equal")
+        fig.colorbar(im,ax=ax[i])
     plt.show()
-
-
-def draw_MLsolver(inputDATA, model, trianglesDATA, meas_index = 0):
-
-    global start_time
-    start_time = time.time()
-
-    # Load measurement data
-    Xih = inputDATA
-    Xih = Xih["Xih"].T
-    print('Input size: ' + str(Xih[0].size) )
     
-    print('Solving model..')
-    # Norm data
-    x_train = tf.keras.utils.normalize(Xih, axis=1)
 
-    # Solve ML model 
-    voltage =  np.expand_dims(x_train[meas_index], 0) 
-    conduct_elem = model.predict(voltage)
-    print("Solving time = ", time.time() - start_time, 's')
+if __name__ == "__main__":
 
-    plot_mesh(trianglesDATA, conduct_elem)
-
-def draw_EIDORS_data(outputDATA, trianglesDATA, meas_index = 0):
-
-    global start_time
-    start_time = time.time()
-    print('Loading output data..')
-    Yih = outputDATA
-    Yih = Yih["Yih"].T
-    print('Output size: ' + str(Yih[0].size) )
-    conduct_elem = Yih[meas_index]
-
-    plot_mesh(trianglesDATA, conduct_elem)
-
-'''
-def draw_compare(input_PATH, output_PATH, trianglesDATA_fPATH, model_NAME, meas_index = 0):
-    
-    # Load measurement data
-    Xih = loadmat(input_PATH)
-    Xih = Xih["Xih"].T
-    Yih = loadmat(output_PATH)
-    Yih = Yih["Yih"].T
-    print('Input size: ' + Xih[0].size, + 'Output size: ' +Yih[0].size)
-
-    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-    ax = axs.ravel()  
-
-    axs[0].tricontourf(triang, z0)
-    axs[0].triplot(triang, '-', alpha=.5)
-    axs[0].set_title('FWD model')
-
-    tpc0 = axs[0].tripcolor(triang, z0, shading='flat')
-    fig.colorbar(tpc0, ax = ax[0])
-
-    axs[1].tricontourf(triang, z)
-    axs[1].triplot(triang, '-', alpha=.5)
-    axs[1].set_title('Model after ML')
-    tpc = axs[1].tripcolor(triang, z, shading='flat')
-    fig.colorbar(tpc, ax = ax[1])
-    fig.tight_layout()
-    plt.show()
-'''
+    fmdl= loadmat('E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/test_plot.mat')
+    plot_EIT_mesh(fmdl, fmdl['un2'])

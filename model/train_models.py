@@ -29,6 +29,11 @@ class ModelGenerator():
         self.model= []
         self.name= ''
         self.info= ''
+    
+    
+    
+    
+    
     def select_model(self, model_func, input_size=256, output_size=990):
     
         self.model = model_func(input_size, output_size)
@@ -46,7 +51,7 @@ class ModelGenerator():
                 loss=loss,
                 metrics=metrics )
 
-    def save_model(self, model):
+    def save_model(self):
         pass
     
     def mk_fit(self,
@@ -62,7 +67,7 @@ class ModelGenerator():
                             epochs=epochs,
                             validation_data=dataset.val,
                             steps_per_epoch=steps_per_epoch,
-                            # validation_steps=validation_steps,
+                            validation_steps=validation_steps,
                             callbacks=callbacks)
         else:
             self.model.fit(dataset.train.features,
@@ -72,6 +77,8 @@ class ModelGenerator():
                             steps_per_epoch=steps_per_epoch,
                             validation_steps=validation_steps,
                             callbacks=callbacks)
+        if self.name.find('autokeras')==-1:
+            self.model = self.model.export_model()
 
         print('\n Training lasted: {}s'.format(time.time()- start_time))
 
@@ -86,6 +93,21 @@ class ModelGenerator():
         model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
         model.add(keras.layers.Dense(512, activation=tf.nn.relu))
         model.add(keras.layers.Dense(512, activation=tf.nn.relu))
+        model.add(keras.layers.Dense(output_size, activation=tf.nn.sigmoid)) 
+
+        return model
+
+    def std_keras2(  self, 
+                    input_size,
+                    output_size):
+
+        self.name = "std_keras2"
+        self.info= '' # to do
+        #y_train = output
+        model = keras.models.Sequential()
+        model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
+        model.add(keras.layers.Dense(512, activation=tf.nn.relu))
+        model.add(keras.layers.Dense(1024, activation=tf.nn.relu))
         model.add(keras.layers.Dense(output_size, activation=tf.nn.sigmoid)) 
 
         return model
@@ -108,6 +130,7 @@ class ModelGenerator():
         #     model.save(nameMODEL, save_format="tf")
         # except Exception:
         #     model.save(nameMODEL + ".h5") 
+        return reg
 
 def ML_optimization_TB(inputDATA, outputDATA, dense_layers, layer_sizes):
     start_time = time.time()

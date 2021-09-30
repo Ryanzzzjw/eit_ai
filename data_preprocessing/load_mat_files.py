@@ -169,7 +169,7 @@ class MatlabDataSet():
         """
         number_samples2load= np.amax(self.dataset["samplesindx"])
         if not number_samples2load or not auto: 
-            prompt= "{} samples are availables. \nEnter the number of samples to load (Enter for all): \n".format(number_samples2load)
+            prompt= "\n{} samples are availables. \nEnter the number of samples to load (Enter for all): \n".format(number_samples2load)
             input_user=input(prompt)
             try:
                 number_samples2load = int(input_user)
@@ -291,7 +291,7 @@ class MatlabDataSet():
     
 if __name__ == "__main__":
      a= MatlabDataSet(verbose=True)
-     a.mk_dataset_from_matlab(auto=True, path="E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat")
+     a.mk_dataset_from_matlab()
 
     # b=MatlabDataSet()
     # b= b.load_dataset_from_pickle()
