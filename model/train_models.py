@@ -23,6 +23,7 @@ from scipy.io import loadmat
 import time
 import datetime
 from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Dropout, Input
+import os
 
 class ModelGenerator():
     def __init__(self) -> None:
@@ -34,9 +35,9 @@ class ModelGenerator():
     
     
     
-    def select_model(self, model_func, input_size=256, output_size=990):
+    # def select_model(self, model_func, input_size=256, output_size=990, **args, **kwargs):
     
-        self.model = model_func(input_size, output_size)
+    #     self.model = model_func(input_size, output_size,**args, **kwargs)
 
     def compile_model(  self,
                         optimizer=keras.optimizers.Adam(),
@@ -51,8 +52,23 @@ class ModelGenerator():
                 loss=loss,
                 metrics=metrics )
 
-    def save_model(self):
+    def save_model(self, path ):
+        
+        from contextlib import redirect_stdout
+
+        with open(os.path.join(path, 'model_summary.txt'), 'w') as f:
+            with redirect_stdout(f):
+                self.model.summary()
+
+        if self.name.find('autokeras')==-1:
+            self.model.save(os.path.join(path,'model.model'))
+        else:
+            try:
+                self.model.save(os.path.join(path, 'model'), save_format="tf")
+            except Exception:
+                self.model.save(os.path.join(path, 'model.h5'))
         pass
+        
     
     def mk_fit(self,
                 dataset=EITDataset4ML(),
@@ -77,10 +93,10 @@ class ModelGenerator():
                             steps_per_epoch=steps_per_epoch,
                             validation_steps=validation_steps,
                             callbacks=callbacks)
-        if self.name.find('autokeras')==-1:
+        if self.name.find('autokeras')>=0:
             self.model = self.model.export_model()
 
-        print('\n Training lasted: {}s'.format(time.time()- start_time))
+        print('\n Training lasted: {}s'.format(time.time()- start_time),)
 
     def std_keras(  self, 
                     input_size,
@@ -89,13 +105,13 @@ class ModelGenerator():
         self.name = "std_keras"
         self.info= '' # to do
         #y_train = output
-        model = keras.models.Sequential()
-        model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
-        model.add(keras.layers.Dense(512, activation=tf.nn.relu))
-        model.add(keras.layers.Dense(512, activation=tf.nn.relu))
-        model.add(keras.layers.Dense(output_size, activation=tf.nn.sigmoid)) 
+        self.model = keras.models.Sequential()
+        self.model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
+        self.model.add(keras.layers.Dense(512, activation=tf.nn.relu))
+        self.model.add(keras.layers.Dense(512, activation=tf.nn.relu))
+        self.model.add(keras.layers.Dense(output_size, activation=tf.nn.sigmoid)) 
 
-        return model
+        return self.model
 
     def std_keras2(  self, 
                     input_size,
@@ -104,19 +120,19 @@ class ModelGenerator():
         self.name = "std_keras2"
         self.info= '' # to do
         #y_train = output
-        model = keras.models.Sequential()
-        model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
-        model.add(keras.layers.Dense(512, activation=tf.nn.relu))
-        model.add(keras.layers.Dense(1024, activation=tf.nn.relu))
-        model.add(keras.layers.Dense(output_size, activation=tf.nn.sigmoid)) 
+        self.model = keras.models.Sequential()
+        self.model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
+        self.model.add(keras.layers.Dense(512, activation=tf.nn.relu))
+        self.model.add(keras.layers.Dense(1024, activation=tf.nn.relu))
+        self.model.add(keras.layers.Dense(output_size, activation=tf.nn.sigmoid)) 
 
-        return model
+        return self.model
 
-    def std_autokeras(self, input_size, output_size):
+    def std_autokeras(self, input_size, output_size, max_trials= 10):
         self.name = "std_autokeras"
         self.info= '' # to do
         
-        reg = ak.StructuredDataRegressor(max_trials = 10, overwrite=True)
+        self.model = ak.StructuredDataRegressor(max_trials = max_trials, overwrite=True)
         # reg.fit(x_train, y_train, validation_split=0.20, epochs = 500, callbacks=[tensorboard]) #,epochs = 100
 
         # print("Training time = ", str(datetime.timedelta(time.time() - start_time)), 's')
@@ -130,7 +146,7 @@ class ModelGenerator():
         #     model.save(nameMODEL, save_format="tf")
         # except Exception:
         #     model.save(nameMODEL + ".h5") 
-        return reg
+        return self.model
 
 def ML_optimization_TB(inputDATA, outputDATA, dense_layers, layer_sizes):
     start_time = time.time()

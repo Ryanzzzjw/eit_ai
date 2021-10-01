@@ -16,6 +16,31 @@ from model.train_models import *
 from eval_plots.draw_data import *
 
 from datetime import datetime
+from tensorboard import program
+
+
+def log_tensorboard(log_path):
+
+    tracking_address = log_path # the path of your log file.
+    tb = program.TensorBoard()
+    tb.configure(argv=[None, '--logdir', tracking_address])
+    url = tb.launch()
+    print(f"\n######################################\nTensorflow listening on {url}\n######################################\n")
+
+
+
+def mk_ouput_dir(name, verbose= True, default_out_dir= 'outputs'):
+    if not os.path.isdir(default_out_dir):
+        os.mkdir(default_out_dir)
+
+    output_dir= os.path.join(default_out_dir, name)
+
+    if verbose:
+        print('\nResults are to found in:\n >> {}'.format(output_dir))
+
+    os.mkdir(output_dir)
+
+    return output_dir
 
 def std_training_pipeline(verbose=False):
     print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
@@ -27,7 +52,7 @@ def std_training_pipeline(verbose=False):
     # Data loading
     path= 'E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
 
-    training_dataset = dataloader(verbose=True, path=path, data_sel= ['Xih','Yih'])
+    training_dataset = dataloader(verbose=True, path=path, data_sel= ['Xih','Yih'], use_tf_dataset=False)
     
     if verbose:
         if training_dataset.use_tf_dataset:
@@ -52,8 +77,7 @@ def std_training_pipeline(verbose=False):
     METRICS=[keras.metrics.Accuracy()]
 
     gen = ModelGenerator()
-    gen.select_model(model_func=gen.std_keras,
-                    input_size=training_dataset.features_size,
+    gen.std_keras(input_size=training_dataset.features_size,
                     output_size=training_dataset.labels_size)
     gen.compile_model(OPTIMIZER, LOSS, METRICS)
     print(gen.model.summary())
@@ -61,8 +85,9 @@ def std_training_pipeline(verbose=False):
     now = datetime.now()
     date_time = now.strftime("%Y%m%d_%H%M%S")
     NAME = "Model_{}_{}".format(gen.name,  date_time )
-
-    tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))
+    ouput_dir= mk_ouput_dir(NAME)
+    tensorboard = TensorBoard(log_dir= os.path.join(ouput_dir,'tf_boards_logs'))
+    log_tensorboard(os.path.join(ouput_dir,'tf_boards_logs'))
 
     # Train the model on all available devices.
     gen.mk_fit(training_dataset,
@@ -70,7 +95,7 @@ def std_training_pipeline(verbose=False):
                 callbacks=[tensorboard],
                 steps_per_epoch=STEPS_PER_EPOCH,
                 validation_steps=VALIDATION_STEP)
-    gen.save_model()             
+    gen.save_model(path=ouput_dir)             
     
     # save model
 
@@ -88,7 +113,7 @@ def std_auto_pipeline(verbose=False):
     # Data loading
     path= 'E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
 
-    training_dataset = dataloader(verbose=True, path=path, data_sel= ['Xih','Yih'])
+    training_dataset = dataloader(verbose=True, path=path, data_sel= ['Xih','Yih'], use_tf_dataset=False)
     
     if verbose:
         if training_dataset.use_tf_dataset:
@@ -103,7 +128,7 @@ def std_auto_pipeline(verbose=False):
 
     # Model setting
 
-    EPOCH= 10
+    EPOCH= 2
     BATCH_SIZE = 32
     STEPS_PER_EPOCH = training_dataset.train_len // BATCH_SIZE
     VALIDATION_STEP = training_dataset.val_len // BATCH_SIZE
@@ -113,17 +138,17 @@ def std_auto_pipeline(verbose=False):
     METRICS=[keras.metrics.Accuracy()]
 
     gen = ModelGenerator()
-    gen.select_model(model_func=gen.std_autokeras,
-                    input_size=training_dataset.features_size,
-                    output_size=training_dataset.labels_size)
+    gen.std_autokeras(input_size=training_dataset.features_size,
+                    output_size=training_dataset.labels_size,max_trials=2)
     gen.compile_model(OPTIMIZER, LOSS, METRICS)
     # print(gen.model.summary())
 
     now = datetime.now()
     date_time = now.strftime("%Y%m%d_%H%M%S")
     NAME = "Model_{}_{}".format(gen.name,  date_time )
-
-    tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))
+    ouput_dir= mk_ouput_dir(NAME)
+    tensorboard = TensorBoard(log_dir= os.path.join(ouput_dir,'tf_boards_logs'))
+    log_tensorboard(os.path.join(ouput_dir,'tf_boards_logs'))
 
     # Train the model on all available devices.
     gen.mk_fit(training_dataset,
@@ -131,7 +156,7 @@ def std_auto_pipeline(verbose=False):
                 callbacks=[tensorboard],
                 steps_per_epoch=STEPS_PER_EPOCH,
                 validation_steps=VALIDATION_STEP)
-    gen.save_model()             
+    gen.save_model(path=ouput_dir)             
     
     # save model
 
@@ -141,10 +166,7 @@ def std_auto_pipeline(verbose=False):
 
 
 if __name__ == "__main__":
-    # import subprocess
-    # cmd = [ 'tensorboard', '--logdir=logs/' ]
-    # output = subprocess.Popen( cmd, stdout=subprocess.PIPE ).communicate()[0]
-    # print(output)
+
 
     #std_training_pipeline(verbose=True)
     std_auto_pipeline()

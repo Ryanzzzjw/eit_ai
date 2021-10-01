@@ -71,10 +71,16 @@ class EITDataset4ML():
         self.val.set_data(features=x_val, labels=y_val)
         self.test.set_data(features=x_test, labels=y_test)
         # To do
-        print('\n\nATTENTION self.train_len=[] / self.val_len=[] / self.test_len= []\n\n')
-        self.train_len=[]
-        self.val_len=[]
-        self.test_len= []
+        # print('\n\nATTENTION self.train_len=[] / self.val_len=[] / self.test_len= []\n\n')
+        
+        self.train_len=x_train.shape[0]
+        self.val_len=x_val.shape[0]
+        self.test_len= x_test.shape[0]
+        
+        if self.verbose:
+            print('\nLength of train', self.train_len)
+            print('Length of val',self.val_len )
+            print('Length of test',self.test_len )
 
     def mk_tf_dataset(self, X, Y, batch_size = 32, test_size= 0.20, val_size=0.20):
         self.use_tf_dataset= True       

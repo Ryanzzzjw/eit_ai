@@ -29,18 +29,42 @@ y= X+ np.random.randn(m,1)
 model = keras.models.Sequential()
 model.add(keras.layers.Dense(1, input_dim = 1))
 
-model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.02),
+model.compile(optimizer=tf.optimizers.Adam(learning_rate=0.1),
                 loss='mean_absolute_error',
                 metrics=[keras.metrics.Accuracy()] )
 
-plt.scatter(X, y)
-ynew= np.array([])
+plt.scatter(X, y, label='data')
+plt.xlabel('X')
+plt.ylabel('y')
+plt.legend()    
+plt.show()
+
+ynew= np.zeros((100,10))
 for i in range(10):
     model.fit(X, y, epochs=i+1)
-    ynew= model.predict(X)
+    ynew[:,i]= model.predict(X).T
+
     
-    plt.scatter(X, ynew, label='Epoch #{}'.format(i+1))
-    
+plt.scatter(X, y, label='data')
+plt.xlabel('X')
+plt.ylabel('y')    
+plt.scatter(X, ynew[:,0], label='Epoch #{}'.format(0))
+plt.legend()    
+plt.show()
+
+plt.scatter(X, y, label='data')
+plt.xlabel('X')
+plt.ylabel('y')    
+plt.scatter(X, ynew[:,0], label='Epoch #{}'.format(0))
+plt.scatter(X, ynew[:,1], label='Epoch #{}'.format(1))
+plt.legend()    
+plt.show()
+
+plt.scatter(X, y, label='data')
+plt.xlabel('X')
+plt.ylabel('y')
+for i in range(10):  
+    plt.scatter(X, ynew[:,i], label='Epoch #{}'.format(i))
 plt.legend()    
 plt.show()
 
