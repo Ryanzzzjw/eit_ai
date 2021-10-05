@@ -4,7 +4,7 @@
 ### then it can be seen http://H-PC:600 or http://localhost:6006/ or etc., copy it and paste it online to see training graphs live or already executed
 ### CMD must be opened all the time, when is wanted to see graphs. 
 
-from data_preprocessing.dataset import EITDataset4ML
+from modules.dataset import EITDataset4ML
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.tri as mtri
@@ -30,10 +30,6 @@ class ModelGenerator():
         self.model= []
         self.name= ''
         self.info= ''
-    
-    
-    
-    
     
     # def select_model(self, model_func, input_size=256, output_size=990, **args, **kwargs):
     
@@ -68,7 +64,11 @@ class ModelGenerator():
             except Exception:
                 self.model.save(os.path.join(path, 'model.h5'))
         pass
+
+    def load_model(self, path ):
+        self.model = tf.keras.models.load_model(path, custom_objects=ak.CUSTOM_OBJECTS)
         
+
     
     def mk_fit(self,
                 dataset=EITDataset4ML(),

@@ -1,22 +1,18 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.tri as mtri
-from scipy.io import loadmat
-# from tensorflow.compat.v1 import ConfigProto
-# from tensorflow.compat.v1 import InteractiveSession
-import tensorflow as tf
-import tensorflow.keras as keras
-import sklearn.model_selection
-import time
 
-from tensorflow.python.keras.metrics import FalseNegatives
-from data_preprocessing.load_mat_files import *
-from data_preprocessing.dataset import *
-from model.train_models import *
-from eval_plots.draw_data import *
+
+import tensorflow.keras as keras
+
+
+from modules.load_mat_files import *
+from modules.dataset import *
+from modules.train_models import *
+from modules.draw_data import *
+
 
 from datetime import datetime
 from tensorboard import program
+
+from modules.path_utils import mk_ouput_dir
 
 
 def log_tensorboard(log_path):
@@ -29,30 +25,12 @@ def log_tensorboard(log_path):
 
 
 
-def mk_ouput_dir(name, verbose= True, default_out_dir= 'outputs'):
-    if not os.path.isdir(default_out_dir):
-        os.mkdir(default_out_dir)
-
-    output_dir= os.path.join(default_out_dir, name)
-
-    if verbose:
-        print('\nResults are to found in:\n >> {}'.format(output_dir))
-
-    os.mkdir(output_dir)
-
-    return output_dir
-
 def std_training_pipeline(verbose=False):
-    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-    gpus = tf.config.list_logical_devices('GPU')
-    strategy = tf.distribute.OneDeviceStrategy(gpus[0])
 
-    
-    #print("Number of devices: {}".format(strategy.num_replicas_in_sync))
     # Data loading
-    path= 'E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
-
-    training_dataset = dataloader(verbose=True, path=path, data_sel= ['Xih','Yih'], use_tf_dataset=False)
+    path=''# 'E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
+    raw_data=get_XY_from_MalabDataSet(path=path, data_sel= ['Xih','Yih'],verbose=verbose)
+    training_dataset = dataloader(raw_data, use_tf_dataset=True,verbose=verbose)
     
     if verbose:
         if training_dataset.use_tf_dataset:
@@ -80,12 +58,17 @@ def std_training_pipeline(verbose=False):
     gen.std_keras(input_size=training_dataset.features_size,
                     output_size=training_dataset.labels_size)
     gen.compile_model(OPTIMIZER, LOSS, METRICS)
-    print(gen.model.summary())
 
     now = datetime.now()
     date_time = now.strftime("%Y%m%d_%H%M%S")
     NAME = "Model_{}_{}".format(gen.name,  date_time )
     ouput_dir= mk_ouput_dir(NAME)
+
+    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt'), 'w') as f:
+        f.write(training_dataset.src_file)
+    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt')) as f:
+        print(f.readlines())
+
     tensorboard = TensorBoard(log_dir= os.path.join(ouput_dir,'tf_boards_logs'))
     log_tensorboard(os.path.join(ouput_dir,'tf_boards_logs'))
 
@@ -104,16 +87,11 @@ def std_training_pipeline(verbose=False):
 
 
 def std_auto_pipeline(verbose=False):
-    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-    gpus = tf.config.list_logical_devices('GPU')
-    strategy = tf.distribute.OneDeviceStrategy(gpus[0])
-
     
-    #print("Number of devices: {}".format(strategy.num_replicas_in_sync))
     # Data loading
     path= 'E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
-
-    training_dataset = dataloader(verbose=True, path=path, data_sel= ['Xih','Yih'], use_tf_dataset=False)
+    raw_data=get_XY_from_MalabDataSet(path=path, data_sel= ['Xih','Yih'],verbose=verbose)
+    training_dataset = dataloader(raw_data, use_tf_dataset=False,verbose=verbose)
     
     if verbose:
         if training_dataset.use_tf_dataset:
@@ -127,7 +105,6 @@ def std_auto_pipeline(verbose=False):
                 break
 
     # Model setting
-
     EPOCH= 2
     BATCH_SIZE = 32
     STEPS_PER_EPOCH = training_dataset.train_len // BATCH_SIZE
@@ -140,13 +117,20 @@ def std_auto_pipeline(verbose=False):
     gen = ModelGenerator()
     gen.std_autokeras(input_size=training_dataset.features_size,
                     output_size=training_dataset.labels_size,max_trials=2)
+
     gen.compile_model(OPTIMIZER, LOSS, METRICS)
-    # print(gen.model.summary())
 
     now = datetime.now()
     date_time = now.strftime("%Y%m%d_%H%M%S")
     NAME = "Model_{}_{}".format(gen.name,  date_time )
     ouput_dir= mk_ouput_dir(NAME)
+
+    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt'), 'w') as f:
+        f.write(training_dataset.src_file)
+    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt')) as f:
+        print(f.readlines())
+
+
     tensorboard = TensorBoard(log_dir= os.path.join(ouput_dir,'tf_boards_logs'))
     log_tensorboard(os.path.join(ouput_dir,'tf_boards_logs'))
 
@@ -156,17 +140,10 @@ def std_auto_pipeline(verbose=False):
                 callbacks=[tensorboard],
                 steps_per_epoch=STEPS_PER_EPOCH,
                 validation_steps=VALIDATION_STEP)
-    gen.save_model(path=ouput_dir)             
-    
-    # save model
-
-    # Test the model on all available devices.
-   # model.evaluate(test_dataset)
-
-
+    #Save model
+    gen.save_model(path=ouput_dir)          
 
 if __name__ == "__main__":
 
-
     #std_training_pipeline(verbose=True)
-    std_auto_pipeline()
+    std_auto_pipeline(verbose=True)
