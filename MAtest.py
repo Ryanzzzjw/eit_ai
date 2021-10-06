@@ -1,49 +1,49 @@
-import numpy as np
-import matplotlib.pyplot as plt
+# import numpy as np
+# import matplotlib.pyplot as plt
 
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.tri as mtri
-from scipy.io import loadmat
-# from tensorflow.compat.v1 import ConfigProto
-# from tensorflow.compat.v1 import InteractiveSession
-import tensorflow as tf
-import tensorflow.keras as keras
-import sklearn.model_selection
-import time
+# import matplotlib.pyplot as plt
+# import numpy as np
+# import matplotlib.tri as mtri
+# from scipy.io import loadmat
+# # from tensorflow.compat.v1 import ConfigProto
+# # from tensorflow.compat.v1 import InteractiveSession
+# import tensorflow as tf
+# import tensorflow.keras as keras
+# import sklearn.model_selection
+# import time
 
-import autokeras as ak
-import tensorflow as tf
-from tensorflow.keras.callbacks import TensorBoard
-from scipy.io import loadmat
-import time
-import datetime
-from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Dropout, Input
-
-
-np.random.seed(0)
-m= 100
-X= np.linspace(0,10,m).reshape(m,1)
-y= 0.000000000000001*X+ np.random.randn(m,1)*0.00000000000000001+1
+# import autokeras as ak
+# import tensorflow as tf
+# from tensorflow.keras.callbacks import TensorBoard
+# from scipy.io import loadmat
+# import time
+# import datetime
+# from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Dropout, Input
 
 
-
-
-from sklearn.linear_model import LinearRegression
-reg = LinearRegression().fit(X, y)
-print('R2:', reg.score(X, y))
-print(':', reg.coef_)
-print('score:', reg.intercept_)
+# np.random.seed(0)
+# m= 100
+# X= np.linspace(0,10,m).reshape(m,1)
+# y= 0.000000000000001*X+ np.random.randn(m,1)*0.00000000000000001+1
 
 
 
-y_p= reg.predict(X)
-plt.scatter(X, y, label='data')
-plt.scatter(X, y_p, label='pre')
-plt.xlabel('X')
-plt.ylabel('y')
-plt.legend() 
-plt.show()
+
+# from sklearn.linear_model import LinearRegression
+# reg = LinearRegression().fit(X, y)
+# print('R2:', reg.score(X, y))
+# print(':', reg.coef_)
+# print('score:', reg.intercept_)
+
+
+
+# y_p= reg.predict(X)
+# plt.scatter(X, y, label='data')
+# plt.scatter(X, y_p, label='pre')
+# plt.xlabel('X')
+# plt.ylabel('y')
+# plt.legend() 
+# plt.show()
 
 # model = keras.models.Sequential()
 # model.add(keras.layers.Dense(1, input_dim = 1))
@@ -87,5 +87,10 @@ plt.show()
 # plt.legend()    
 # plt.show()
 
+if __name__ == "__main__":
+    a='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/out'
 
+    b='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/data/hjjjh/jkjkjk.g'
+    import os
+    print(os.path.relpath(b, start=a))
 

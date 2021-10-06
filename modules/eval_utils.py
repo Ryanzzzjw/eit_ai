@@ -13,7 +13,7 @@ def normalized(y_true, y_pred):
     print('Real normalized values: ' + str(y_true) + '; Solved normalized values: ' + str(y_pred))
 
 
-def error_eval(y_true, y_pred, verbose=False, axis_samples=0):
+def error_eval(y_true, y_pred, verbose=False, axis_samples=0, info='set from error_eval'):
 
     if y_true.shape==y_pred.shape:
         
@@ -47,7 +47,22 @@ def error_eval(y_true, y_pred, verbose=False, axis_samples=0):
             print('RIE = ' , rie, rie.shape)
             print('ICC = ', icc, icc.shape)
 
-    return mse, rie, icc
+    results= EvalResults()
+    results.set_values(mse, rie, icc, info)
+    return results
+
+class EvalResults(object):
+    def __init__(self) -> None:
+        super().__init__()
+        self.indicators=dict()
+        self.info=None
+
+    def set_values(self, mse, rie, icc, info='values set')-> None:
+        self.indicators['mse']=mse
+        self.indicators['rie']=rie
+        self.indicators['icc']=icc
+        self.info = info
+
 
 
 if __name__ == "__main__":

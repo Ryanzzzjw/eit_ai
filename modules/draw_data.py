@@ -4,47 +4,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.tri as mtri
 from scipy.io import loadmat
+from modules.eval_utils import EvalResults
 
 import modules.interp2d as interp2d
 
 from modules.utils import check_order
+from modules.eval_utils import *
 
-# def data_loading(input_PATH, output_PATH, trianglesDATA_fPATH, model_NAME):
-#     start_time = time.time()
-#     trianglesDATA = loadmat(trianglesDATA_fPATH)
-#     inputDATA = loadmat(input_PATH)
-#     outputDATA = loadmat(output_PATH)
-#     model = tf.keras.models.load_model(model_NAME, custom_objects=ak.CUSTOM_OBJECTS)
-#     print("Data loading time = ", time.time() - start_time, 's')
-#     return inputDATA, outputDATA, trianglesDATA, model
+# from eval_utils import EvalResults
 
-# def Extract_tr_data(fwd_model):
-    
-#     # Load nodes coordinates data and triangle nodes
-#     triangles = np.array(fwd_model['elems'])
-#     xy = np.array(fwd_model['nodes'])
-#     x, y = xy.T 
-    
-#     return x, y, triangles
+# import interp2d as interp2d
 
-# def convert(conduct_elem, triangles, x):
+# from utils import check_order
 
-#     # Convert from each triangle element conductivity data to each node conductivity data.
-#     m = np.array(conduct_elem).flatten()
-#     n = np.array(triangles, dtype = float).flatten()
-#     z = [0 for a in range(np.size(x))]
-
-#     list = []
-
-#     for i in range (len(n)):
-#         idx = n[int(i)] 
-#         idx =int(idx)
-#         #print(idx)
-#         if idx not in list: 
-#             j= int(i/3)
-#             z[idx-1]=m[j]
-#             list.append(idx)
-#     return z
 
 def get_elem_nodal_data(fwd_model, perm):
 
@@ -127,7 +99,7 @@ def plot_EIT_samples(fwd_model, perm, U):
     fig.colorbar(im,ax=ax[0])
 
     ax[1].plot(U)
-    plt.show()
+    plt.show(block=False)
 
 def plot_real_NN_EIDORS(fwd_model, perm_real, perm_nn, perm_eidors):
 
@@ -160,7 +132,49 @@ def plot_real_NN_EIDORS(fwd_model, perm_real, perm_nn, perm_eidors):
         fig.colorbar(im,ax=ax[i])
 
     plt.show()
+
+def plot_eval_results(results, axis='linear'):
+
+    n_set= len(results)
+    n_indic= len(results[0].indicators.keys())
+
+    fig1, ax = plt.subplots(2,n_indic)
+
+    for indx, indic in enumerate(results[0].indicators.keys()):
+
+        ax[0,indx].set_title(indic)
+        tmp= list()
+        labels= list()
+        for res in results:
+            tmp.append(np.reshape(res.indicators[indic], (len(res.indicators[indic]),)))
+            labels.append(res.info)
+        
+        
+        
+        ax[0,indx].boxplot(tmp, labels=labels,)
+        ax[1,indx].plot(np.array(tmp).T, label=labels)
+        ax[1,indx].legend()
     
+        
+    # plt.plot(mse_nn)
+    # plt.plot(rie_nn)
+    # plt.plot(icc_nn)
+    # plt.plot(mse_eidors)
+    # plt.plot(rie_eidors)
+    # plt.plot(icc_eidors)
+    # plt.show()
+
+
+
+    # fig1, ax = plt.subplots(1,3)
+    # ax[0].set_title('MSE')
+    # ax[0].boxplot((mse_nn, mse_eidors))
+    # ax[1].set_title('RIE')
+    # ax[1].boxplot((rie_nn, rie_eidors))
+    # ax[2].set_title('icc')
+    # ax[2].boxplot((icc_nn, icc_eidors))
+    plt.show()
+    pass
 
 
     
@@ -168,4 +182,22 @@ def plot_real_NN_EIDORS(fwd_model, perm_real, perm_nn, perm_eidors):
 if __name__ == "__main__":
 
     fmdl= loadmat('E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/test_plot.mat')
-    plot_EIT_mesh(fmdl, fmdl['un2'])
+    # plot_EIT_mesh(fmdl, fmdl['un2'])
+    fig1, ax = plt.subplots(2,3)
+    ax[0,0].set_title('MSE')
+    results= [fmdl['un2'],fmdl['un2']]
+    tmp= list()
+    labels= list()
+    for res in results:
+            # tmp.append(res)
+            tmp.append(np.reshape(res, (len(res),))) # only vectors
+        
+    ax[0,0].boxplot(tmp, labels=['eidors', 'nn'],)
+    ax[1,0].plot(np.array(tmp).T, label=['eidors', 'nn'],)
+    ax[1,0].legend()
+    plt.plot()
+    plt.show()
+
+    
+    
+

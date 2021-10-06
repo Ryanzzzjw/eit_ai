@@ -1,149 +1,117 @@
 
 
+
 import tensorflow.keras as keras
 
 
-from modules.load_mat_files import *
+# from modules.load_mat_files import *
 from modules.dataset import *
-from modules.train_models import *
 from modules.draw_data import *
+from modules.train_models import *
+from modules.train_utils import *
 
 
-from datetime import datetime
-from tensorboard import program
-
-from modules.path_utils import mk_ouput_dir
-
-
-def log_tensorboard(log_path):
-
-    tracking_address = log_path # the path of your log file.
-    tb = program.TensorBoard()
-    tb.configure(argv=[None, '--logdir', tracking_address])
-    url = tb.launch()
-    print(f"\n######################################\nTensorflow listening on {url}\n######################################\n")
-
-
-
-def std_training_pipeline(verbose=False):
-
-    # Data loading
-    path=''# 'E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
-    raw_data=get_XY_from_MalabDataSet(path=path, data_sel= ['Xih','Yih'],verbose=verbose)
-    training_dataset = dataloader(raw_data, use_tf_dataset=True,verbose=verbose)
+def std_training_pipeline(verbose=False, path= ''):
     
+    gen = ModelGenerator()# Create a model generator
+
+    train_inputs=TrainInputs() # create class to managed training variables (saving them,....)
+    train_inputs.init_ouput(training_name='Test_keras', append_time= True) # set the naem of the current training and cretae directory for ouputs
+
+    # get data from matlab 
+    raw_data=get_XY_from_MalabDataSet(path=path, data_sel= ['Xih','Yih'],verbose=verbose)
+    train_inputs.data_select= raw_data.data_sel
+
+    # data preprocessing
+    train_inputs.set_values4dataloader(batch_size=1000)
+    dataset = dataloader(raw_data,verbose=verbose, train_inputs=train_inputs)
+
+    train_inputs.idx_samples_file= save_idx_samples_2matfile(raw_data,dataset)  # extract and save th idx of the samples
+
     if verbose:
-        if training_dataset.use_tf_dataset:
+        if dataset.use_tf_dataset:
             # extract data for verification?
-            for inputs, outputs in training_dataset.train.as_numpy_iterator():
-                # print(inputs.size, outputs.size)
-                # Print the first element and the label
-                print(inputs[0,:])
+            for inputs, outputs in dataset.train.as_numpy_iterator():
+                print(inputs[0])
                 print('label of this input is', outputs[0])
-                plot_EIT_mesh(training_dataset.fwd_model, outputs[0])
+                plot_EIT_samples(dataset.fwd_model, outputs[0],inputs[0])
+                
                 break
 
-    # Model setting
+    tensorboard = mk_callback_tensorboard(train_inputs)
 
-    EPOCH= 10
-    BATCH_SIZE = 32
-    STEPS_PER_EPOCH = training_dataset.train_len // BATCH_SIZE
-    VALIDATION_STEP = training_dataset.val_len // BATCH_SIZE
-    LEARNING_RATE= 0.1
-    OPTIMIZER=keras.optimizers.Adam(learning_rate=LEARNING_RATE)
-    LOSS='binary_crossentropy' #keras.losses.CategoricalCrossentropy()
-    METRICS=[keras.metrics.Accuracy()]
-
-    gen = ModelGenerator()
-    gen.std_keras(input_size=training_dataset.features_size,
-                    output_size=training_dataset.labels_size)
-    gen.compile_model(OPTIMIZER, LOSS, METRICS)
-
-    now = datetime.now()
-    date_time = now.strftime("%Y%m%d_%H%M%S")
-    NAME = "Model_{}_{}".format(gen.name,  date_time )
-    ouput_dir= mk_ouput_dir(NAME)
-
-    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt'), 'w') as f:
-        f.write(training_dataset.src_file)
-    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt')) as f:
-        print(f.readlines())
-
-    tensorboard = TensorBoard(log_dir= os.path.join(ouput_dir,'tf_boards_logs'))
-    log_tensorboard(os.path.join(ouput_dir,'tf_boards_logs'))
-
-    # Train the model on all available devices.
-    gen.mk_fit(training_dataset,
-                epochs=EPOCH,
-                callbacks=[tensorboard],
-                steps_per_epoch=STEPS_PER_EPOCH,
-                validation_steps=VALIDATION_STEP)
-    gen.save_model(path=ouput_dir)             
+    train_inputs.set_values4model(  model_func=gen.std_keras,
+                                    dataset=dataset,
+                                    epoch=1,
+                                    callbacks=[tensorboard])
     
-    # save model
+    gen.select_model(train_inputs)
+    gen.compile_model(train_inputs=train_inputs)
 
-    # Test the model on all available devices.
-   # model.evaluate(test_dataset)
+    train_inputs.save()
 
-
-def std_auto_pipeline(verbose=False):
+    # Train the model
+    gen.mk_fit(dataset,train_inputs=train_inputs)
     
-    # Data loading
-    path= 'E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
+    # Save the trained model
+    gen.save_model(path=train_inputs.ouput_dir)             
+
+def std_auto_pipeline(verbose=False, path=''):
+
+    gen = ModelGenerator()# Create a model generator
+
+    train_inputs=TrainInputs() # create class to managed training variables (saving them,....)
+    train_inputs.init_ouput(training_name='Autokeras', append_time= True) # set the naem of the current training and cretae directory for ouputs
+
+    # get data from matlab 
     raw_data=get_XY_from_MalabDataSet(path=path, data_sel= ['Xih','Yih'],verbose=verbose)
-    training_dataset = dataloader(raw_data, use_tf_dataset=False,verbose=verbose)
-    
-    if verbose:
-        if training_dataset.use_tf_dataset:
+    train_inputs.data_select= raw_data.data_sel
+
+    # data preprocessing
+    train_inputs.set_values4dataloader(batch_size=32,use_tf_dataset=False)
+    dataset = dataloader(raw_data,verbose=verbose, train_inputs=train_inputs)
+
+    # train_inputs.idx_samples_file= save_idx_samples_2matfile(raw_data,dataset)
+        
+    if not verbose:
+        if dataset.use_tf_dataset:
             # extract data for verification?
-            for inputs, outputs in training_dataset.train.as_numpy_iterator():
-                # print(inputs.size, outputs.size)
-                # Print the first element and the label
-                print(inputs[0,:])
+            for inputs, outputs in dataset.train.as_numpy_iterator():
+                print(inputs[0])
                 print('label of this input is', outputs[0])
-                plot_EIT_mesh(training_dataset.fwd_model, outputs[0])
+               #plot_EIT_samples(dataset.fwd_model, outputs[0],inputs[0])
                 break
+    
+    tensorboard = mk_callback_tensorboard(train_inputs)
 
-    # Model setting
-    EPOCH= 2
-    BATCH_SIZE = 32
-    STEPS_PER_EPOCH = training_dataset.train_len // BATCH_SIZE
-    VALIDATION_STEP = training_dataset.val_len // BATCH_SIZE
-    LEARNING_RATE= 0.1
-    OPTIMIZER=keras.optimizers.Adam(learning_rate=LEARNING_RATE)
-    LOSS='binary_crossentropy' #keras.losses.CategoricalCrossentropy()
-    METRICS=[keras.metrics.Accuracy()]
+    train_inputs.set_values4model(  model_func=gen.std_autokeras,
+                                    dataset=dataset,
+                                    epoch=2,
+                                    callbacks=[tensorboard],
+                                    max_trials_autokeras=2)
+    
+    gen.select_model(train_inputs)
+    gen.compile_model(train_inputs=train_inputs)
 
-    gen = ModelGenerator()
-    gen.std_autokeras(input_size=training_dataset.features_size,
-                    output_size=training_dataset.labels_size,max_trials=2)
+    train_inputs.save()
 
-    gen.compile_model(OPTIMIZER, LOSS, METRICS)
+    # Train the model
+    gen.mk_fit(dataset,train_inputs=train_inputs)
+    
+    # Save the trained model
+    gen.save_model(path=train_inputs.ouput_dir) 
 
-    now = datetime.now()
-    date_time = now.strftime("%Y%m%d_%H%M%S")
-    NAME = "Model_{}_{}".format(gen.name,  date_time )
-    ouput_dir= mk_ouput_dir(NAME)
-
-    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt'), 'w') as f:
-        f.write(training_dataset.src_file)
-    with open(os.path.join(ouput_dir,'training_dataset_src_file.txt')) as f:
-        print(f.readlines())
-
-
-    tensorboard = TensorBoard(log_dir= os.path.join(ouput_dir,'tf_boards_logs'))
-    log_tensorboard(os.path.join(ouput_dir,'tf_boards_logs'))
-
-    # Train the model on all available devices.
-    gen.mk_fit(training_dataset,
-                epochs=EPOCH,
-                callbacks=[tensorboard],
-                steps_per_epoch=STEPS_PER_EPOCH,
-                validation_steps=VALIDATION_STEP)
-    #Save model
-    gen.save_model(path=ouput_dir)          
+       
 
 if __name__ == "__main__":
+    debug=True
+    
+    if debug:
+        path='datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
+    else:
+        path= ''
 
-    #std_training_pipeline(verbose=True)
-    std_auto_pipeline(verbose=True)
+    #std_training_pipeline(verbose=True, path=path)
+
+    std_auto_pipeline(verbose=True, path=path)
+    plt.show()

@@ -19,12 +19,13 @@ def std_eval_pipeline(verbose=False):
 
 
     title= 'Select directory of model to evaluate'
-    # path_dir=get_dir(title=title)
-    path_dir='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/outputs/Model_std_keras_20211004_170742'
+    path_dir=get_dir(title=title)
+    #path_dir='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/outputs/Model_std_keras_20211004_170742'
     
     
-    with open(os.path.join(path_dir,'training_dataset_src_file.txt')) as f:
-        path_pkl=f.readline()
+    with open(os.path.join(path_dir,'dataset_src_file.txt')) as f:
+        path_pkl=f.readline().replace('\n','')
+        path_pkl=f.readline().replace('\n','')
     
     # Data loading
     raw_data=get_XY_from_MalabDataSet(path=path_pkl, data_sel= ['Xih','Yih'],verbose=verbose)#, type2load='.pkl')
@@ -41,11 +42,11 @@ def std_eval_pipeline(verbose=False):
                 # print('label of this input is', outputs[0])
                 # plot_EIT_samples(training_dataset.fwd_model, outputs[0], inputs[0])
                 break
-        save_2matfile_4_solving(raw_data,training_dataset)        
+        # save_idx_samples_2matfile(raw_data,training_dataset)        
 
     # Load model
     gen = ModelGenerator()
-    gen.load_model(os.path.join(path_dir,'model.model'))
+    gen.load_model(os.path.join(path_dir,'model'))
     print(gen.model.summary())
 
     # make predictions
@@ -67,6 +68,7 @@ def std_eval_pipeline(verbose=False):
     a.mk_dataset_from_matlab(path= verify_file(path=path, extension='.mat'), only_get_samples_EIDORS=True)
     for key in a.samples_EIDORS.keys():
         print('samples_EIDORS[{}]'.format(key) , a.samples_EIDORS[key].shape)
+
     perm_eidors= a.samples_EIDORS['elem_data'].T
     perm_eidors_n= a.samples_EIDORS['elem_data_n'].T
 
@@ -84,39 +86,17 @@ def std_eval_pipeline(verbose=False):
     perm_real = np.concatenate(l, axis=0)
     print('perm_real',perm_real.shape)
 
-
-
-
     plot_real_NN_EIDORS(training_dataset.fwd_model, perm_real[0,:].T, perm_nn[0,:].T, perm_eidors[0,:].T)
 
+    results= list()
+    results.append(error_eval(perm_real, perm_nn[:perm_real.shape[0],:], verbose=False, axis_samples=0, info='Results NN'))
+# eval_res_eidors= error_eval(perm_real,perm_eidors[:perm_real.shape[0],:], verbose=False, axis_samples=0, info='Results eidors')
 
-
-
-    mse_nn, rie_nn, icc_nn= error_eval(perm_real, perm_nn[:perm_real.shape[0],:], verbose=False, axis_samples=0)
-
-    mse_eidors, rie_eidors, icc_eidors= error_eval(perm_real,perm_eidors[:perm_real.shape[0],:], verbose=False, axis_samples=0)
-
+    # results= [eval_res_nn, eval_res_eidors]
     
-
-    fig1, ax = plt.subplots(1,3)
-    ax[0].set_title('MSE')
-    ax[0].boxplot((mse_nn, mse_eidors))
-    ax[1].set_title('RIE')
-    ax[1].boxplot((rie_nn, rie_eidors))
-    ax[2].set_title('icc')
-    ax[2].boxplot((icc_nn, icc_eidors))
-    plt.show()
-
-
-
-
-
-    
-
+    plot_eval_results(results, axis='linear')
 
     # plot some samples
-
-
 
     # # Model setting
 
@@ -125,7 +105,7 @@ def std_eval_pipeline(verbose=False):
     # STEPS_PER_EPOCH = training_dataset.train_len // BATCH_SIZE
     # VALIDATION_STEP = training_dataset.val_len // BATCH_SIZE
     # LEARNING_RATE= 0.1
-    # OPTIMIZER=keras.optimizers.Adam(learning_rate=LEARNING_RATE)
+    # OPTIMIZER=keras.optimizers.Adam(ling_rate=LEARNING_RATE)
     # LOSS='binary_crossentropy' #keras.losses.CategoricalCrossentropy()
     # METRICS=[keras.metrics.Accuracy()]
 
@@ -155,6 +135,10 @@ def std_eval_pipeline(verbose=False):
    # model.evaluate(test_dataset)
 
 if __name__ == "__main__":
-
+    # path_pkl= 'datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
+    # print(verify_file(path_pkl, extension=".pkl", debug=True))
+    # get_XY_from_MalabDataSet(path=path_pkl, data_sel= ['Xih','Yih'],verbose=True)
     std_eval_pipeline(verbose=True)
+
+    plt.show()
     
