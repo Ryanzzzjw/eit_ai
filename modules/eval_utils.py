@@ -1,6 +1,36 @@
 import numpy as np
 from sklearn.metrics import mean_squared_error
+import tensorflow.keras.backend as K
 
+
+
+def EIT_mse(y_true, y_pred):
+    return 
+
+def EIT_rie(y_true, y_pred):
+    return K.sqrt(K.sum(K.pow(K.abs(y_true-y_pred),2))/K.sum(K.pow(K.abs(y_pred),2)))
+
+def EIT_re(y_true, y_pred):
+    """Relative error
+
+    Args:
+        y_true ([type]): [description]
+        y_pred ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    
+    return K.sqrt(K.sum(K.square(y_true-y_pred))/K.sum(K.square(y_pred)))
+    
+
+def EIT_icc(y_true, y_pred):
+    
+    icc_matrix = np.corrcoef(y_true, y_pred,rowvar=False) #(Image) Correlation Coefficient (ICC)
+
+    nb_samples=y_true.shape[1]
+    I=np.eye(nb_samples)
+    return np.diag(icc_matrix[:nb_samples,nb_samples:]*I)
 
 
 

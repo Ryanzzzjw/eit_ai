@@ -16,6 +16,7 @@ from modules.eval_utils import *
 # import interp2d as interp2d
 
 # from utils import check_order
+# from eval_utils import *
 
 
 def get_elem_nodal_data(fwd_model, perm):
@@ -101,35 +102,50 @@ def plot_EIT_samples(fwd_model, perm, U):
     ax[1].plot(U)
     plt.show(block=False)
 
-def plot_real_NN_EIDORS(fwd_model, perm_real, perm_nn, perm_eidors):
+def plot_real_NN_EIDORS(fwd_model, perm_real,*argv):
 
-    data= [dict() for _ in range(3)]
+    _perm= list()
+    _perm.append(perm_real)
 
-    tri, pts, data[0]= get_elem_nodal_data(fwd_model, perm_real)
-    _, _, data[1]= get_elem_nodal_data(fwd_model, perm_nn)
-    _, _, data[2]= get_elem_nodal_data(fwd_model, perm_eidors)
+    for arg in argv:
+        if _perm[0].shape==arg.shape:
+            _perm.append(arg)
+    perm=list()
+    if perm_real.ndim > 1:
+        n_row=  perm_real.shape[1]
+        for p in _perm:
+            perm.append(p)
+    else:
+        for p in _perm:
+            perm.append(p.reshape((p.shape[0],1)))
+        n_row= 1
+    n_col = len(perm)
 
-    # if perm.shape[0]==pts.shape[0]:
-    #     key= 'nodes_data'
-    # else:
-    key= 'elems_data'
+    fig, ax = plt.subplots(n_row,n_col)
+    if ax.ndim==1:
+        ax=ax.reshape((ax.shape[0],1)).T
 
-    fig, ax = plt.subplots(1,3)
-    
-    for i in range(3):
-        im = ax[i].tripcolor(pts[:,0], pts[:,1], tri, np.real(data[i][key]),shading='flat', vmin=None,vmax=None)
-        title= key
+    for row in range(ax.shape[0]):
 
-        # if np.all(perm <= 1):
-        #     title= title +'\nNormalized conductivity distribution'
-        # else:
-        #     title= title +'\nConductivity distribution'
-        ax[i].set_title(title)
-        ax[i].set_xlabel("X axis")
-        ax[i].set_ylabel("Y axis")
-            
-        ax[i].axis("equal")
-        fig.colorbar(im,ax=ax[i])
+        data= [dict() for _ in range(n_col)]
+        for i, p in enumerate(perm):
+            tri, pts, data[i]= get_elem_nodal_data(fwd_model, p[:, row])
+        key= 'elems_data'
+        for col in range(n_col):
+            print(row, col)
+            im = ax[row, col].tripcolor(pts[:,0], pts[:,1], tri, np.real(data[col][key]),shading='flat', vmin=None,vmax=None)
+            title= key + f'#{row}'
+
+            # if np.all(perm <= 1):
+            #     title= title +'\nNormalized conductivity distribution'
+            # else:
+            #     title= title +'\nConductivity distribution'
+            ax[row, col].set_title(title)
+            ax[row, col].set_xlabel("X axis")
+            ax[row, col].set_ylabel("Y axis")
+                
+            ax[row, col].axis("equal")
+            fig.colorbar(im,ax=ax[row, col])
 
     plt.show(block=False)
 
@@ -174,28 +190,34 @@ def plot_eval_results(results, axis='linear'):
     # ax[2].set_title('icc')
     # ax[2].boxplot((icc_nn, icc_eidors))
     plt.show(block=False)
-    pass
+    
 
 
     
 
 if __name__ == "__main__":
 
-    fmdl= loadmat('E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/test_plot.mat')
+    fmdl= loadmat('datasets/test_plot.mat')
     # plot_EIT_mesh(fmdl, fmdl['un2'])
-    fig1, ax = plt.subplots(2,3)
-    ax[0,0].set_title('MSE')
-    results= [fmdl['un2'],fmdl['un2']]
-    tmp= list()
-    labels= list()
-    for res in results:
-            # tmp.append(res)
-            tmp.append(np.reshape(res, (len(res),))) # only vectors
+
+    plot_real_NN_EIDORS(fmdl, fmdl['un2'], fmdl['elem_data'], fmdl['elem_data'])
+    # fig1, ax = plt.subplots(2,3)
+    # ax[0,0].set_title('MSE')
+    # results= [fmdl['un2'],fmdl['un2']]
+    # tmp= list()
+    # labels= list()
+    # for res in results:
+    #         # tmp.append(res)
+    #         tmp.append(np.reshape(res, (len(res),))) # only vectors
         
-    ax[0,0].boxplot(tmp, labels=['eidors', 'nn'],)
-    ax[1,0].plot(np.array(tmp).T, label=['eidors', 'nn'],)
-    ax[1,0].legend()
-    plt.plot()
+    # ax[0,0].boxplot(tmp, labels=['eidors', 'nn'],)
+    # ax[1,0].plot(np.array(tmp).T, label=['eidors', 'nn'],)
+    # ax[1,0].legend()
+    # plt.plot()
+
+
+
+
     plt.show()
 
     

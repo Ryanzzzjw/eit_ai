@@ -2,6 +2,7 @@
 
 
 import tensorflow.keras as keras
+from tensorflow.python.keras.losses import MSE
 
 
 # from modules.load_mat_files import *
@@ -42,8 +43,9 @@ def std_training_pipeline(verbose=False, path= ''):
 
     train_inputs.set_values4model(  model_func=gen.std_keras,
                                     dataset=dataset,
-                                    epoch=300,
-                                    callbacks=[tensorboard])
+                                    epoch=3,
+                                    callbacks=[tensorboard],
+                                    metrics=[MSE])
     
     gen.select_model(train_inputs)
     gen.compile_model(train_inputs=train_inputs)

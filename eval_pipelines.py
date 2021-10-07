@@ -15,14 +15,14 @@ from modules.eval_utils import error_eval
 from modules.load_mat_files import *
 from modules.path_utils import get_dir, mk_ouput_dir, verify_file
 from modules.train_models import *
-
+import random
 
 def std_eval_pipeline(verbose=False):
 
 
     title= 'Select directory of model to evaluate'
-    path_dir=get_dir(title=title)
-    #path_dir='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/outputs/Model_std_keras_20211004_170742'
+    #path_dir=get_dir(title=title)
+    path_dir='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/outputs/Std_keras_20211007_144918'
     
     # read train inputs instead
 
@@ -48,7 +48,7 @@ def std_eval_pipeline(verbose=False):
                 # Print the first element and the label
                 # print(inputs[0])
                 # print('label of this input is', outputs[0])
-                plot_EIT_samples(eval_dataset.fwd_model, outputs[0], inputs[0])
+                #plot_EIT_samples(eval_dataset.fwd_model, outputs[0], inputs[0])
                 break
     
 
@@ -67,6 +67,7 @@ def std_eval_pipeline(verbose=False):
     perm_real=extract_samples(eval_dataset, dataset_part='test', idx_samples=None, elem_idx = 1)
 
     print('\nperm_real',perm_real.shape)
+    
 
     # Load model
     gen = ModelGenerator()
@@ -103,8 +104,10 @@ def std_eval_pipeline(verbose=False):
     results= list()
     results.append(error_eval(perm_real, perm_nn[:perm_real.shape[0],:], verbose=False, axis_samples=0, info='Results NN'))
     results.append(error_eval(perm_real, perm_eidors[:perm_real.shape[0],:], verbose=False, axis_samples=0, info='Results Eidors'))
-
-    plot_real_NN_EIDORS(eval_dataset.fwd_model, perm_real[2,:].T, perm_nn[2,:].T, perm_eidors[2,:].T)
+    
+    #Generate 5 random numbers between 10 and 30
+    randnlist = random.sample(range(eval_dataset.test_len), 5)
+    plot_real_NN_EIDORS(eval_dataset.fwd_model, perm_real[randnlist,:].T, perm_nn[randnlist,:].T)
     
 
     
