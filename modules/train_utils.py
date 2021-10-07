@@ -9,16 +9,20 @@ from tensorflow.python.keras.backend import learning_phase
 from modules.dataset import *
 # from modules.load_mat_files import *
 from modules.path_utils import *
-import dill
 
+import modules.constants as const
 class TrainInputs(object):
     def __init__(self) -> None:
         super().__init__()
         self.type='TrainInputs'
+        self.time=None
         self.training_name= None
         self.ouput_dir= None
 
+        self.dataset_src_file=None
         self.idx_samples_file= None
+        self.model_saving_path= None
+
         self.data_select= None
 
         self.batch_size=None
@@ -42,11 +46,11 @@ class TrainInputs(object):
         self.learning_rate= None
         self.loss= None
         self.metrics= None
-
-
+    
 
     def init_ouput(self, training_name, append_time= True):
-        self.training_name= f'{training_name}_{get_date_time()}' if append_time else training_name
+        self.time = get_date_time()
+        self.training_name= f'{training_name}_{self.time}' if append_time else training_name
         self.ouput_dir= mk_ouput_dir(self.training_name)
 
     def set_values4dataloader(  self,
@@ -93,8 +97,8 @@ class TrainInputs(object):
         self.dataset_src_file=[  get_POSIX_path(dataset.src_file),
                                 get_POSIX_path(os.path.relpath(dataset.src_file, start=self.ouput_dir)[6:])]
         
-        filename= os.path.join(self.ouput_dir,'dataset_src_file.txt') # it that necessary??
-        save_as_txt(filename,self.dataset_src_file)
+        # filename= os.path.join(self.ouput_dir,'dataset_src_file.txt') # it that necessary??
+        # save_as_txt(filename,self.dataset_src_file)
         
         self.optimizer=optimizer
         self.learning_rate= learning_rate
@@ -104,6 +108,10 @@ class TrainInputs(object):
         if not type(metrics)==type(list()):
             error('metrics need to be a list')
         self.metrics=metrics
+    
+    def set_idx_samples(self, path):
+        self.idx_samples_file=[  get_POSIX_path(path),
+                                get_POSIX_path(os.path.relpath(path, start=self.ouput_dir)[6:])]
 
     def save(self, path= None):
 
@@ -138,7 +146,16 @@ class TrainInputs(object):
             save_as_txt(filename, copy)
         
         
-
+    def read(self, path):
+        
+        load_dict=read_txt(path)
+        for key in load_dict.keys():
+            #print(key, load_dict[key])
+            if key in self.__dict__.keys():
+                setattr(self,key, load_dict[key])
+        
+        print(self.__dict__)
+        return self
     # def load(self, path=None):
         
     #     path, filename=get_file(filetypes=[("Pickle-file", "*.pkl")], path=path)
@@ -149,7 +166,7 @@ class TrainInputs(object):
 
 def mk_callback_tensorboard(train_inputs):
 
-    log_path= os.path.join(train_inputs.ouput_dir,'log')
+    log_path= os.path.join(train_inputs.ouput_dir,const.TENSORBOARD_LOG_FOLDER)
     
     tensorboard = TensorBoard(log_dir= log_path)
     log_tensorboard(log_path)
@@ -167,8 +184,7 @@ def log_tensorboard(log_path):
 
 if __name__ == "__main__":
 
-
-
+    
     learning_rate=None
     if learning_rate:
     

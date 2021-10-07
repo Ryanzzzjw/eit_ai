@@ -70,10 +70,12 @@ def plot_EIT_mesh(fwd_model, perm):
           
         ax[i].axis("equal")
         fig.colorbar(im,ax=ax[i])
-    plt.show()
+    plt.show(block=False)
 
 def plot_EIT_samples(fwd_model, perm, U):
 
+
+    
     tri, pts, data= get_elem_nodal_data(fwd_model, perm)
 
     if perm.shape[0]==pts.shape[0]:
@@ -82,8 +84,6 @@ def plot_EIT_samples(fwd_model, perm, U):
         key= 'elems_data'
 
     fig, ax = plt.subplots(1,2)
-    
-
     im = ax[0].tripcolor(pts[:,0], pts[:,1], tri, np.real(data[key]),shading='flat', vmin=None,vmax=None)
     title= key
 
@@ -131,7 +131,7 @@ def plot_real_NN_EIDORS(fwd_model, perm_real, perm_nn, perm_eidors):
         ax[i].axis("equal")
         fig.colorbar(im,ax=ax[i])
 
-    plt.show()
+    plt.show(block=False)
 
 def plot_eval_results(results, axis='linear'):
 
@@ -151,7 +151,7 @@ def plot_eval_results(results, axis='linear'):
         
         
         
-        ax[0,indx].boxplot(tmp, labels=labels,)
+        ax[0,indx].boxplot(tmp, labels=labels)
         ax[1,indx].plot(np.array(tmp).T, label=labels)
         ax[1,indx].legend()
     
@@ -173,7 +173,7 @@ def plot_eval_results(results, axis='linear'):
     # ax[1].boxplot((rie_nn, rie_eidors))
     # ax[2].set_title('icc')
     # ax[2].boxplot((icc_nn, icc_eidors))
-    plt.show()
+    plt.show(block=False)
     pass
 
 

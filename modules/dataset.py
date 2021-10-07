@@ -16,7 +16,7 @@ from modules.path_utils import *
 # from modules.load_mat_files import *
 # from load_mat_files import *
 from modules.train_utils import *
-
+import modules.constants as const
 
 class MatlabDataSet(object):
     def __init__(self,verbose=0, debug=0) -> None:
@@ -40,22 +40,22 @@ class MatlabDataSet(object):
         self.filename= ''
         self.path= ''
 
-    def flex_load(self, path="", auto=False, type2load='.mat'):
+    def flex_load(self, path="", auto=False, type2load=const.EXT_MAT, time=None):
 
-        if verify_file(path, extension=".mat"):
-            self.mk_dataset_from_matlab(path=path, auto= auto)
-        elif verify_file(path, extension=".pkl"):
+        if verify_file(path, extension=const.EXT_MAT):
+            self.mk_dataset_from_matlab(path=path, auto= auto, time=time)
+        elif verify_file(path, extension=const.EXT_PKL):
             self.load_dataset_from_pickle(path)
         else:
-            if type2load=='.mat':
-                self.mk_dataset_from_matlab(auto= auto)
+            if type2load==const.EXT_MAT:
+                self.mk_dataset_from_matlab(auto= auto, time=time)
             else:
                 self.load_dataset_from_pickle(path)
             
         
 
 
-    def mk_dataset_from_matlab(self, path="", auto= False, only_get_samples_EIDORS=False):
+    def mk_dataset_from_matlab(self, path="", auto= False, only_get_samples_EIDORS=False, time= None):
         """[summary]
 
         Args:
@@ -66,13 +66,13 @@ class MatlabDataSet(object):
             self.filename, self.path ="test10_infos2py.mat", "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest"
         else:
             
-            if verify_file(path, extension=".mat"):
+            if verify_file(path, extension=const.EXT_MAT):
                 self.path, self.filename= os.path.split(path)
             else:
                 self.path, self.filename =get_file(filetypes=[("Matlab file","*.mat")])
 
         filename= os.path.join(self.path, self.filename)
-        if verify_file(filename, extension=".mat"):
+        if verify_file(filename, extension=const.EXT_MAT):
             if self.verbose or 1:
                 print(  '##################################################\n',\
                         'Loading file: {}\n'.format(self.filename), \
@@ -81,7 +81,7 @@ class MatlabDataSet(object):
             if not only_get_samples_EIDORS:
                 self.get_info_from_dataset(self.filename, self.path)
                 self.load_samples(auto=auto)
-                self.save_dataset()
+                self.save_dataset(time=time)
             else:
                 self.load_samples_EIDORS(os.path.join(self.path, self.filename))
         else:
@@ -96,32 +96,29 @@ class MatlabDataSet(object):
             loaded_dataset[MatlabDataSet]: obvious
         """
         
-        if verify_file(path, extension=".pkl"):
+        if verify_file(path, extension=const.EXT_PKL):
             self.path, self.filename= os.path.split(path)
         else:
             self.path, self.filename= get_file(filetypes=[("pickle file","*.pkl")])
 
-        filename= os.path.join(self.path, self.filename)
-        if verify_file(filename, extension=".pkl"):
-            if self.verbose or 1:
-                print(  '##################################################\n',\
-                        'Loading file: {}\n'.format(self.filename), \
-                        'path: ...{}\n'.format(self.path[-60:]),\
-                        '##################################################')
+        
+        path= self.path
+        filepath= os.path.join(self.path, self.filename)
+        if verify_file(filepath, extension=const.EXT_PKL):
+            print(  '##################################################\n',\
+                    'Loading file: {}\n'.format(self.filename), \
+                    'path: ...{}\n'.format(self.path[-60:]),\
+                    '##################################################')
 
-            self= load_pickle(filename, class2upload=self)
-            # with open(filename, 'rb') as inp:
-            #     loaded_dataset = pickle.load(inp)
-
-            # for key in loaded_dataset.__dict__.keys():
-            #     setattr(self, key, getattr(loaded_dataset,key))
-
+            self= load_pickle(filepath, class2upload=self)
+            self.path_pkl=filepath # as we do not save the pickel we have to actualizate the path (win/unix)
+            self.path= path # we have to actualizate the path (win/unix)
             self.load_samples(mode='reload')
-            self.save_dataset()
+            #self.save_dataset()
         else:
             print(  '##################################################\n',\
-                        'Loading CANCELLED\n',\
-                        '##################################################')
+                    'Loading CANCELLED\n',\
+                    '##################################################')
 
 
     def get_info_from_dataset(self, filename, path):
@@ -175,24 +172,6 @@ class MatlabDataSet(object):
             str_array= [tmp] 
 
         return str_array 
-
-    # def get_file(self, filetypes=[("Matlab file","*.mat")]):
-    #     """used to get select files using gui (multple type of file cane be set!)
-
-    #     Args:
-    #         filetypes (list, optional: obvious.... Defaults to [("Matlab file","*.mat")].
-
-    #     Returns:
-    #         filename (str): filename of the file selected
-    #         path (str): folder where the mat-file is to found
-    #     """
-    #     Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
-    #     whole_path = askopenfilename(   initialdir=os.getcwd(),
-    #                                     filetypes=filetypes) # show an "Open" dialog box and return the path to the selected file
-    #     path, filename = os.path.split(whole_path)
-    #     if self.verbose:
-    #         print(path, filename)
-    #     return path, filename
 
     def get_number_samples2load(self,number_samples2load=0, auto= False):
         """ Get nb of samples to load (console input from user)
@@ -269,25 +248,6 @@ class MatlabDataSet(object):
             print('\nVariables of samples to load : {}'.format(keys2load))
 
         return  keys2load
-    # def ask4keys(self, keys_availables:list()):
-
-    #     input_valid= False
-    #     while not input_valid:
-    #         prompt= "Enter keys list (comma separated) contained in the list {} (Enter for all): \n".format(keys_availables)
-    #         input_user=input(prompt)
-    #         if input_user=="":
-    #             # print('Enter pressed')
-    #             return keys_availables[:1]
-    #         keys2load=input_user.split(sep=',')
-    #         input_valid= True
-    #         for k in keys2load:
-    #             if k not in keys_availables:
-    #                 # print('Enter key contained in the list {}'.format(keys))
-    #                 input_valid= False
-    #                 break
-    #     if self.verbose:
-    #         print('\nKeys selected : {}'.format(keys2load))
-        return keys2load
 
     def load_samples(self, mode= 'load', auto=False):
         """ load the samples from each mat-file
@@ -352,57 +312,15 @@ class MatlabDataSet(object):
         
         print('\nkeys ', self.samples_EIDORS.keys())
 
-        
-
-
-        # folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
-        # filesnames= self.dataset["samplesfilenames"]
-
-        # if mode=='load':
-        #     self.nb_samples=self.get_number_samples2load(auto=auto)
-        #     self.keys2load= self.get_keys_of_samples(auto=auto, path=os.path.join(folder, filesnames[0]))
-        # elif mode == 'reload':
-        #     if self.verbose:
-        #         print('{} samples are reloaded, with keys {}'.format(self.nb_samples,self.keys2load))
-        # tmp= np.where(self.dataset["samplesindx"]==self.nb_samples)
-        # nb_samples_batch2load= tmp[0][0]
-        # nbsamples_lastbatch2load= tmp[1][0]
-
-        # for key in self.keys2load:
-        #     self.samples[key]= np.array([])
-        
-        # for idx_batch in range(nb_samples_batch2load+1):
-        #     batch_filename= os.path.join(folder, filesnames[idx_batch])
-        #     if self.verbose:
-        #         print('\nLoading samples file : ...{}'.format(batch_filename[-50:]))
-        #     batch_file=loadmat(batch_filename)
-        #     if idx_batch==nb_samples_batch2load:
-        #         for key in self.keys2load:
-        #             s= [slice(None)]*batch_file[key].ndim
-        #             s[1]= slice(0,nbsamples_lastbatch2load+1)                    
-        #             self.samples[key]=np.append(self.samples[key],batch_file[key][tuple(s)],axis=1)
-        #     elif idx_batch==0:
-        #         for key in self.keys2load:
-        #             self.samples[key]=batch_file[key]
-        #     else:
-        #         for key in self.keys2load:
-        #             self.samples[key]=np.append(self.samples[key],batch_file[key],axis=1)
-        # if self.verbose:
-        #     for key in self.keys2load:
-        #         print('\nSize of sample loaded ', key ,self.samples[key].shape)
-
-
-    def save_dataset(self):
+    def save_dataset(self, time= None):
         """ save the MatlabDataSet under a pickle-file
                 (samples are cleared to avoid a big file)
         """
-
-        filename= os.path.join(self.path, f'{get_date_time()}.pkl')
+        time = time if time else get_date_time()
+        filename= os.path.join(self.path, f'{time}{const.EXT_PKL}')
         tmp= self.samples    
         self.samples= dict() # clear that too big if not... wil be reloaded...
         save_as_pickle(filename,self)
-        # with open(filename, 'wb') as outp:
-        #     pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
         self.path_pkl= get_POSIX_path(filename)
         self.samples = tmp
 
@@ -422,9 +340,7 @@ class MatlabDataSet(object):
         tmpX['Xhn'] =self.samples['X'][:,:,2]
         tmpX['Xihn']=self.samples['X'][:,:,3]
 
-
         # here we can create the differences
-
         tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
         tmpY['Yih-Yh']= tmpY['Yih']-tmpY['Yh']
 
@@ -467,7 +383,7 @@ def get_XY_from_MalabDataSet(path="", data_sel= ['Xih','Yih'], verbose=False,**k
     raw_data.data_selection(data_sel=data_sel)
     return raw_data
 
-def save_idx_samples_2matfile(raw_data, training_dataset):
+def save_idx_samples_2matfile(raw_data, training_dataset, time= None):
     """[summary]
 
     Args:
@@ -480,10 +396,12 @@ def save_idx_samples_2matfile(raw_data, training_dataset):
     f['idx_train']= training_dataset.idx_train
     f['idx_val']= training_dataset.idx_val
     f['idx_test']= training_dataset.idx_test
+    time = time if time else get_date_time()
 
-    path =  os.path.join(raw_data.path, '{}_idx_samples.mat'.format(get_date_time()))
+    path =  os.path.join(raw_data.path, f'{time}{const.EXT_IDX_FILE}')
     savemat(path, f, appendmat=True)
     return path
+
 
 class FeaturesLabelsSet(object):
     def __init__(self) -> None:
@@ -674,7 +592,21 @@ def dataloader( raw_data,
     training_dataset.fwd_model= raw_data.fwd_model
     # Reserve num_val_samples samples for validation
     return training_dataset
+    
+def extract_samples(dataset, dataset_part='test', idx_samples=None, elem_idx = 0):
 
+    l=[]
+    for i, xy in enumerate(getattr(dataset, dataset_part)):
+        # print('#', i, eval_dataset.batch_size,eval_dataset.test_len)
+        if (i+1)*dataset.batch_size>dataset.test_len:
+            break
+        l.append(xy[elem_idx].numpy())
+
+    samples = np.concatenate(l, axis=0)
+    if isinstance(idx_samples, list):
+        samples= samples[idx_samples]      
+    
+    return samples
 if __name__ == "__main__":
     path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
     

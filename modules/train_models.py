@@ -16,7 +16,7 @@ import autokeras as ak
 from scipy.io import loadmat
 import time
 import os
-
+import modules.constants as const
 
 class ModelGenerator(object):
     def __init__(self) -> None:
@@ -51,18 +51,22 @@ class ModelGenerator(object):
         
         from contextlib import redirect_stdout
 
-        with open(os.path.join(path, 'model_summary.txt'), 'w') as f:
+        with open(os.path.join(path, const.MODEL_SUMMARY_FILENAME), 'w') as f:
             with redirect_stdout(f):
                 self.model.summary()
 
         if self.model_name.find('autokeras')==-1:
-            self.model.save(os.path.join(path,'model.model'))
+            model_saving_path=os.path.join(path, 'model.model')
+            self.model.save(model_saving_path)
         else:
             try:
-                self.model.save(os.path.join(path, 'model'), save_format="tf")
+                model_saving_path=os.path.join(path, 'model')
+                self.model.save(model_saving_path, save_format="tf")
             except Exception:
-                self.model.save(os.path.join(path, 'model.h5'))
-        pass
+                model_saving_path=os.path.join(path, 'model.h5')
+                self.model.save(model_saving_path)
+
+        return model_saving_path
 
     def load_model(self, path ):
 

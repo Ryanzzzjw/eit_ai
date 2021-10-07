@@ -5,11 +5,11 @@ from tkinter.filedialog import askdirectory, askopenfilename, askopenfilenames
 import pickle
 import json
 import datetime
-
+import modules.constants as const
 
 def get_date_time():
     _now = datetime.datetime.now()
-    date_time = _now.strftime("%Y%m%d_%H%M%S")
+    date_time = _now.strftime(const.FORMAT_DATE_TIME)
     return date_time
 
 def get_POSIX_path(path:str):
@@ -17,7 +17,7 @@ def get_POSIX_path(path:str):
     return path.replace('\\','/')
 
 
-def mk_ouput_dir(name, verbose= True, default_out_dir= 'outputs', ):
+def mk_ouput_dir(name, verbose= True, default_out_dir= const.DEFAULT_OUTPUTS_DIR ):
     """[summary]
 
     Args:
@@ -108,13 +108,13 @@ def save_as_pickle(filename, class2save, verbose=True, add_ext=True):
         verbose (bool, optional): [description]. Defaults to True.
     """
     if add_ext:
-        filename= os.path.splitext(filename)[0] + ".pkl"
+        filename= os.path.splitext(filename)[0] + const.EXT_PKL
 
     with open(filename, 'wb') as file:
         pickle.dump(class2save, file, pickle.HIGHEST_PROTOCOL)
     print_saving_verbose(filename, class2save, verbose)
 
-def save_as_txt(filename, class2save, verbose=True, add_ext=True):
+def save_as_txt(filepath, class2save, verbose=True, add_ext=True):
     """[summary]
 
     Args:
@@ -124,7 +124,7 @@ def save_as_txt(filename, class2save, verbose=True, add_ext=True):
         add_ext (bool, optional): [description]. Defaults to True.
     """
     if add_ext:
-        filename= os.path.splitext(filename)[0] + ".txt"
+        filepath= os.path.splitext(filepath)[0] + const.EXT_TXT
     list_of_strings= list()
     if isinstance(class2save,str):
         list_of_strings.append(class2save)
@@ -139,11 +139,17 @@ def save_as_txt(filename, class2save, verbose=True, add_ext=True):
         list_of_strings.append('\n\nSingle attributes:')
         list_of_strings.extend([f'{key} = {tmp_dict[key]},' for key in class2save.__dict__ ])
 
-    with open(filename, 'w') as file:
+    with open(filepath, 'w') as file:
         [ file.write(f'{st}\n') for st in list_of_strings ]
 
-    print_saving_verbose(filename, class2save, verbose)
+    print_saving_verbose(filepath, class2save, verbose)
 
+def read_txt(filepath):
+    with open(filepath, 'r') as file:
+        lines = file.readlines()
+
+    if 'Dictionary form:' in lines[0]:
+        return json.loads(lines[1].replace('\n', ''))
 
 def print_saving_verbose(filename, class2save= None, verbose=True):
     """[summary]
@@ -202,7 +208,7 @@ if __name__ == "__main__":
 
     path_pkl='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
     # path_pkl=path_pkl.replace('/','\\')
-    print(verify_file(path_pkl, extension=".pkl", debug=True))
+    print(verify_file(path_pkl, extension=const.EXT_PKL, debug=True))
 
     a= 'print_saving_verbose'
     print(os.path.splitext('hhhhhhhh'))
