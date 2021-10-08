@@ -2,6 +2,7 @@
 
 
 FORMAT_DATE_TIME= "%Y%m%d_%H%M%S"
+FORMAT_TIME= "%Hh %Mm %Ss"
 DEFAULT_OUTPUTS_DIR= 'outputs'
 
 

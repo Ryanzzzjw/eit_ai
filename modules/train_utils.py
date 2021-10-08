@@ -90,8 +90,8 @@ class TrainInputs(object):
         self._test_len=dataset.test_len
         self.input_size=dataset.features_size
         self.output_size=dataset.labels_size
-        self._steps_per_epoch = self._train_len // self.batch_size if self.batch_size else 1
-        self._validation_steps = self._val_len // self.batch_size if self.batch_size else 1
+        self._steps_per_epoch = self._train_len // self.batch_size if self.batch_size else None
+        self._validation_steps = self._val_len // self.batch_size if self.batch_size else None
         self.callbacks=callbacks
         
         self.dataset_src_file=[  get_POSIX_path(dataset.src_file),

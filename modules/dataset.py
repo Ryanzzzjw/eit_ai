@@ -528,9 +528,9 @@ class EITDataset4ML(object):
             self.val= val_tmp.repeat().batch(self.batch_size)
             self.test=test_tmp.repeat().batch(self.batch_size)
         else:
-            self.train= train_tmp.repeat()
-            self.val= val_tmp.repeat()
-            self.test=test_tmp.repeat()
+            self.train= train_tmp
+            self.val= val_tmp
+            self.test=test_tmp
 
         
 
@@ -594,18 +594,31 @@ def dataloader( raw_data,
     return training_dataset
     
 def extract_samples(dataset, dataset_part='test', idx_samples=None, elem_idx = 0):
+    if dataset.use_tf_dataset:
+        l=[]
+        for i, xy in enumerate(getattr(dataset, dataset_part)):
+            # print('#', i, eval_dataset.batch_size,eval_dataset.test_len)
+            if dataset.batch_size:
+                if (i+1)*dataset.batch_size>dataset.test_len:
+                    break
+                l.append(xy[elem_idx].numpy())
+            else:
+                #print(xy[elem_idx], xy[elem_idx].shape)
+                l.append(xy[elem_idx].numpy().reshape(xy[elem_idx].shape[0],1).T)
+        
+        samples = np.concatenate(l, axis=0)
+        
+        # samples = np.concatenate(l, axis=1).T
+             
+    else:
+        if elem_idx==0:
+            samples= getattr(getattr(dataset, dataset_part),'features')
+        elif elem_idx:
+            samples= getattr(getattr(dataset, dataset_part),'labels')
 
-    l=[]
-    for i, xy in enumerate(getattr(dataset, dataset_part)):
-        # print('#', i, eval_dataset.batch_size,eval_dataset.test_len)
-        if (i+1)*dataset.batch_size>dataset.test_len:
-            break
-        l.append(xy[elem_idx].numpy())
-
-    samples = np.concatenate(l, axis=0)
     if isinstance(idx_samples, list):
-        samples= samples[idx_samples]      
-    
+            samples= samples[idx_samples]  
+              
     return samples
 if __name__ == "__main__":
     path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
