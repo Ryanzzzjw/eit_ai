@@ -12,12 +12,14 @@ import tensorflow as tf
 from scipy.io import loadmat
 from scipy.io.matlab.mio import savemat
 
+
 from modules.path_utils import *
 # from modules.load_mat_files import *
 # from load_mat_files import *
 from modules.train_utils import *
 import modules.constants as const
-
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 class MatlabDataSet(object):
     def __init__(self,verbose=0, debug=0) -> None:
         
@@ -461,32 +463,48 @@ class EITDataset4ML(object):
         #     print(self.val_len )
         #     print(self.test_len )
     
-    def mk_std_dataset(self,X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20):
+    def mk_std_dataset(self,X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
         self.use_tf_dataset= False
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
+
+        
+   
+        scaler = MinMaxScaler()
+        # transform data
+        X=scaler.fit_transform(X)
+        Y=scaler.fit_transform(Y)
+        
+        #add indexes
+        idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
+        X= np.concatenate(( X, idx ), axis=1)
 
         x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y,test_size=self.test_ratio)
         x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp, test_size=self.val_ratio)
         
+        self.idx_train= x_train[:,-1]
+        self.idx_val= x_val[:,-1]
+        self.idx_test= x_test[:,-1]
+
         self.train=FeaturesLabelsSet()
         self.val=FeaturesLabelsSet()
         self.test=FeaturesLabelsSet()
-        self.train.set_data(features=x_train, labels=y_train)
-        self.val.set_data(features=x_val, labels=y_val)
-        self.test.set_data(features=x_test, labels=y_test)
+        self.train.set_data(features=x_train[:,:-1], labels=y_train)
+        self.val.set_data(features=x_val[:,:-1], labels=y_val)
+        self.test.set_data(features=x_test[:,:-1], labels=y_test)
         # To do
         # print('\n\nATTENTION self.train_len=[] / self.val_len=[] / self.test_len= []\n\n')
         
         self.train_len=x_train.shape[0]
         self.val_len=x_val.shape[0]
         self.test_len= x_test.shape[0]
+
         
         if self.verbose:
             print('\nLength of train', self.train_len)
             print('Length of val',self.val_len )
             print('Length of test',self.test_len )
 
-    def mk_tf_dataset(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20):
+    def mk_tf_dataset(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
         self.use_tf_dataset= True       
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
 
@@ -517,6 +535,12 @@ class EITDataset4ML(object):
         self.idx_test= np.array(list(idx.as_numpy_iterator()))
         test_tmp=test_tmp.map(lambda xy, idx: xy)
 
+        scaler = MinMaxScaler()
+
+        # transform data
+        train_tmp=train_tmp.map(lambda x, y: (scaler.fit_transform(x), scaler.fit_transform(y)))
+        val_tmp=val_tmp.map(lambda x, y: (scaler.fit_transform(x), scaler.fit_transform(y)))
+        val_tmp=val_tmp.map(lambda x, y: (scaler.fit_transform(x), scaler.fit_transform(y)))
         
         if self.verbose:
             print('\nLength of train', self.train_len)
@@ -531,13 +555,53 @@ class EITDataset4ML(object):
             self.train= train_tmp
             self.val= val_tmp
             self.test=test_tmp
-
         
+    
+    # def get_sample(self, which= 'train', idx_samples= None):
 
+    #     if which=='train':
+    #         tmp_ds= self.train
+    #         tmp_len= self.train_len
+    #     elif which== 'val':
+    #         tmp_ds= self.val
+    #         tmp_len= self.val_len
+    #     elif which== 'test':
+    #         tmp_ds= self.test
+    #         tmp_len= self.test_len
 
-    def get_sample(self):
-        # To do
-        pass
+    #     if not idx_samples:
+    #         idx_samples= np.random.randint(tmp_len)
+    #     # To do
+    #     if self.use_tf_dataset:
+    #         # extract data for verification?
+    #         for inputs, outputs in tmp_ds.as_numpy_iterator():
+    #             if self.batch_size:
+    #                 for 
+
+    #             else:
+
+    #             if 
+    #             break
+    #     else:
+    #         x, y= tmp_ds.labels[idx_samples],tmp_ds.features[idx_samples]
+
+    #     if self.verbose:
+    #         print(f'Features from dataset {which}, idx {idx_samples}: {x}, {x.shape}')
+    #         print(f'Labels from dataset {which}, idx {idx_samples}: {y}, {y.shape}')
+
+    #     return x, y
+
+# def minmax_scale(x,y, axis=0):
+#     X= (x – min) / (max – min)
+#     Y
+
+#     return (x – min) / (max – min)
+def scale_prepocess(x, scale):
+    scaler = MinMaxScaler()
+    if scale:
+        x= scaler.fit_transform(x)
+    return x
+
 def dataloader( raw_data,
                 batch_size = 32, 
                 test_ratio= 0.20, 
@@ -572,10 +636,10 @@ def dataloader( raw_data,
     X = raw_data.X.T
     Y = raw_data.Y.T
 
-    if normalize[0]:
-        X = tf.keras.utils.normalize(X, axis=0).astype("float32")
-    if normalize[1]:
-        Y = tf.keras.utils.normalize(Y, axis=0).astype("float32")
+    # if normalize[0]:
+    #     X = tf.keras.utils.normalize(X, axis=0).astype("float32")
+    # if normalize[1]:
+    #     Y = tf.keras.utils.normalize(Y, axis=0).astype("float32")
  
     print('Shape of X: {},\nShape of Y: {}'.format(np.shape(X) ,np.shape(Y)))
     
@@ -585,9 +649,9 @@ def dataloader( raw_data,
     training_dataset.src_file= raw_data.path_pkl
 
     if use_tf_dataset:
-        training_dataset.mk_tf_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio)
+        training_dataset.mk_tf_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio, train_inputs= train_inputs)
     else:
-        training_dataset.mk_std_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio)
+        training_dataset.mk_std_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio, train_inputs= train_inputs)
     
     training_dataset.fwd_model= raw_data.fwd_model
     # Reserve num_val_samples samples for validation
@@ -595,31 +659,44 @@ def dataloader( raw_data,
     
 def extract_samples(dataset, dataset_part='test', idx_samples=None, elem_idx = 0):
     if dataset.use_tf_dataset:
-        l=[]
+       
+        x= []
+        y=[]
         for i, xy in enumerate(getattr(dataset, dataset_part)):
             # print('#', i, eval_dataset.batch_size,eval_dataset.test_len)
             if dataset.batch_size:
                 if (i+1)*dataset.batch_size>dataset.test_len:
                     break
-                l.append(xy[elem_idx].numpy())
+                x.append(xy[0].numpy())
+                y.append(xy[1].numpy())
             else:
                 #print(xy[elem_idx], xy[elem_idx].shape)
-                l.append(xy[elem_idx].numpy().reshape(xy[elem_idx].shape[0],1).T)
+                x.append(xy[0].numpy().reshape(xy[0].shape[0],1).T)
+                y.append(xy[1].numpy().reshape(xy[1].shape[0],1).T)
+                
         
-        samples = np.concatenate(l, axis=0)
-        
+        samples_x = np.concatenate(x, axis=0)
+        samples_y = np.concatenate(y, axis=0)
         # samples = np.concatenate(l, axis=1).T
              
     else:
-        if elem_idx==0:
-            samples= getattr(getattr(dataset, dataset_part),'features')
-        elif elem_idx:
-            samples= getattr(getattr(dataset, dataset_part),'labels')
+        samples_x= getattr(getattr(dataset, dataset_part),'features')
+        samples_y= getattr(getattr(dataset, dataset_part),'labels')
+
+    if not idx_samples:
+            idx_samples= np.random.randint(len(samples_x))
+            
+    if idx_samples=='all':
+        return samples_x, samples_y
+
+    if isinstance(idx_samples, int):
+        idx_samples= [idx_samples]
 
     if isinstance(idx_samples, list):
-            samples= samples[idx_samples]  
+            samples_x= samples_x[idx_samples]  
+            samples_y= samples_y[idx_samples]  
               
-    return samples
+    return samples_x, samples_y
 if __name__ == "__main__":
     path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
     

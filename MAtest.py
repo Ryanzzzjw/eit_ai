@@ -7,7 +7,8 @@
 # from scipy.io import loadmat
 # # from tensorflow.compat.v1 import ConfigProto
 # # from tensorflow.compat.v1 import InteractiveSession
-# import tensorflow as tf
+import numpy as np
+import tensorflow as tf
 # import tensorflow.keras as keras
 # import sklearn.model_selection
 # import time
@@ -88,6 +89,29 @@
 # plt.show()
 
 if __name__ == "__main__":
+
+    import numpy as np
+    from numpy import asarray
+    from sklearn.preprocessing import MinMaxScaler
+    # define data
+    data = asarray([[100, 0.001],
+                    [8, 0.05],
+                    [50, 0.005],
+                    [88, 0.07],
+                    [4, 0.1]])
+    print(data)
+    # define min max scaler
+    scaler = MinMaxScaler()
+    # transform data
+    scaled = scaler.fit_transform(data)
+    print(scaled)
+    X= np.array([[1, 2,3,4,5],[6,7,8,9,10]])
+    print(X, X.shape)
+    # X = (X, axis=1, order=2).astype("float32")
+    # print(X, X.shape)
+
+
+
     a='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/out'
 
     b='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/data/hjjjh/jkjkjk.g'

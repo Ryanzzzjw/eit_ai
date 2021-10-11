@@ -3,7 +3,6 @@ from sklearn.metrics import mean_squared_error
 import tensorflow.keras.backend as K
 
 
-
 def EIT_mse(y_true, y_pred):
     return 
 
@@ -41,7 +40,6 @@ def normalized(y_true, y_pred):
     y_true = [(y_true-min(y_true))/(max(y_true)-min(y_true))] #normalize 
 
     print('Real normalized values: ' + str(y_true) + '; Solved normalized values: ' + str(y_pred))
-
 
 def error_eval(y_true, y_pred, verbose=False, axis_samples=0, info='set from error_eval'):
 

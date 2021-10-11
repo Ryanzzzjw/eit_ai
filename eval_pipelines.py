@@ -56,8 +56,7 @@ def std_eval_pipeline(verbose=False):
                 break
     
 
-
-    perm_real=extract_samples(eval_dataset, dataset_part='test', idx_samples=None, elem_idx = 1)
+    _, perm_real=extract_samples(eval_dataset, dataset_part='test', idx_samples='all', elem_idx = 1)
 
     print('\nperm_real',perm_real.shape)
     

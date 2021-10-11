@@ -57,7 +57,7 @@ class TrainInputs(object):
                                 batch_size=32,
                                 test_ratio=0.2,
                                 val_ratio=0.2, 
-                                use_tf_dataset:bool=True, 
+                                use_tf_dataset:bool=False, 
                                 normalize= [True, True]):
 
         self.batch_size = batch_size

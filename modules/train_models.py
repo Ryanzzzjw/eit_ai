@@ -99,6 +99,7 @@ class ModelGenerator(object):
                 steps_per_epoch=None,
                 validation_steps=None,
                 callbacks=None,
+                batch_size=None,
                 train_inputs:TrainInputs=None):
 
         if train_inputs:
@@ -106,6 +107,7 @@ class ModelGenerator(object):
             steps_per_epoch=train_inputs._steps_per_epoch
             validation_steps=train_inputs._validation_steps
             callbacks=train_inputs.callbacks
+            batch_size=train_inputs.batch_size
 
         start_time = time.time()
         if dataset.use_tf_dataset:
@@ -114,7 +116,7 @@ class ModelGenerator(object):
                             validation_data=dataset.val,
                             steps_per_epoch=steps_per_epoch,
                             validation_steps=validation_steps,
-                            callbacks=callbacks, )
+                            callbacks=callbacks)
         else:
             self.model.fit( dataset.train.features,
                             dataset.train.labels,
@@ -122,7 +124,8 @@ class ModelGenerator(object):
                             validation_data=(dataset.val.features, dataset.val.labels),
                             steps_per_epoch=steps_per_epoch,
                             validation_steps=validation_steps,
-                            callbacks=callbacks)
+                            callbacks=callbacks,
+                            batch_size=batch_size)
 
         delta_time= time.time()- start_time
         delta_time = timedelta(seconds=delta_time)

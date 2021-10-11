@@ -23,7 +23,6 @@ def get_elem_nodal_data(fwd_model, perm):
 
     tri = np.array(fwd_model['elems'])
     pts = np.array(fwd_model['nodes'])
-
     
     # perm= fwd_model['un2']    
     perm= np.reshape(perm, (perm.shape[0],))
@@ -73,10 +72,20 @@ def plot_EIT_mesh(fwd_model, perm):
         fig.colorbar(im,ax=ax[i])
     plt.show(block=False)
 
+def format_inputs(fwd_model, data):
+    if data.ndim==2:
+        tri = np.array(fwd_model['elems'])
+        pts = np.array(fwd_model['nodes'])
+        if data.shape[1]==pts.shape[0] or data.shape[1]==tri.shape[0]:
+            data= data.T
+
+    return data
+
 def plot_EIT_samples(fwd_model, perm, U):
 
+    perm=format_inputs(fwd_model, perm)
+    U=format_inputs(fwd_model, U)
 
-    
     tri, pts, data= get_elem_nodal_data(fwd_model, perm)
 
     if perm.shape[0]==pts.shape[0]:
@@ -99,7 +108,8 @@ def plot_EIT_samples(fwd_model, perm, U):
     ax[0].axis("equal")
     fig.colorbar(im,ax=ax[0])
 
-    ax[1].plot(U)
+    ax[1].plot(U.T)
+    
     plt.show(block=False)
 
 def plot_real_NN_EIDORS(fwd_model, perm_real,*argv):
@@ -110,6 +120,7 @@ def plot_real_NN_EIDORS(fwd_model, perm_real,*argv):
     for arg in argv:
         if _perm[0].shape==arg.shape:
             _perm.append(arg)
+
     perm=list()
     if perm_real.ndim > 1:
         n_row=  perm_real.shape[1]
