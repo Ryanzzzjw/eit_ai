@@ -116,7 +116,7 @@ if __name__ == "__main__":
     else:
         path= ''
 
-    #std_training_pipeline(verbose=True, path=path)
+    std_training_pipeline(verbose=True, path=path)
 
-    std_auto_pipeline(verbose=True, path=path)
+    #std_auto_pipeline(verbose=True, path=path)
     plt.show()

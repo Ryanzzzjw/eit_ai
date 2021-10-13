@@ -20,6 +20,7 @@ from modules.train_utils import *
 import modules.constants as const
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
+from pyeit.mesh.plot.voronoi_plot import voronoi
 class MatlabDataSet(object):
     def __init__(self,verbose=0, debug=0) -> None:
         
@@ -149,6 +150,9 @@ class MatlabDataSet(object):
         self.dataset["samplesfolder"]= self.str_cellarray2str_list(self.dataset["samplesfolder"])
         self.dataset["samplesfilenames"]= self.str_cellarray2str_list(self.dataset["samplesfilenames"])
         self.dataset["samplesindx"]= self.dataset["samplesindx"]
+
+        self.fwd_model['elems']= self.fwd_model['elems']-int(1)
+
         if self.debug:
             print('\nKeys of loaded mat file:', file.keys())
         if self.verbose:
@@ -350,7 +354,7 @@ class MatlabDataSet(object):
         tmpX['Xihn-Xh']= tmpX['Xihn']-tmpX['Xh']
         tmpX['Xihn-Xh']= tmpX['Xih']-tmpX['Xhn']
 
-        ## control input.... TODO
+        ## control input
 
         if data_sel[0] not in tmpX.keys():
             error('\n not correct data_sel')
@@ -462,17 +466,33 @@ class EITDataset4ML(object):
         #     print(self.train_len)
         #     print(self.val_len )
         #     print(self.test_len )
+    def remodel_(self, X, Y, func=None):
+        if func== 'add_xyz':
+            # get middle point of elems
+            pts=self.fwd_model['nodes']
+            tri=self.fwd_model['elems']
+            print(tri, tri.shape, type(tri), tri.dtype)
+            tri=np.array(self.fwd_model['elems']-np.ones(self.fwd_model['elems'].shape),dtype=np.int64)
+            print(tri, tri.shape, type(tri), tri.dtype)
+            pts_= voronoi(pts, tri, fd=None)
+            print(pts_, pts.shape)
+
+            
+
+
+        return X, Y
     
     def mk_std_dataset(self,X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
         self.use_tf_dataset= False
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
 
         
-   
         scaler = MinMaxScaler()
         # transform data
         X=scaler.fit_transform(X)
         Y=scaler.fit_transform(Y)
+
+        X, Y= self.remodel_(X,Y, func= 'add_xyz')
         
         #add indexes
         idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
@@ -647,13 +667,14 @@ def dataloader( raw_data,
 
     training_dataset= EITDataset4ML(verbose=verbose)
     training_dataset.src_file= raw_data.path_pkl
+    training_dataset.fwd_model= raw_data.fwd_model
 
     if use_tf_dataset:
         training_dataset.mk_tf_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio, train_inputs= train_inputs)
     else:
         training_dataset.mk_std_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio, train_inputs= train_inputs)
     
-    training_dataset.fwd_model= raw_data.fwd_model
+    
     # Reserve num_val_samples samples for validation
     return training_dataset
     
@@ -685,7 +706,7 @@ def extract_samples(dataset, dataset_part='test', idx_samples=None, elem_idx = 0
 
     if not idx_samples:
             idx_samples= np.random.randint(len(samples_x))
-            
+
     if idx_samples=='all':
         return samples_x, samples_y
 
@@ -697,7 +718,14 @@ def extract_samples(dataset, dataset_part='test', idx_samples=None, elem_idx = 0
             samples_y= samples_y[idx_samples]  
               
     return samples_x, samples_y
+
 if __name__ == "__main__":
+  
+
+
+
+
+
     path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
     
     raw_data= get_XY_from_MalabDataSet(path= path, data_sel= ['Xh','Yh'])

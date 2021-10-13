@@ -55,11 +55,9 @@ def std_eval_pipeline(verbose=False):
                     plot_EIT_samples(eval_dataset.fwd_model, outputs, inputs)
                 break
     
-
     _, perm_real=extract_samples(eval_dataset, dataset_part='test', idx_samples='all', elem_idx = 1)
 
     print('\nperm_real',perm_real.shape)
-    
 
     # Load model
     gen = ModelGenerator()

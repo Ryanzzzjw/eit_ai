@@ -6,9 +6,9 @@ import matplotlib.tri as mtri
 from scipy.io import loadmat
 from modules.eval_utils import EvalResults
 
-import modules.interp2d as interp2d
+# import modules.interp2d as interp2d
 
-from modules.utils import check_order
+# from modules.utils import check_order
 from modules.eval_utils import *
 
 # from eval_utils import EvalResults
@@ -18,6 +18,8 @@ from modules.eval_utils import *
 # from utils import check_order
 # from eval_utils import *
 
+import pyeit.mesh.utils
+import pyeit.eit.interp2d
 
 def get_elem_nodal_data(fwd_model, perm):
 
@@ -27,16 +29,16 @@ def get_elem_nodal_data(fwd_model, perm):
     # perm= fwd_model['un2']    
     perm= np.reshape(perm, (perm.shape[0],))
 
-    tri = tri-1 # matlab count from 1 python from 0
-    tri= check_order(pts, tri)
+    # tri = tri-1 # matlab count from 1 python from 0
+    tri= pyeit.mesh.utils.check_order(pts, tri)
     data=dict()
 
     if perm.shape[0]==pts.shape[0]:
-        data['elems_data'] = interp2d.pts2sim(tri, perm)
+        data['elems_data'] = pyeit.eit.interp2d.pts2sim(tri, perm)
         data['nodes_data']= perm
     elif perm.shape[0]==tri.shape[0]:
         data['elems_data'] = perm
-        data['nodes_data']= interp2d.sim2pts(pts, tri, perm)
+        data['nodes_data']= pyeit.eit.interp2d.sim2pts(pts, tri, perm)
 
     for key in data.keys():
         data[key]= np.reshape(data[key], (data[key].shape[0],))
@@ -202,10 +204,6 @@ def plot_eval_results(results, axis='linear'):
     # ax[2].boxplot((icc_nn, icc_eidors))
     plt.show(block=False)
     
-
-
-    
-
 if __name__ == "__main__":
 
     fmdl= loadmat('datasets/test_plot.mat')
