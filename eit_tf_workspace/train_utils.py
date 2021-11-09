@@ -6,11 +6,11 @@ from tensorflow.keras.callbacks import TensorBoard
 import tensorflow.keras as keras
 from tensorflow.python.keras.backend import learning_phase
 # from dataset import *
-from modules.dataset import *
+from  eit_tf_workspace.dataset import *
 # from modules.load_mat_files import *
-from modules.path_utils import *
+from eit_tf_workspace.path_utils import *
 
-import modules.constants as const
+import eit_tf_workspace.constants as const
 class TrainInputs(object):
     def __init__(self) -> None:
         super().__init__()
@@ -19,7 +19,8 @@ class TrainInputs(object):
         self.training_name= None
         self.ouput_dir= None
 
-        self.dataset_src_file=None
+        self.dataset_src_file:List[str]=None
+        self.dataset_src_file_pkl:List[str]=None
         self.idx_samples_file= None
         self.model_saving_path= None
 
@@ -71,7 +72,7 @@ class TrainInputs(object):
         
     def set_values4model(   self,
                             model_func,
-                            dataset,#:EITDataset4ML, 
+                            dataset, 
                             epoch=10,
                             max_trials_autokeras=10, 
                             callbacks=[],
@@ -94,8 +95,7 @@ class TrainInputs(object):
         self._validation_steps = self._val_len // self.batch_size if self.batch_size else None
         self.callbacks=callbacks
         
-        self.dataset_src_file=[  get_POSIX_path(dataset.src_file),
-                                get_POSIX_path(os.path.relpath(dataset.src_file, start=self.ouput_dir)[6:])]
+        self.set_dataset_src_file(dataset)
         
         # filename= os.path.join(self.ouput_dir,'dataset_src_file.txt') # it that necessary??
         # save_as_txt(filename,self.dataset_src_file)
@@ -108,6 +108,13 @@ class TrainInputs(object):
         if not type(metrics)==type(list()):
             error('metrics need to be a list')
         self.metrics=metrics
+
+    def set_dataset_src_file(self, dataset:EITDataset4ML):
+        self.dataset_src_file_pkl=[  get_POSIX_path(dataset.src_file_pkl),
+                                get_POSIX_path(os.path.relpath(dataset.src_file_pkl, start=self.ouput_dir)[6:])]
+        self.dataset_src_file=[  get_POSIX_path(dataset.src_file),
+                                get_POSIX_path(os.path.relpath(dataset.src_file, start=self.ouput_dir)[6:])]
+
     
     def set_idx_samples(self, path):
         self.idx_samples_file=[  get_POSIX_path(path),

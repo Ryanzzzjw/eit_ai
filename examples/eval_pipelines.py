@@ -8,13 +8,13 @@ from numpy.core.fromnumeric import reshape
 from scipy.io import loadmat
 from tensorflow.python.keras.metrics import FalseNegatives
 
-import modules.constants as const
-from modules.dataset import *
-from modules.draw_data import *
-from modules.eval_utils import error_eval
-from modules.load_mat_files import *
-from modules.path_utils import get_dir, mk_ouput_dir, verify_file
-from modules.train_models import *
+import eit_tf_workspace.constants as const
+from eit_tf_workspace.dataset import *
+from eit_tf_workspace.draw_data import *
+from eit_tf_workspace.eval_utils import error_eval
+from eit_tf_workspace.load_mat_files import *
+from eit_tf_workspace.path_utils import get_dir, mk_ouput_dir, verify_file
+from eit_tf_workspace.train_models import *
 import random
 
 def std_eval_pipeline(verbose=False):
@@ -34,11 +34,13 @@ def std_eval_pipeline(verbose=False):
     #     path_pkl=f.readline().replace('\n','')
     #     path_pkl=f.readline().replace('\n','')
     
-    path_pkl=training_settings.dataset_src_file[1]
+    path_pkl=training_settings.dataset_src_file_pkl[1]
     data_sel= training_settings.data_select
     # Data loading
     raw_data=get_XY_from_MalabDataSet(path=path_pkl, data_sel= data_sel,verbose=verbose)#, type2load='.pkl')
     eval_dataset = dataloader(raw_data, use_tf_dataset=True,verbose=verbose, train_inputs=training_settings)
+    training_settings.set_dataset_src_file(eval_dataset)
+    training_settings.save()
     
     if verbose:
         print(eval_dataset.use_tf_dataset)

@@ -1,25 +1,17 @@
 ### this code is called by EVAL.py
 
 import matplotlib.pyplot as plt
-import numpy as np
 import matplotlib.tri as mtri
-from scipy.io import loadmat
-from modules.eval_utils import EvalResults
-
-# import modules.interp2d as interp2d
-
-# from modules.utils import check_order
-from modules.eval_utils import *
-
-# from eval_utils import EvalResults
-
-# import interp2d as interp2d
-
-# from utils import check_order
-# from eval_utils import *
-
-import pyeit.mesh.utils
+import numpy as np
 import pyeit.eit.interp2d
+import pyeit.mesh.utils
+from scipy.io import loadmat
+
+from eit_tf_workspace.eval_utils import *
+from eit_tf_workspace.eval_utils import EvalResults
+
+
+
 
 def get_elem_nodal_data(fwd_model, perm):
 

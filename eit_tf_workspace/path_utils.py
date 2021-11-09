@@ -5,12 +5,14 @@ from tkinter.filedialog import askdirectory, askopenfilename, askopenfilenames
 import pickle
 import json
 import datetime
-import modules.constants as const
+from typing import List, Union
+
+from matplotlib.pyplot import title
+import  eit_tf_workspace.constants as const
 
 def get_date_time():
     _now = datetime.datetime.now()
-    date_time = _now.strftime(const.FORMAT_DATE_TIME)
-    return date_time
+    return _now.strftime(const.FORMAT_DATE_TIME)
 
 def get_POSIX_path(path:str):
 
@@ -51,11 +53,10 @@ def get_dir(initialdir=None, title='Select a directory'):
         [type]: [description]
     """
     Tk().withdraw()
-    initialdir = initialdir if initialdir else os.getcwd()
-    path_dir = askdirectory(initialdir=initialdir, title= title) 
-    return path_dir
+    initialdir = initialdir or os.getcwd()
+    return askdirectory(initialdir=initialdir, title= title)
 
-def get_file(filetypes=[("All files","*.*")], verbose= True, initialdir=None):
+def get_file(filetypes:List[tuple[str, str]]=[("All files","*.*")], verbose:bool= True, initialdir:str=None, title:str= ''):
     """used to get select files using gui (multiple types of file can be set!)
 
     Args:
@@ -69,10 +70,12 @@ def get_file(filetypes=[("All files","*.*")], verbose= True, initialdir=None):
 
     Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
 
-    initialdir = initialdir if initialdir else os.getcwd()
+    initialdir = initialdir or os.getcwd()
 
-    whole_path = askopenfilename(   initialdir=initialdir,
-                                    filetypes=filetypes) # show an "Open" dialog box and return the path to the selected file
+    whole_path = askopenfilename(
+                    initialdir=initialdir,
+                    filetypes=filetypes,
+                    title=title) # show an "Open" dialog box and return the path to the selected file
     path, filename = os.path.split(whole_path)
     if verbose:
         print(path, filename)
@@ -125,7 +128,7 @@ def save_as_txt(filepath, class2save, verbose=True, add_ext=True):
     """
     if add_ext:
         filepath= os.path.splitext(filepath)[0] + const.EXT_TXT
-    list_of_strings= list()
+    list_of_strings = []
     if isinstance(class2save,str):
         list_of_strings.append(class2save)
     elif isinstance(class2save, list):
@@ -134,7 +137,7 @@ def save_as_txt(filepath, class2save, verbose=True, add_ext=True):
     else:
 
         tmp_dict= class2save.__dict__
-        list_of_strings.append(f'Dictionary form:')
+        list_of_strings.append('Dictionary form:')
         list_of_strings.append(json.dumps(class2save.__dict__))
         list_of_strings.append('\n\nSingle attributes:')
         list_of_strings.extend([f'{key} = {tmp_dict[key]},' for key in class2save.__dict__ ])
@@ -181,12 +184,12 @@ def load_pickle(filename, class2upload=None, verbose=True):
     with open(filename, 'rb') as file:
                 loaded_class = pickle.load(file)
     print_loading_verbose(filename, loaded_class, verbose)
-    if class2upload:
-        for key in loaded_class.__dict__.keys():
-                setattr(class2upload, key, getattr(loaded_class,key))
-        return class2upload
-    else:
+    if not class2upload:
         return loaded_class
+
+    for key in loaded_class.__dict__.keys():
+            setattr(class2upload, key, getattr(loaded_class,key))
+    return class2upload
 
 def print_loading_verbose(filename, classloaded= None, verbose=True):
     """[summary]
@@ -203,12 +206,8 @@ def print_loading_verbose(filename, classloaded= None, verbose=True):
             print('\nSome data were loaded from : ...{}'.format(filename[-50:]))
 
 
-
 if __name__ == "__main__":
    
-
-
-
     path_pkl='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
     # path_pkl=path_pkl.replace('/','\\')
     print(verify_file(path_pkl, extension=const.EXT_PKL, debug=True))
@@ -217,4 +216,7 @@ if __name__ == "__main__":
     print(os.path.splitext('hhhhhhhh'))
     if os.path.splitext('hhhhhhhh')[1]:
         print_saving_verbose('ffffffffffffffffffffff', class2save= None, verbose=True)
-    pass
+
+    path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
+
+    print(os.path.split(os.path.split(path)[0]))

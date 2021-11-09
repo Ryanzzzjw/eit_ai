@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 
-# perso
+# eit_tf_workspace specific
+_test_scripts
 datasets
-structured_data_regressor
 outputs

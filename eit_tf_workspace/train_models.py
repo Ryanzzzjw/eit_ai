@@ -4,8 +4,8 @@
 ### then it can be seen http://H-PC:600 or http://localhost:6006/ or etc., copy it and paste it online to see training graphs live or already executed
 ### CMD must be opened all the time, when is wanted to see graphs. 
 
-from modules.dataset import EITDataset4ML, FeaturesLabelsSet
-from modules.train_utils import *
+from eit_tf_workspace.dataset import EITDataset4ML, FeaturesLabelsSet
+from eit_tf_workspace.train_utils import *
 
 # from tensorflow.compat.v1 import ConfigProto
 # from tensorflow.compat.v1 import InteractiveSession
@@ -16,7 +16,7 @@ import autokeras as ak
 from scipy.io import loadmat
 import time
 import os
-import modules.constants as const
+import eit_tf_workspace.constants as const
 import pickle
 from contextlib import redirect_stdout
 from datetime import timedelta
@@ -143,10 +143,7 @@ class ModelGenerator(object):
 
         return pred
 
-
-
-        pass
-
+    
     def std_keras(  self, 
                     input_size=10,
                     output_size=10,

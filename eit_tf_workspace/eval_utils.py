@@ -31,8 +31,6 @@ def EIT_icc(y_true, y_pred):
     I=np.eye(nb_samples)
     return np.diag(icc_matrix[:nb_samples,nb_samples:]*I)
 
-
-
 def normalized(y_true, y_pred):
 
     #!!!I don't know why, but only in that form it normalized correctly, and if I don't put values in [], drops an error: Found input variables with inconsistent numbers of samples: [3054, 1]

@@ -13,11 +13,11 @@ from scipy.io import loadmat
 from scipy.io.matlab.mio import savemat
 
 
-from modules.path_utils import *
+from eit_tf_workspace.path_utils import *
 # from modules.load_mat_files import *
 # from load_mat_files import *
-from modules.train_utils import *
-import modules.constants as const
+from eit_tf_workspace.train_utils import *
+import eit_tf_workspace.constants as const
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from pyeit.mesh.plot.voronoi_plot import voronoi
@@ -245,7 +245,7 @@ class MatlabDataSet(object):
         folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
         filesnames= self.dataset["samplesfilenames"]
         batch_file=loadmat(os.path.join(folder, filesnames[0]),)
-        keys2load_frombatchfile= [ key  for key in batch_file.keys() if "__" not in key]
+        keys2load_frombatchfile= [ key for key in batch_file.keys() if "__" not in key]
 
         if not keys2load_frombatchfile==keys2load:
             error('Samples file does not contain {} variables as expected'.format(keys2load))
@@ -309,23 +309,23 @@ class MatlabDataSet(object):
                                 relaod is used after loading a Matlabdataset from a pickle-file 
 
         """
-        self.samples_EIDORS=dict()
+        self.samples_EIDORS = {}
         if verify_file(path, extension=".mat"):
             file = loadmat(path)
             for key in file.keys():
                 if ("__") not in key:
                     self.samples_EIDORS[key]= file[key]
-        
+
         print('\nkeys ', self.samples_EIDORS.keys())
 
     def save_dataset(self, time= None):
         """ save the MatlabDataSet under a pickle-file
                 (samples are cleared to avoid a big file)
         """
-        time = time if time else get_date_time()
+        time = time or get_date_time()
         filename= os.path.join(self.path, f'{time}{const.EXT_PKL}')
-        tmp= self.samples    
-        self.samples= dict() # clear that too big if not... wil be reloaded...
+        tmp= self.samples
+        self.samples = {}
         save_as_pickle(filename,self)
         self.path_pkl= get_POSIX_path(filename)
         self.samples = tmp
@@ -334,18 +334,16 @@ class MatlabDataSet(object):
         
     def data_selection(self, data_sel= ['Xih','Yih']):
          # data selection
-        tmpX= dict()
-        tmpY= dict()
-        
-        tmpX['Xh'] = self.samples['X'][:,:,0]
-        tmpY['Yh'] = self.samples['y'][:,:,0]
-
-        tmpX['Xih'] = self.samples['X'][:,:,1]
-        tmpY['Yih'] = self.samples['y'][:,:,1]
-
-        tmpX['Xhn'] =self.samples['X'][:,:,2]
-        tmpX['Xihn']=self.samples['X'][:,:,3]
-
+        tmpX = {
+            'Xh': self.samples['X'][:, :, 0],
+            'Xih': self.samples['X'][:, :, 1],
+            'Xhn': self.samples['X'][:, :, 2],
+            'Xihn': self.samples['X'][:, :, 3],
+        }
+        tmpY = {
+            'Yh': self.samples['y'][:,:,0],
+            'Yih': self.samples['y'][:,:,1]
+            }
         # here we can create the differences
         tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
         tmpY['Yih-Yh']= tmpY['Yih']-tmpY['Yh']
@@ -398,11 +396,13 @@ def save_idx_samples_2matfile(raw_data, training_dataset, time= None):
         feature_or_label_indexes (int, optional): [description]. Defaults to 2.
     """
 
-    f=dict()
-    f['idx_train']= training_dataset.idx_train
-    f['idx_val']= training_dataset.idx_val
-    f['idx_test']= training_dataset.idx_test
-    time = time if time else get_date_time()
+    f = {
+        'idx_train': training_dataset.idx_train,
+        'idx_val': training_dataset.idx_val,
+        'idx_test': training_dataset.idx_test,
+    }
+
+    time = time or get_date_time()
 
     path =  os.path.join(raw_data.path, f'{time}{const.EXT_IDX_FILE}')
     savemat(path, f, appendmat=True)
@@ -415,7 +415,7 @@ class FeaturesLabelsSet(object):
         self.type= 'FeaturesLabelsSet'
         self.features=np.array([])
         self.labels = np.array([])
-        pass
+
     def set_data(self, features, labels):
         self.features=features
         self.labels = labels
@@ -424,21 +424,22 @@ class FeaturesLabelsSet(object):
 class EITDataset4ML(object):
     def __init__(self,verbose=False) -> None:
         super().__init__()
-        self.type= 'EITDataset4ML'
-        self.use_tf_dataset= False
-        self.nb_samples =  0
-        self.batch_size = 32
-        self.test_ratio= 0.20
-        self.val_ratio =0.2
+        self.type:str= 'EITDataset4ML'
+        self.use_tf_dataset:bool= False
+        self.nb_samples:int =  0
+        self.batch_size:int = 32
+        self.test_ratio:float= 0.20
+        self.val_ratio:float =0.2
         self.train=[]
         self.val=[]
         self.test=[]
         self.train_len=[]
         self.val_len=[]
         self.test_len= []
-        self.verbose= verbose
-        self.fwd_model=dict()
-        self.src_file= ''
+        self.verbose:bool= verbose
+        self.fwd_model:dict={}
+        self.src_file_pkl:str= ''
+        self.src_file:str= ''
         # self.use_tf_dataset= use_tf_dataset
         # if self.use_tf_dataset:
         #     self.train=tf.data.Dataset()
@@ -448,7 +449,7 @@ class EITDataset4ML(object):
         #     self.train_X=FeaturesLabelsSet()
         #     self.val_X=FeaturesLabelsSet()
         #     self.test_X=FeaturesLabelsSet()
-        pass
+        
     def set_sizes_dataset(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20):
         
         if test_ratio+val_ratio>=0.8:
@@ -466,6 +467,8 @@ class EITDataset4ML(object):
         #     print(self.train_len)
         #     print(self.val_len )
         #     print(self.test_len )
+
+
     def remodel_(self, X, Y, func=None):
         if func== 'add_xyz':
             # get middle point of elems
@@ -477,9 +480,6 @@ class EITDataset4ML(object):
             pts_= voronoi(pts, tri, fd=None)
             print(pts_, pts.shape)
 
-            
-
-
         return X, Y
     
     def mk_std_dataset(self,X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
@@ -487,12 +487,11 @@ class EITDataset4ML(object):
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
 
         
-        scaler = MinMaxScaler()
         # transform data
-        X=scaler.fit_transform(X)
-        Y=scaler.fit_transform(Y)
+        X=scale_prepocess(X, train_inputs.normalize[0])
+        Y=scale_prepocess(Y, train_inputs.normalize[0])
 
-        X, Y= self.remodel_(X,Y, func= 'add_xyz')
+        # X, Y= self.remodel_(X,Y, func= 'add_xyz')
         
         #add indexes
         idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
@@ -622,7 +621,7 @@ def scale_prepocess(x, scale):
         x= scaler.fit_transform(x)
     return x
 
-def dataloader( raw_data,
+def dataloader( raw_data:MatlabDataSet,
                 batch_size = 32, 
                 test_ratio= 0.20, 
                 val_ratio=0.20, 
@@ -666,7 +665,8 @@ def dataloader( raw_data,
     # make the training dataset 
 
     training_dataset= EITDataset4ML(verbose=verbose)
-    training_dataset.src_file= raw_data.path_pkl
+    training_dataset.src_file_pkl= raw_data.path_pkl
+    training_dataset.src_file= raw_data.path
     training_dataset.fwd_model= raw_data.fwd_model
 
     if use_tf_dataset:
@@ -720,22 +720,20 @@ def extract_samples(dataset, dataset_part='test', idx_samples=None, elem_idx = 0
     return samples_x, samples_y
 
 if __name__ == "__main__":
-  
-
-
-
 
 
     path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
+
+    print(os.path.split(os.path.split(path)[0]))
+    # 
+    # raw_data= get_XY_from_MalabDataSet(path= path, data_sel= ['Xh','Yh'])
     
-    raw_data= get_XY_from_MalabDataSet(path= path, data_sel= ['Xh','Yh'])
-    
-    training_dataset=dataloader(raw_data, verbose=True, batch_size=1)
-    for inputs, indexes in training_dataset.train.as_numpy_iterator():
-            print(inputs,'indexes', indexes)
-            # Print the first element and the label
-            print(inputs[0])
-            print('label of this input is', inputs[1])
-            break
-    pass
+    # training_dataset=dataloader(raw_data, verbose=True, batch_size=1)
+    # for inputs, indexes in training_dataset.train.as_numpy_iterator():
+    #         print(inputs,'indexes', indexes)
+    #         # Print the first element and the label
+    #         print(inputs[0])
+    #         print('label of this input is', inputs[1])
+    #         break
+    # pass
 
