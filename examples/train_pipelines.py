@@ -6,7 +6,8 @@ import tensorflow.keras as keras
 from tensorflow.python.keras.losses import MSE
 
 
-# from modules.load_mat_files import *
+from eit_tf_workspace.mat_files import MatlabDataSet, get_MalabDataSet
+
 from eit_tf_workspace.dataset import *
 from eit_tf_workspace.draw_data import *
 from eit_tf_workspace.train_models import *
@@ -18,11 +19,11 @@ def std_training_pipeline(verbose=False, path= ''):
     
     gen = ModelGenerator()# Create a model generator
 
-    train_inputs=TrainInputs() # create class to managed training variables (saving them,....)
+    train_inputs=TrainMetaData() # create class to managed training variables (saving them,....)
     train_inputs.init_ouput(training_name='Std_keras_epoch500', append_time= True) # set the naem of the current training and cretae directory for ouputs
 
     # get data from matlab 
-    raw_data=get_XY_from_MalabDataSet(path=path, data_sel= ['Xih-Xh','Yih-Yh'],verbose=verbose, time=train_inputs.time)
+    raw_data=get_MalabDataSet(file_path=path, data_sel= ['Xih-Xh','Yih-Yh'],verbose=verbose, time=train_inputs.time)
     train_inputs.data_select= raw_data.data_sel
 
     # data preprocessing
@@ -60,11 +61,11 @@ def std_auto_pipeline(verbose=False, path=''):
 
     gen = ModelGenerator()# Create a model generator
 
-    train_inputs=TrainInputs() # create class to managed training variables (saving them,....)
+    train_inputs=TrainMetaData() # create class to managed training variables (saving them,....)
     train_inputs.init_ouput(training_name='Autokeras', append_time= True) # set the naem of the current training and cretae directory for ouputs
 
     # get data from matlab 
-    raw_data=get_XY_from_MalabDataSet(path=path, data_sel= ['Xih','Yih'],verbose=verbose)
+    raw_data=get_MalabDataSet(file_path=path, data_sel= ['Xih','Yih'],verbose=verbose)
     train_inputs.data_select= raw_data.data_sel
 
     # data preprocessing

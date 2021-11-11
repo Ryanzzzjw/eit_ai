@@ -5,10 +5,13 @@ from tkinter.filedialog import askdirectory, askopenfilename, askopenfilenames
 import pickle
 import json
 import datetime
-from typing import List, Union
 
-from matplotlib.pyplot import title
 import  eit_tf_workspace.constants as const
+
+
+
+class DialogCancelledException(Exception):
+    """"""
 
 def get_date_time():
     _now = datetime.datetime.now()
@@ -56,7 +59,7 @@ def get_dir(initialdir=None, title='Select a directory'):
     initialdir = initialdir or os.getcwd()
     return askdirectory(initialdir=initialdir, title= title)
 
-def get_file(filetypes=[("All files","*.*")], verbose:bool= True, initialdir:str=None, title:str= ''):
+def get_file(filetypes=[("All files","*.*")], verbose:bool= False, initialdir:str=None, title:str= '', split:bool=True):
     """used to get select files using gui (multiple types of file can be set!)
 
     Args:
@@ -76,12 +79,18 @@ def get_file(filetypes=[("All files","*.*")], verbose:bool= True, initialdir:str
                     initialdir=initialdir,
                     filetypes=filetypes,
                     title=title) # show an "Open" dialog box and return the path to the selected file
+    print(whole_path)
+    if not whole_path:
+        raise DialogCancelledException
+    if not split:
+        return whole_path
     path, filename = os.path.split(whole_path)
     if verbose:
         print(path, filename)
     return path, filename
+    
 
-def verify_file(path, extension, debug=False):
+def verify_file(file_path, extension, debug=False):
     """[summary]
 
     Args:
@@ -93,13 +102,13 @@ def verify_file(path, extension, debug=False):
     """
     path_out=""
     if debug:
-        print(os.path.isfile(path))
-    if os.path.isfile(path):
-            _, file_extension = os.path.splitext(path)
+        print(os.path.isfile(file_path))
+    if os.path.isfile(file_path):
+            _, file_extension = os.path.splitext(file_path)
             if debug:
-                print(os.path.splitext(path),file_extension)
+                print(os.path.splitext(file_path),file_extension)
             if file_extension==extension:
-                path_out= path
+                path_out= file_path
     return path_out
 
 def save_as_pickle(filename, class2save, verbose=True, add_ext=True):

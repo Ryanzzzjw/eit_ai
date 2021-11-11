@@ -4,7 +4,7 @@
 ### then it can be seen http://H-PC:600 or http://localhost:6006/ or etc., copy it and paste it online to see training graphs live or already executed
 ### CMD must be opened all the time, when is wanted to see graphs. 
 
-from eit_tf_workspace.dataset import EITDataset4ML, FeaturesLabelsSet
+from eit_tf_workspace.dataset import DeepLDataset, FeaturesLabelsSet
 from eit_tf_workspace.train_utils import *
 
 # from tensorflow.compat.v1 import ConfigProto
@@ -35,7 +35,7 @@ class ModelGenerator(object):
                         optimizer=keras.optimizers.Adam(),
                         loss=keras.losses.CategoricalCrossentropy(),
                         metrics=[keras.metrics.Accuracy()],
-                        train_inputs:TrainInputs=None):
+                        train_inputs:TrainMetaData=None):
 
         if train_inputs:
             optimizer=train_inputs.optimizer
@@ -94,13 +94,13 @@ class ModelGenerator(object):
                 self.model = pickle.load(file)
            
     def mk_fit(self,
-                dataset:EITDataset4ML,
+                dataset:DeepLDataset,
                 epochs=100,
                 steps_per_epoch=None,
                 validation_steps=None,
                 callbacks=None,
                 batch_size=None,
-                train_inputs:TrainInputs=None):
+                train_inputs:TrainMetaData=None):
 
         if train_inputs:
             epochs=train_inputs.epoch
@@ -147,7 +147,7 @@ class ModelGenerator(object):
     def std_keras(  self, 
                     input_size=10,
                     output_size=10,
-                    train_inputs:TrainInputs=None):
+                    train_inputs:TrainMetaData=None):
 
         if train_inputs:
             input_size=train_inputs.input_size
@@ -171,7 +171,7 @@ class ModelGenerator(object):
 
     def std_autokeras(self,
                     max_trials= 10,
-                    train_inputs:TrainInputs=None):
+                    train_inputs:TrainMetaData=None):
         dir_results=None
         if train_inputs:
             max_trials=train_inputs.max_trials_autokeras

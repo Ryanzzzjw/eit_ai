@@ -1,17 +1,15 @@
 
 from logging import error
+from typing import List
 from tensorboard import program
 from tensorflow.keras.callbacks import TensorBoard
 
 import tensorflow.keras as keras
-from tensorflow.python.keras.backend import learning_phase
-# from dataset import *
 from  eit_tf_workspace.dataset import *
-# from modules.load_mat_files import *
 from eit_tf_workspace.path_utils import *
 
 import eit_tf_workspace.constants as const
-class TrainInputs(object):
+class TrainMetaData(object):
     def __init__(self) -> None:
         super().__init__()
         self.type='TrainInputs'
@@ -130,7 +128,7 @@ class TrainInputs(object):
 
         #print(dill.detect.badtypes(self, depth=1).keys(), self.__dict__)
 
-        copy=TrainInputs()
+        copy=TrainMetaData()
 
         for key, val in self.__dict__.items():
 

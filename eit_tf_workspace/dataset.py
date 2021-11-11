@@ -14,399 +14,396 @@ from scipy.io.matlab.mio import savemat
 
 
 from eit_tf_workspace.path_utils import *
-# from modules.load_mat_files import *
-# from load_mat_files import *
-from eit_tf_workspace.train_utils import *
+from eit_tf_workspace.mat_files import MatlabDataSet, get_MalabDataSet, save_idx_samples_2matfile
+from eit_tf_workspace.train_utils import TrainMetaData
 import eit_tf_workspace.constants as const
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from pyeit.mesh.plot.voronoi_plot import voronoi
-class MatlabDataSet(object):
-    def __init__(self,verbose=0, debug=0) -> None:
+# class MatlabDataSet(object):
+#     def __init__(self,verbose=0, debug=0) -> None:
         
-        """
+#         """
 
-        Args:
-            verbose (int, optional): [description]. Defaults to 0.
-        """
-        super().__init__()
-        self.type= 'MatlabDataSet'
-        self.verbose= verbose
-        self.debug= debug
-        self.dataset=dict()
-        self.fwd_model=dict()
-        self.user_entry=dict()
-        self.samples = dict()
-        self.path_pkl= ''
-        self.X= []
-        self.Y=[]
-        self.filename= ''
-        self.path= ''
+#         Args:
+#             verbose (int, optional): [description]. Defaults to 0.
+#         """
+#         super().__init__()
+#         self.type= 'MatlabDataSet'
+#         self.verbose= verbose
+#         self.debug= debug
+#         self.dataset=dict()
+#         self.fwd_model=dict()
+#         self.user_entry=dict()
+#         self.samples = dict()
+#         self.path_pkl= ''
+#         self.X= []
+#         self.Y=[]
+#         self.filename= ''
+#         self.path= ''
 
-    def flex_load(self, path="", auto=False, type2load=const.EXT_MAT, time=None):
+#     def flex_load(self, path="", auto=False, type2load=const.EXT_MAT, time=None):
 
-        if verify_file(path, extension=const.EXT_MAT):
-            self.mk_dataset_from_matlab(path=path, auto= auto, time=time)
-        elif verify_file(path, extension=const.EXT_PKL):
-            self.load_dataset_from_pickle(path)
-        else:
-            if type2load==const.EXT_MAT:
-                self.mk_dataset_from_matlab(auto= auto, time=time)
-            else:
-                self.load_dataset_from_pickle(path)
+#         if verify_file(path, extension=const.EXT_MAT):
+#             self.mk_dataset_from_matlab(path=path, auto= auto, time=time)
+#         elif verify_file(path, extension=const.EXT_PKL):
+#             self.load_dataset_from_pickle(path)
+#         elif type2load==const.EXT_MAT:
+#             self.mk_dataset_from_matlab(auto= auto, time=time)
+#         else:
+#             self.load_dataset_from_pickle(path)
             
         
 
 
-    def mk_dataset_from_matlab(self, path="", auto= False, only_get_samples_EIDORS=False, time= None):
-        """[summary]
+#     def mk_dataset_from_matlab(self, path="", auto= False, only_get_samples_EIDORS=False, time= None):
+#         """[summary]
 
-        Args:
-            path (str, optional): [description]. Defaults to "".
-        """
+#         Args:
+#             path (str, optional): [description]. Defaults to "".
+#         """
             
-        if self.debug:
-            self.filename, self.path ="test10_infos2py.mat", "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest"
-        else:
-            
-            if verify_file(path, extension=const.EXT_MAT):
-                self.path, self.filename= os.path.split(path)
-            else:
-                self.path, self.filename =get_file(filetypes=[("Matlab file","*.mat")])
+#         if self.debug:
+#             self.filename, self.path ="test10_infos2py.mat", "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest"
+#         else:
+#             if verify_file(path, extension=const.EXT_MAT):
+#                 self.path, self.filename= os.path.split(path)
+#             else:
+#                 self.path, self.filename =get_file(filetypes=[("Matlab file","*.mat")])
 
-        filename= os.path.join(self.path, self.filename)
-        if verify_file(filename, extension=const.EXT_MAT):
-            if self.verbose or 1:
-                print(  '##################################################\n',\
-                        'Loading file: {}\n'.format(self.filename), \
-                        'path: ...{}\n'.format(self.path[-60:]),\
-                        '##################################################')
-            if not only_get_samples_EIDORS:
-                self.get_info_from_dataset(self.filename, self.path)
-                self.load_samples(auto=auto)
-                self.save_dataset(time=time)
-            else:
-                self.load_samples_EIDORS(os.path.join(self.path, self.filename))
-        else:
-            print(  '##################################################\n',\
-                        'Loading CANCELLED\n',\
-                        '##################################################')
+#         filename= os.path.join(self.path, self.filename)
+#         if verify_file(filename, extension=const.EXT_MAT):
+#             if self.verbose or 1:
+#                 print(  '##################################################\n',\
+#                         'Loading file: {}\n'.format(self.filename), \
+#                         'path: ...{}\n'.format(self.path[-60:]),\
+#                         '##################################################')
+#             if not only_get_samples_EIDORS:
+#                 self.get_info_from_dataset(self.filename, self.path)
+#                 self.load_samples(auto=auto)
+#                 self.save_dataset(time=time)
+#             else:
+#                 self.load_samples_EIDORS(os.path.join(self.path, self.filename))
+#         else:
+#             print(  '##################################################\n',\
+#                         'Loading CANCELLED\n',\
+#                         '##################################################')
 
-    def load_dataset_from_pickle(self, path=""):
-        """load a MatlabDataSet from a pickle-file
+#     def load_dataset_from_pickle(self, path=""):
+#         """load a MatlabDataSet from a pickle-file
 
-        Returns:
-            loaded_dataset[MatlabDataSet]: obvious
-        """
+#         Returns:
+#             loaded_dataset[MatlabDataSet]: obvious
+#         """
         
-        if verify_file(path, extension=const.EXT_PKL):
-            self.path, self.filename= os.path.split(path)
-        else:
-            self.path, self.filename= get_file(filetypes=[("pickle file","*.pkl")])
+#         if verify_file(path, extension=const.EXT_PKL):
+#             self.path, self.filename= os.path.split(path)
+#         else:
+#             self.path, self.filename= get_file(filetypes=[("pickle file","*.pkl")])
 
         
-        path= self.path
-        filepath= os.path.join(self.path, self.filename)
-        if verify_file(filepath, extension=const.EXT_PKL):
-            print(  '##################################################\n',\
-                    'Loading file: {}\n'.format(self.filename), \
-                    'path: ...{}\n'.format(self.path[-60:]),\
-                    '##################################################')
+#         path= self.path
+#         filepath= os.path.join(self.path, self.filename)
+#         if verify_file(filepath, extension=const.EXT_PKL):
+#             print(  '##################################################\n',\
+#                     'Loading file: {}\n'.format(self.filename), \
+#                     'path: ...{}\n'.format(self.path[-60:]),\
+#                     '##################################################')
 
-            self= load_pickle(filepath, class2upload=self)
-            self.path_pkl=filepath # as we do not save the pickel we have to actualizate the path (win/unix)
-            self.path= path # we have to actualizate the path (win/unix)
-            self.load_samples(mode='reload')
-            #self.save_dataset()
-        else:
-            print(  '##################################################\n',\
-                    'Loading CANCELLED\n',\
-                    '##################################################')
+#             self= load_pickle(filepath, class2upload=self)
+#             self.path_pkl=filepath # as we do not save the pickel we have to actualizate the path (win/unix)
+#             self.path= path # we have to actualizate the path (win/unix)
+#             self.load_samples(mode='reload')
+#             #self.save_dataset()
+#         else:
+#             print(  '##################################################\n',\
+#                     'Loading CANCELLED\n',\
+#                     '##################################################')
 
 
-    def get_info_from_dataset(self, filename, path):
-        """ extract the data  contained in the *info2py.mat to load the samples in python.
+#     def get_info_from_dataset(self, filename, path):
+#         """ extract the data  contained in the *info2py.mat to load the samples in python.
 
-        Args:
-            filename (str): mat-file ending with *info2py.mat
-            path (str): folder where the mat-file is to found
-        """
+#         Args:
+#             filename (str): mat-file ending with *info2py.mat
+#             path (str): folder where the mat-file is to found
+#         """
 
-        file = loadmat(os.path.join(path, filename))
-        #sort the data using the keys name
-        for key in file.keys():
-            if ("userentry") in key:
-                keynew= key.replace("userentry_", "")
-                if ("fmdl") in key:
-                    keynew= keynew.replace("fmdl_", "")   
-                    self.fwd_model[keynew]= file[key]
-                else:
-                    self.user_entry[keynew]= file[key]
-            else:
-                if ("__") not in key:
-                    self.dataset[key]= file[key]
+#         file = loadmat(os.path.join(path, filename))
+#         #sort the data using the keys name
+#         for key in file.keys():
+#             if ("userentry") in key:
+#                 keynew= key.replace("userentry_", "")
+#                 if ("fmdl") in key:
+#                     keynew= keynew.replace("fmdl_", "")   
+#                     self.fwd_model[keynew]= file[key]
+#                 else:
+#                     self.user_entry[keynew]= file[key]
+#             else:
+#                 if ("__") not in key:
+#                     self.dataset[key]= file[key]
 
-        # Samples folder /filenames extract
-        self.dataset["samplesfolder"]= self.str_cellarray2str_list(self.dataset["samplesfolder"])
-        self.dataset["samplesfilenames"]= self.str_cellarray2str_list(self.dataset["samplesfilenames"])
-        self.dataset["samplesindx"]= self.dataset["samplesindx"]
+#         # Samples folder /filenames extract
+#         self.dataset["samplesfolder"]= self.str_cellarray2str_list(self.dataset["samplesfolder"])
+#         self.dataset["samplesfilenames"]= self.str_cellarray2str_list(self.dataset["samplesfilenames"])
+#         self.dataset["samplesindx"]= self.dataset["samplesindx"]
 
-        self.fwd_model['elems']= self.fwd_model['elems']-int(1)
+#         self.fwd_model['elems']= self.fwd_model['elems']-int(1)
 
-        if self.debug:
-            print('\nKeys of loaded mat file:', file.keys())
-        if self.verbose:
-            print('\nKeys of dataset:',self.dataset.keys())
-            print('\nKeys of fwd_model:',self.fwd_model.keys())
-            print('\nKeys of user_entry:',self.user_entry.keys())
+#         if self.debug:
+#             print('\nKeys of loaded mat file:', file.keys())
+#         if self.verbose:
+#             print('\nKeys of dataset:',self.dataset.keys())
+#             print('\nKeys of fwd_model:',self.fwd_model.keys())
+#             print('\nKeys of user_entry:',self.user_entry.keys())
            
-    def str_cellarray2str_list(self, str_cellarray):
-        """ After using loadmat, the str cell array have a strange shape
-            >>> here the loaded "strange" array is converted to an str list
+#     def str_cellarray2str_list(self, str_cellarray):
+#         """ After using loadmat, the str cell array have a strange shape
+#             >>> here the loaded "strange" array is converted to an str list
 
-        Args:
-            str_cellarray ("strange" ndarray): correponing to str cell array in matlab
+#         Args:
+#             str_cellarray ("strange" ndarray): correponing to str cell array in matlab
 
-        Returns:
-            str list: 
-        """
-        if str_cellarray.ndim ==2: 
-            tmp= str_cellarray[0,:]
-            str_array= [ t[0] for t in tmp] 
-        elif str_cellarray.ndim ==1:
-            tmp= str_cellarray[0]
-            str_array= [tmp] 
+#         Returns:
+#             str list: 
+#         """
+#         if str_cellarray.ndim ==2: 
+#             tmp= str_cellarray[0,:]
+#             str_array= [ t[0] for t in tmp] 
+#         elif str_cellarray.ndim ==1:
+#             tmp= str_cellarray[0]
+#             str_array= [tmp] 
 
-        return str_array 
+#         return str_array 
 
-    def get_number_samples2load(self,number_samples2load=0, auto= False):
-        """ Get nb of samples to load (console input from user)
+#     def get_number_samples2load(self,number_samples2load=0, auto= False):
+#         """ Get nb of samples to load (console input from user)
 
-        Args:
-            number_samples2load (int, optional):if > 0 console input wont be asked. Defaults to 0.
+#         Args:
+#             number_samples2load (int, optional):if > 0 console input wont be asked. Defaults to 0.
 
-        Returns:
-            number_samples2load [int]: nb of samples to load
-        """
-        number_samples2load= np.amax(self.dataset["samplesindx"])
-        if not number_samples2load or not auto: 
-            prompt= "\n{} samples are availables. \nEnter the number of samples to load (Enter for all): \n".format(number_samples2load)
-            input_user=input(prompt)
-            try:
-                number_samples2load = int(input_user)
-            except ValueError:
-                pass
-        if self.verbose:
-            print('\nNumber of samples to load : {}'.format(number_samples2load))
-        return number_samples2load
+#         Returns:
+#             number_samples2load [int]: nb of samples to load
+#         """
+#         number_samples2load= np.amax(self.dataset["samplesindx"])
+#         if not number_samples2load or not auto: 
+#             prompt= "\n{} samples are availables. \nEnter the number of samples to load (Enter for all): \n".format(number_samples2load)
+#             input_user=input(prompt)
+#             try:
+#                 number_samples2load = int(input_user)
+#             except ValueError:
+#                 pass
+#         if self.verbose:
+#             print('\nNumber of samples to load : {}'.format(number_samples2load))
+#         return number_samples2load
 
-    def get_keys_of_samples(self, path="", auto= False, keys_default= ['X','y']):
-        """ set the keys to load of the samples ()
+#     def get_keys_of_samples(self, path="", auto= False, keys_default= ['X','y']):
+#         """ set the keys to load of the samples ()
 
-        Args:
+#         Args:
             
-            path (str, optional): path of a sample file to get the list of available keys list.
-                                Defaults to "". if not given default or given keys wilt be used.
+#             path (str, optional): path of a sample file to get the list of available keys list.
+#                                 Defaults to "". if not given default or given keys wilt be used.
 
-        Returns:
-            keys2load [str list]: [description]
-        """
+#         Returns:
+#             keys2load [str list]: [description]
+#         """
         
-        # Deprecated we dont need that
+#         # Deprecated we dont need that
 
-        # if not verify_file(path, extension=".mat") and not auto:
-        #     keys2load= keys_default
-        # elif verify_file(path, extension=".mat") and not auto:
-        #     batch_file=loadmat(path)
-        #     keys= [ key  for key in batch_file.keys() if "__" not in key]
-        #     input_valid= False
-        #     while not input_valid:
-        #         prompt= "Enter keys list (comma separated) contained in the list {} (Enter for all): \n".format(keys)
-        #         input_user=input(prompt)
-        #         if input_user=="":
-        #             # print('Enter pressed')
-        #             keys2load= keys
-        #             break
-        #         keys2load=input_user.split(sep=',')
-        #         input_valid= True
-        #         for k in keys2load:
-        #             if k not in keys:
-        #                 # print('Enter key contained in the list {}'.format(keys))
-        #                 input_valid= False
-        #                 break
-        # else: # auto==true
-        #     folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
-        #     filesnames= self.dataset["samplesfilenames"]
-        #     batch_file=loadmat(os.path.join(folder, filesnames[0]),)
-        #     keys2load= [ key  for key in batch_file.keys() if "__" not in key]
-
-        
-        keys2load= ['X','y']
-        folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
-        filesnames= self.dataset["samplesfilenames"]
-        batch_file=loadmat(os.path.join(folder, filesnames[0]),)
-        keys2load_frombatchfile= [ key for key in batch_file.keys() if "__" not in key]
-
-        if not keys2load_frombatchfile==keys2load:
-            error('Samples file does not contain {} variables as expected'.format(keys2load))
-
-        if self.verbose:
-            print('\nVariables of samples to load : {}'.format(keys2load))
-
-        return  keys2load
-
-    def load_samples(self, mode= 'load', auto=False):
-        """ load the samples from each mat-file
-
-        Args:
-            mode (str, optional): 'load' or 'reload'. Defaults to 'load'. 
-                                load mode ist the std one where number and key to load are aske to the user
-                                relaod is used after loading a Matlabdataset from a pickle-file 
-
-        """
-        folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
-        filesnames= self.dataset["samplesfilenames"]
-
-        if mode=='load':
-            self.nb_samples=self.get_number_samples2load(auto=auto)
-            self.keys2load= self.get_keys_of_samples(auto=auto, path=os.path.join(folder, filesnames[0]))
-        elif mode == 'reload':
-            if self.verbose:
-                print('{} samples are reloaded, with keys {}'.format(self.nb_samples,self.keys2load))
-        tmp= np.where(self.dataset["samplesindx"]==self.nb_samples)
-        nb_samples_batch2load= tmp[0][0]
-        nbsamples_lastbatch2load= tmp[1][0]
-
-        for key in self.keys2load:
-            self.samples[key]= np.array([])
-        
-        for idx_batch in range(nb_samples_batch2load+1):
-            batch_filename= os.path.join(folder, filesnames[idx_batch])
-            if self.verbose:
-                print('\nLoading samples file : ...{}'.format(batch_filename[-50:]))
-            batch_file=loadmat(batch_filename)
-            if idx_batch==nb_samples_batch2load:
-                for key in self.keys2load:
-                    s= [slice(None)]*batch_file[key].ndim
-                    s[1]= slice(0,nbsamples_lastbatch2load+1)                    
-                    self.samples[key]=np.append(self.samples[key],batch_file[key][tuple(s)],axis=1)
-            elif idx_batch==0:
-                for key in self.keys2load:
-                    self.samples[key]=batch_file[key]
-            else:
-                for key in self.keys2load:
-                    self.samples[key]=np.append(self.samples[key],batch_file[key],axis=1)
-        if self.verbose:
-            for key in self.keys2load:
-                print('\nSize of sample loaded ', key ,self.samples[key].shape)
-
-    def load_samples_EIDORS(self, path):
-        """ load the samples from each mat-file
-
-        Args:
-            mode (str, optional): 'load' or 'reload'. Defaults to 'load'. 
-                                load mode ist the std one where number and key to load are aske to the user
-                                relaod is used after loading a Matlabdataset from a pickle-file 
-
-        """
-        self.samples_EIDORS = {}
-        if verify_file(path, extension=".mat"):
-            file = loadmat(path)
-            for key in file.keys():
-                if ("__") not in key:
-                    self.samples_EIDORS[key]= file[key]
-
-        print('\nkeys ', self.samples_EIDORS.keys())
-
-    def save_dataset(self, time= None):
-        """ save the MatlabDataSet under a pickle-file
-                (samples are cleared to avoid a big file)
-        """
-        time = time or get_date_time()
-        filename= os.path.join(self.path, f'{time}{const.EXT_PKL}')
-        tmp= self.samples
-        self.samples = {}
-        save_as_pickle(filename,self)
-        self.path_pkl= get_POSIX_path(filename)
-        self.samples = tmp
+#         # if not verify_file(path, extension=".mat") and not auto:
+#         #     keys2load= keys_default
+#         # elif verify_file(path, extension=".mat") and not auto:
+#         #     batch_file=loadmat(path)
+#         #     keys= [ key  for key in batch_file.keys() if "__" not in key]
+#         #     input_valid= False
+#         #     while not input_valid:
+#         #         prompt= "Enter keys list (comma separated) contained in the list {} (Enter for all): \n".format(keys)
+#         #         input_user=input(prompt)
+#         #         if input_user=="":
+#         #             # print('Enter pressed')
+#         #             keys2load= keys
+#         #             break
+#         #         keys2load=input_user.split(sep=',')
+#         #         input_valid= True
+#         #         for k in keys2load:
+#         #             if k not in keys:
+#         #                 # print('Enter key contained in the list {}'.format(keys))
+#         #                 input_valid= False
+#         #                 break
+#         # else: # auto==true
+#         #     folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
+#         #     filesnames= self.dataset["samplesfilenames"]
+#         #     batch_file=loadmat(os.path.join(folder, filesnames[0]),)
+#         #     keys2load= [ key  for key in batch_file.keys() if "__" not in key]
 
         
+#         keys2load= ['X','y']
+#         folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
+#         filesnames= self.dataset["samplesfilenames"]
+#         batch_file=loadmat(os.path.join(folder, filesnames[0]),)
+#         keys2load_frombatchfile= [ key for key in batch_file.keys() if "__" not in key]
+
+#         if not keys2load_frombatchfile==keys2load:
+#             error('Samples file does not contain {} variables as expected'.format(keys2load))
+
+#         if self.verbose:
+#             print('\nVariables of samples to load : {}'.format(keys2load))
+
+#         return  keys2load
+
+#     def load_samples(self, mode= 'load', auto=False):
+#         """ load the samples from each mat-file
+
+#         Args:
+#             mode (str, optional): 'load' or 'reload'. Defaults to 'load'. 
+#                                 load mode ist the std one where number and key to load are aske to the user
+#                                 relaod is used after loading a Matlabdataset from a pickle-file 
+
+#         """
+#         folder=os.path.join(self.path, self.dataset["samplesfolder"][0])
+#         filesnames= self.dataset["samplesfilenames"]
+
+#         if mode=='load':
+#             self.nb_samples=self.get_number_samples2load(auto=auto)
+#             self.keys2load= self.get_keys_of_samples(auto=auto, path=os.path.join(folder, filesnames[0]))
+#         elif mode == 'reload':
+#             if self.verbose:
+#                 print('{} samples are reloaded, with keys {}'.format(self.nb_samples,self.keys2load))
+#         tmp= np.where(self.dataset["samplesindx"]==self.nb_samples)
+#         nb_samples_batch2load= tmp[0][0]
+#         nbsamples_lastbatch2load= tmp[1][0]
+
+#         for key in self.keys2load:
+#             self.samples[key]= np.array([])
         
-    def data_selection(self, data_sel= ['Xih','Yih']):
-         # data selection
-        tmpX = {
-            'Xh': self.samples['X'][:, :, 0],
-            'Xih': self.samples['X'][:, :, 1],
-            'Xhn': self.samples['X'][:, :, 2],
-            'Xihn': self.samples['X'][:, :, 3],
-        }
-        tmpY = {
-            'Yh': self.samples['y'][:,:,0],
-            'Yih': self.samples['y'][:,:,1]
-            }
-        # here we can create the differences
-        tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
-        tmpY['Yih-Yh']= tmpY['Yih']-tmpY['Yh']
+#         for idx_batch in range(nb_samples_batch2load+1):
+#             batch_filename= os.path.join(folder, filesnames[idx_batch])
+#             if self.verbose:
+#                 print('\nLoading samples file : ...{}'.format(batch_filename[-50:]))
+#             batch_file=loadmat(batch_filename)
+#             if idx_batch==nb_samples_batch2load:
+#                 for key in self.keys2load:
+#                     s= [slice(None)]*batch_file[key].ndim
+#                     s[1]= slice(0,nbsamples_lastbatch2load+1)                    
+#                     self.samples[key]=np.append(self.samples[key],batch_file[key][tuple(s)],axis=1)
+#             elif idx_batch==0:
+#                 for key in self.keys2load:
+#                     self.samples[key]=batch_file[key]
+#             else:
+#                 for key in self.keys2load:
+#                     self.samples[key]=np.append(self.samples[key],batch_file[key],axis=1)
+#         if self.verbose:
+#             for key in self.keys2load:
+#                 print('\nSize of sample loaded ', key ,self.samples[key].shape)
 
-        tmpX['Xihn-Xhn']= tmpX['Xihn']-tmpX['Xhn']
-        tmpX['Xihn-Xh']= tmpX['Xihn']-tmpX['Xh']
-        tmpX['Xihn-Xh']= tmpX['Xih']-tmpX['Xhn']
+#     def load_samples_EIDORS(self, path):
+#         """ load the samples from each mat-file
 
-        ## control input
+#         Args:
+#             mode (str, optional): 'load' or 'reload'. Defaults to 'load'. 
+#                                 load mode ist the std one where number and key to load are aske to the user
+#                                 relaod is used after loading a Matlabdataset from a pickle-file 
 
-        if data_sel[0] not in tmpX.keys():
-            error('\n not correct data_sel')
-        if data_sel[1] not in tmpY.keys():
-            error('\n not correct data_sel')
+#         """
+#         self.samples_EIDORS = {}
+#         if verify_file(path, extension=".mat"):
+#             file = loadmat(path)
+#             for key in file.keys():
+#                 if ("__") not in key:
+#                     self.samples_EIDORS[key]= file[key]
 
-        self.data_sel= data_sel        
+#         print('\nkeys ', self.samples_EIDORS.keys())
 
-        if self.verbose:
-            print('\nData {} used'.format(data_sel))
+#     def save_dataset(self, time= None):
+#         """ save the MatlabDataSet under a pickle-file
+#                 (samples are cleared to avoid a big file)
+#         """
+#         time = time or get_date_time()
+#         filename= os.path.join(self.path, f'{time}{const.EXT_PKL}')
+#         tmp= self.samples
+#         self.samples = {}
+#         save_as_pickle(filename,self)
+#         self.path_pkl= get_POSIX_path(filename)
+#         self.samples = tmp
 
-        self.X= tmpX[data_sel[0]]
-        self.Y= tmpY[data_sel[1]]
+        
+        
+#     def data_selection(self, data_sel= ['Xih','Yih']):
+#          # data selection
+#         tmpX = {
+#             'Xh': self.samples['X'][:, :, 0],
+#             'Xih': self.samples['X'][:, :, 1],
+#             'Xhn': self.samples['X'][:, :, 2],
+#             'Xihn': self.samples['X'][:, :, 3],
+#         }
+#         tmpY = {
+#             'Yh': self.samples['y'][:,:,0],
+#             'Yih': self.samples['y'][:,:,1]
+#             }
+#         # here we can create the differences
+#         tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
+#         tmpY['Yih-Yh']= tmpY['Yih']-tmpY['Yh']
 
-        return self.X, self.Y
+#         tmpX['Xihn-Xhn']= tmpX['Xihn']-tmpX['Xhn']
+#         tmpX['Xihn-Xh']= tmpX['Xihn']-tmpX['Xh']
+#         tmpX['Xihn-Xh']= tmpX['Xih']-tmpX['Xhn']
+
+#         ## control input
+
+#         if data_sel[0] not in tmpX.keys():
+#             error('\n not correct data_sel')
+#         if data_sel[1] not in tmpY.keys():
+#             error('\n not correct data_sel')
+
+#         self.data_sel= data_sel        
+
+#         if self.verbose:
+#             print('\nData {} used'.format(data_sel))
+
+#         self.X= tmpX[data_sel[0]]
+#         self.Y= tmpY[data_sel[1]]
+
+#         return self.X, self.Y
 
 
-def get_XY_from_MalabDataSet(path="", data_sel= ['Xih','Yih'], verbose=False,**kwargs):
-    """[summary]
+# def get_XY_from_MalabDataSet(path="", data_sel= ['Xih','Yih'], verbose=False,**kwargs):
+#     """[summary]
 
-    Args:
-        path (str, optional): [description]. Defaults to "".
-        data_sel (list, optional): [description]. Defaults to ['Xih','Yih'].
-        verbose (bool, optional): [description]. Defaults to False.
+#     Args:
+#         path (str, optional): [description]. Defaults to "".
+#         data_sel (list, optional): [description]. Defaults to ['Xih','Yih'].
+#         verbose (bool, optional): [description]. Defaults to False.
 
-    Returns:
-        [type]: [description]
-    """
+#     Returns:
+#         [type]: [description]
+#     """
 
-    raw_data=MatlabDataSet(verbose=verbose)
-    raw_data.flex_load(path, **kwargs)
-    raw_data.data_selection(data_sel=data_sel)
-    return raw_data
+#     raw_data=MatlabDataSet(verbose=verbose)
+#     raw_data.flex_load(path, **kwargs)
+#     raw_data.data_selection(data_sel=data_sel)
+#     return raw_data
 
-def save_idx_samples_2matfile(raw_data, training_dataset, time= None):
-    """[summary]
+# def save_idx_samples_2matfile(raw_data, training_dataset, time= None):
+#     """[summary]
 
-    Args:
-        raw_data ([type]): [description]
-        training_dataset ([type]): [description]
-        feature_or_label_indexes (int, optional): [description]. Defaults to 2.
-    """
+#     Args:
+#         raw_data ([type]): [description]
+#         training_dataset ([type]): [description]
+#         feature_or_label_indexes (int, optional): [description]. Defaults to 2.
+#     """
 
-    f = {
-        'idx_train': training_dataset.idx_train,
-        'idx_val': training_dataset.idx_val,
-        'idx_test': training_dataset.idx_test,
-    }
+#     f = {
+#         'idx_train': training_dataset.idx_train,
+#         'idx_val': training_dataset.idx_val,
+#         'idx_test': training_dataset.idx_test,
+#     }
 
-    time = time or get_date_time()
+#     time = time or get_date_time()
 
-    path =  os.path.join(raw_data.path, f'{time}{const.EXT_IDX_FILE}')
-    savemat(path, f, appendmat=True)
-    return path
+#     path =  os.path.join(raw_data.path, f'{time}{const.EXT_IDX_FILE}')
+#     savemat(path, f, appendmat=True)
+#     return path
 
 
 class FeaturesLabelsSet(object):
@@ -421,7 +418,7 @@ class FeaturesLabelsSet(object):
         self.labels = labels
 
 
-class EITDataset4ML(object):
+class DeepLDataset(object):
     def __init__(self,verbose=False) -> None:
         super().__init__()
         self.type:str= 'EITDataset4ML'
@@ -482,7 +479,7 @@ class EITDataset4ML(object):
 
         return X, Y
     
-    def mk_std_dataset(self,X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
+    def mk_std_dataset(self,X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainMetaData=None):
         self.use_tf_dataset= False
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
 
@@ -523,7 +520,7 @@ class EITDataset4ML(object):
             print('Length of val',self.val_len )
             print('Length of test',self.test_len )
 
-    def mk_tf_dataset(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
+    def mk_tf_dataset(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainMetaData=None):
         self.use_tf_dataset= True       
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
 
@@ -628,7 +625,7 @@ def dataloader( raw_data:MatlabDataSet,
                 use_tf_dataset=True, 
                 verbose=False, 
                 normalize=[True, True], 
-                train_inputs:TrainInputs=None):
+                train_inputs:TrainMetaData=None):
     """[summary]
 
     Args:
@@ -664,9 +661,9 @@ def dataloader( raw_data:MatlabDataSet,
     
     # make the training dataset 
 
-    training_dataset= EITDataset4ML(verbose=verbose)
+    training_dataset= DeepLDataset(verbose=verbose)
     training_dataset.src_file_pkl= raw_data.path_pkl
-    training_dataset.src_file= os.path.join(raw_data.path, raw_data.filename)
+    training_dataset.src_file= os.path.join(raw_data.dir_path, raw_data.file_path)
     training_dataset.fwd_model= raw_data.fwd_model
 
     if use_tf_dataset:
@@ -718,6 +715,27 @@ def extract_samples(dataset, dataset_part='test', idx_samples=None, elem_idx = 0
             samples_y= samples_y[idx_samples]  
               
     return samples_x, samples_y
+
+def save_idx_samples_2matfile(raw_data:MatlabDataSet, training_dataset:DeepLDataset, time= None, train_metadata:TrainMetaData=None):
+    """[summary]
+
+    Args:
+        raw_data ([type]): [description]
+        training_dataset ([type]): [description]
+        feature_or_label_indexes (int, optional): [description]. Defaults to 2.
+    """
+
+    f = {
+        'idx_train': training_dataset.idx_train,
+        'idx_val': training_dataset.idx_val,
+        'idx_test': training_dataset.idx_test,
+    }
+
+    time = time or get_date_time()
+
+    path =  os.path.join(os.path.split(train_metadata.dataset_src_file)[0], f'{time}{const.EXT_IDX_FILE}')
+    savemat(path, f, appendmat=True)
+    return path
 
 if __name__ == "__main__":
 
