@@ -56,7 +56,7 @@ def get_dir(initialdir=None, title='Select a directory'):
     initialdir = initialdir or os.getcwd()
     return askdirectory(initialdir=initialdir, title= title)
 
-def get_file(filetypes:List[tuple[str, str]]=[("All files","*.*")], verbose:bool= True, initialdir:str=None, title:str= ''):
+def get_file(filetypes=[("All files","*.*")], verbose:bool= True, initialdir:str=None, title:str= ''):
     """used to get select files using gui (multiple types of file can be set!)
 
     Args:

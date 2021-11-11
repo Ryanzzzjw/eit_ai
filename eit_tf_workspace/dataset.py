@@ -666,7 +666,7 @@ def dataloader( raw_data:MatlabDataSet,
 
     training_dataset= EITDataset4ML(verbose=verbose)
     training_dataset.src_file_pkl= raw_data.path_pkl
-    training_dataset.src_file= raw_data.path
+    training_dataset.src_file= os.path.join(raw_data.path, raw_data.filename)
     training_dataset.fwd_model= raw_data.fwd_model
 
     if use_tf_dataset:

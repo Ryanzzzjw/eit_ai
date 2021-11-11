@@ -109,9 +109,9 @@ class TrainInputs(object):
             error('metrics need to be a list')
         self.metrics=metrics
 
-    def set_dataset_src_file(self, dataset:EITDataset4ML):
+    def set_dataset_src_file(self, dataset):
         self.dataset_src_file_pkl=[  get_POSIX_path(dataset.src_file_pkl),
-                                get_POSIX_path(os.path.relpath(dataset.src_file_pkl, start=self.ouput_dir)[6:])]
+                                    get_POSIX_path(os.path.relpath(dataset.src_file_pkl, start=self.ouput_dir)[6:])]
         self.dataset_src_file=[  get_POSIX_path(dataset.src_file),
                                 get_POSIX_path(os.path.relpath(dataset.src_file, start=self.ouput_dir)[6:])]
 
@@ -122,35 +122,37 @@ class TrainInputs(object):
 
     def save(self, path= None):
 
-        if self.ouput_dir:
-            path= path if path else self.ouput_dir
-            filename=os.path.join(path,'train_inputs')
+        if not self.ouput_dir:
+            return
 
-            #print(dill.detect.badtypes(self, depth=1).keys(), self.__dict__)
+        path = path or self.ouput_dir
+        filename=os.path.join(path,'train_inputs')
 
-            copy=TrainInputs()
+        #print(dill.detect.badtypes(self, depth=1).keys(), self.__dict__)
 
-            for key, val in self.__dict__.items():
+        copy=TrainInputs()
+
+        for key, val in self.__dict__.items():
 
                 #print(key, val, type(val), hasattr(val, '__dict__'), hasattr(val, '__call__'))
 
-                if hasattr(val, '__dict__'):
-                    setattr(copy, key, type(val).__name__)
-                elif isinstance(val, list):
-                    l=list()
-                    for elem in val:
-                        if hasattr(elem, '__dict__'):
-                            #print(key, elem, type(elem), hasattr(elem, '__dict__'), hasattr(elem, '__call__'))
-                            l.append(type(elem).__name__)
-                        else:
-                            l.append(elem)
-                    setattr(copy, key, l)
+            if hasattr(val, '__dict__'):
+                setattr(copy, key, type(val).__name__)
+            elif isinstance(val, list):
+                l = []
+                for elem in val:
+                    if hasattr(elem, '__dict__'):
+                        #print(key, elem, type(elem), hasattr(elem, '__dict__'), hasattr(elem, '__call__'))
+                        l.append(type(elem).__name__)
+                    else:
+                        l.append(elem)
+                setattr(copy, key, l)
 
-                else:
-                    setattr(copy, key, val)
+            else:
+                setattr(copy, key, val)
 
-            # save_as_pickle(filename, copy) not really posible... because of different unpickable variables
-            save_as_txt(filename, copy)
+        # save_as_pickle(filename, copy) not really posible... because of different unpickable variables
+        save_as_txt(filename, copy)
         
         
     def read(self, path):
@@ -194,7 +196,4 @@ if __name__ == "__main__":
     
     learning_rate=None
     if learning_rate:
-    
         print(type(keras.losses.CategoricalCrossentropy()))
-
-    pass

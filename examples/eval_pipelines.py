@@ -1,5 +1,6 @@
 
 
+from enum import auto
 from sys import modules
 
 import matplotlib.pyplot as plt
@@ -16,6 +17,15 @@ from eit_tf_workspace.load_mat_files import *
 from eit_tf_workspace.path_utils import get_dir, mk_ouput_dir, verify_file
 from eit_tf_workspace.train_models import *
 import random
+
+from logging import getLogger
+
+logger = getLogger(__name__)
+
+
+def f(x):
+    return np.int(x)
+f2 = np.vectorize(f)
 
 def std_eval_pipeline(verbose=False):
 
@@ -37,7 +47,19 @@ def std_eval_pipeline(verbose=False):
     path_pkl=training_settings.dataset_src_file_pkl[1]
     data_sel= training_settings.data_select
     # Data loading
-    raw_data=get_XY_from_MalabDataSet(path=path_pkl, data_sel= data_sel,verbose=verbose)#, type2load='.pkl')
+    try:
+        raw_data=get_XY_from_MalabDataSet(
+            path=training_settings.dataset_src_file_pkl[1],
+            data_sel= training_settings.data_select,
+            verbose=verbose)#, type2load='.pkl')
+    except BaseException as e:
+        logger.error(f'Loading of File: {training_settings.dataset_src_file_pkl[1]} - Failed, ({e})')
+        raw_data=get_XY_from_MalabDataSet(
+            path=training_settings.dataset_src_file[1],
+            data_sel= data_sel,
+            auto=True,
+            verbose=verbose)#, type2load='.pkl')
+
     eval_dataset = dataloader(raw_data, use_tf_dataset=True,verbose=verbose, train_inputs=training_settings)
     training_settings.set_dataset_src_file(eval_dataset)
     training_settings.save()
@@ -107,8 +129,6 @@ if __name__ == "__main__":
 
     # a= TrainInputs()
     # a.read('E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/outputs/Std_keras_20211006_165901/train_inputs.txt')
-
-
     # path_pkl= 'datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
     # print(verify_file(path_pkl, extension=".pkl", debug=True))
     # get_XY_from_MalabDataSet(path=path_pkl, data_sel= ['Xih','Yih'],verbose=True)
