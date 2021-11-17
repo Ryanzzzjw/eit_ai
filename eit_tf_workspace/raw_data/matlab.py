@@ -1,112 +1,55 @@
 
 
 import os
-from logging import error
-from typing import List
-
-
+import sys
+from logging import getLogger
+import traceback
 import numpy as np
-
+from eit_tf_workspace.constants import EXT_MAT
+from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_tf_workspace.utils.log import log_file_loaded
+from eit_tf_workspace.utils.path_utils import (LoadCancelledException,
+                                               WrongFileTypeSelectedError,
+                                               get_file_dir_path)
 from scipy.io import loadmat
 
-from eit_tf_workspace.path_utils import DialogCancelledException, verify_file,get_file, load_pickle, get_date_time, get_POSIX_path, save_as_pickle
-
-import eit_tf_workspace.constants as const
-from eit_tf_workspace.utils.log import MAX_LOG_MSG_LENGTH, main_log, log_file_loaded
-
-from logging import getLogger, error
 logger = getLogger(__name__)
 
+################################################################################
+# Matlab Samples 
+################################################################################
 
+class MatlabSamples(RawSamples):
 
-# Conversion methods from matlab to python
+    def load(self, file_path:str="", nb_samples2load:int=0, data_sel=['Xih','Yih'], time:str= None):
+        try:
+            self._load( file_path=file_path, nb_samples2load=nb_samples2load, data_sel=data_sel)
+        except (LoadCancelledException, WrongFileTypeSelectedError) as e:
+            logger.warning(f'Loading Cancelled: {e}')
+            sys.exit()
+        except BaseException as e:
+            traceback.print_exc()
+            logger.error(f'Loading Cancelled: {e}')
+            sys.exit()
 
-def str_cellarray2str_list(str_cellarray):
-    """ After using loadmat, the str cell array have a strange shape
-        >>> here the loaded "strange" array is converted to an str list
-
-    Args:
-        str_cellarray ("strange" ndarray): correponing to str cell array in matlab
-
-    Returns:
-        str list: 
-    """
-    if str_cellarray.ndim ==2: 
-        tmp= str_cellarray[0,:]
-        str_array= [ t[0] for t in tmp] 
-    elif str_cellarray.ndim ==1:
-        tmp= str_cellarray[0]
-        str_array= [tmp] 
-    return str_array 
-
-# loading of mat-file
-
-class LoadCancelledException(Exception):
-    """"""
-class WrongFileTypeSelectedError(Exception):
-    """"""
-
-def get_file_dir_path( file_path:str=""):
-    file_path= verify_file(file_path, extension=const.EXT_MAT)
-    if not file_path:
-        try: 
-            file_path =get_file(
-                title= f'Please select *{const.EXT_MAT} files',
-                filetypes=[("Matlab file",f"*{const.EXT_MAT}")],
-                split=False)
-        except DialogCancelledException:
-            raise LoadCancelledException('Loading aborted from user')
-    dir_path=os.path.split(file_path)[0]
-
-    if not verify_file(file_path, extension=const.EXT_MAT):
-        raise WrongFileTypeSelectedError('User selected wrong file!')
-
-    return dir_path , file_path
-
-def load_predictions_EIDORS(file_path):
-    """     """
-    _ , file_path= get_file_dir_path(file_path)
-    file = loadmat(file_path)
-    samples_EIDORS = {key: file[key] for key in file.keys() if ("__") not in key}
-    logger.debug(f'Loaded keys: {samples_EIDORS.keys()} from file {os.path.split(file_path)[1]}')
-    return samples_EIDORS
-
-class MatlabDataSet(object):
-    def __init__(self) -> None:
-        super().__init__()
-        self.type= 'MatlabDataSet'
-        self.dataset = {}
-        self.fwd_model= {}
-        self.user_entry = {}
-        self.samples = {}
-        # self.samples_EIDORS = {}
-        # self.path_pkl= ''
-        self.X= []
-        self.Y=[]
-        self.file_path= ''
-        self.dir_path= ''
-
-    # def flex_load(self, path="", auto=False, type2load=const.EXT_MAT, time=None):
-
-    #     if verify_file(path, extension=const.EXT_MAT):
-    #         self.load_dataset_from_mat_file(file_path=path, auto= auto, time=time)
-    #     elif verify_file(path, extension=const.EXT_PKL):
-    #         self.load_dataset_from_pickle(path)
-    #     elif type2load==const.EXT_MAT:
-    #         self.load_dataset_from_mat_file(auto=auto, time=time)
-    #     else:
-    #         self.load_dataset_from_pickle(path)
-
-    def load_dataset_from_mat_file(self, file_path:str="", nb_samples2load:int=0, data_sel=['Xih','Yih'], time:str= None):
-        """      """
+    def _load(self, file_path:str="", nb_samples2load:int=0, data_sel=['Xih','Yih'], time:str= None):
+        self.loaded=False
         self.dir_path , self.file_path= get_file_dir_path(file_path)
         log_file_loaded(file_path=self.file_path)
         self._load_metadata_from_dataset_matfile(self.file_path)
         self._load_samples(nb_samples2load=nb_samples2load)
         self._XY_selection(data_sel=data_sel)
-        # self.save_dataset(time=time)
-
+        self.loaded=True
+    
     def _XY_selection(self, data_sel= ['Xih','Yih']):
+        """[summary]
+
+        Args:
+            data_sel (list, optional): [description]. Defaults to ['Xih','Yih'].
+        
+        Note:
+        - X and Y have shape (nb_samples, nbfeatures) and (nb_samples, nblabels)
+        """
          # data selection
         tmpX = {
             'Xh': self.samples['X'][:, :, 0],
@@ -135,32 +78,9 @@ class MatlabDataSet(object):
         self.data_sel= data_sel        
         logger.debug(f'Data {data_sel} used')
 
-        self.X= tmpX[data_sel[0]]
-        self.Y= tmpY[data_sel[1]]
+        self.X= tmpX[data_sel[0]].T
+        self.Y= tmpY[data_sel[1]].T
 
-    # def load_dataset_from_pickle(self, path=""):
-    #     """load a MatlabDataSet from a pickle-file
-
-    #     Returns:
-    #         loaded_dataset[MatlabDataSet]: obvious
-    #     """
-
-    #     if verify_file(path, extension=const.EXT_PKL):
-    #         self.path, self.file_path= os.path.split(path)
-    #     else:
-    #         self.path, self.file_path= get_file(filetypes=[("pickle file","*.pkl")])
-
-    #     path= self.path
-    #     file_path= os.path.join(self.path, self.file_path)
-    #     if verify_file(file_path, extension=const.EXT_PKL):
-            
-    #         self= load_pickle(file_path, class2upload=self)
-    #         self.path_pkl=file_path # as we do not save the pickel we have to actualizate the path (win/unix)
-    #         self.path= path # we have to actualizate the path (win/unix)
-    #         self.load_samples(mode='reload')
-    #         #self.save_dataset()
-    #     else:
-    #         pass
 
     def _load_metadata_from_dataset_matfile(self, file_path):
         """ extract the data  contained in the *info2py.mat to load the samples in python.
@@ -202,6 +122,9 @@ class MatlabDataSet(object):
         Returns:
             number_samples2load [int]: nb of samples to load
         """
+        if not isinstance(nb_samples2load, int): #
+            nb_samples2load=0
+        
         max_samples= np.amax(self.dataset["samplesindx"])
         self.nb_samples= max_samples
         if nb_samples2load<0:
@@ -262,57 +185,89 @@ class MatlabDataSet(object):
         self._verify_keys_of_samples(keys=['X', 'y'])
         
         for idx_batch in range(idx_lastbatch2load+1):
-
             batch_file_path= os.path.join(folder, filesnames[idx_batch])
             logger.info(f'Loading batch samples file : ...{batch_file_path[-50:]}')
             batch_file=loadmat(batch_file_path)
             for key in self.samples.keys():
-                if idx_batch==idx_lastbatch2load:
+                if idx_batch==0:
+                    if idx_batch==idx_lastbatch2load:
+                        s= [slice(None)]*batch_file[key].ndim
+                        s[1]= slice(0,idx_lastsamplesoflastbatch2load+1)                    
+                        self.samples[key]=batch_file[key][tuple(s)]
+                    else:
+                        self.samples[key]=batch_file[key]
+                elif idx_batch==idx_lastbatch2load:
                     s= [slice(None)]*batch_file[key].ndim
                     s[1]= slice(0,idx_lastsamplesoflastbatch2load+1)                    
                     self.samples[key]=np.append(self.samples[key],batch_file[key][tuple(s)],axis=1)
-                elif idx_batch==0:
-                    self.samples[key]=batch_file[key]
                 else:
                    self.samples[key]=np.append(self.samples[key],batch_file[key],axis=1)
         for key in self.samples.keys():
             logger.debug(f'Size of sample loaded "{key}": {self.samples[key].shape}')
 
-    # def __save_dataset(self, time= None):
-    #     """ save the MatlabDataSet under a pickle-file
-    #             (samples are cleared to avoid a big file)
-    #     """
-    #     time = time or get_date_time()
-    #     filename= os.path.join(self.dir_path, f'{time}{const.EXT_PKL}')
-    #     tmp= self.samples
-    #     self.samples = {}
-    #     save_as_pickle(filename,self)
-    #     self.path_pkl= get_POSIX_path(filename)
-    #     self.samples = tmp
+
+# 'def get_matlab_dataset(file_path="", data_sel= ['Xih','Yih'], nb_samples2load:int=0) -> MatlabSamples:
+#     """[summary]
+
+#     Args:
+
+#         path (str, optional): [description]. Defaults to "".
+#         data_sel (list, optional): [description]. Defaults to ['Xih','Yih'].
+
+#     Returns:
+#         [type]: [description]
+#     """
+#     raw_samples=MatlabSamples()
+#     try:
+#         raw_samples.load(file_path=file_path,nb_samples2load=nb_samples2load, data_sel=data_sel)        
+#         return raw_samples
+#     except (LoadCancelledException, WrongFileTypeSelectedError) as e:
+#         logger.warning(f'Loading Cancelled: {e}')
+#         sys.exit()
+#     except BaseException as e:
+#         logger.error(e)
+#         sys.exit()'
+
+################################################################################
+# Conversion methods from matlab to python
+################################################################################
 
 
-def get_MalabDataSet(file_path="", data_sel= ['Xih','Yih'], nb_samples2load:int=0) -> MatlabDataSet:
-    """[summary]
+def str_cellarray2str_list(str_cellarray):
+    """ After using loadmat, the str cell array have a strange shape
+        >>> here the loaded "strange" array is converted to an str list
 
     Args:
-        path (str, optional): [description]. Defaults to "".
-        data_sel (list, optional): [description]. Defaults to ['Xih','Yih'].
+        str_cellarray ("strange" ndarray): correponing to str cell array in matlab
 
     Returns:
-        [type]: [description]
+        str list: 
     """
-    raw_data=MatlabDataSet()
-    try:
-        raw_data.load_dataset_from_mat_file(file_path=file_path,nb_samples2load=nb_samples2load, data_sel=data_sel)        
-    except (LoadCancelledException, WrongFileTypeSelectedError) as e:
-         logger.warning(f'Loading Cancelled: {e}')
-    except BaseException as e:
-        logger.error(e)
-    finally:
-        return raw_data
+    if str_cellarray.ndim ==2: 
+        tmp= str_cellarray[0,:]
+        str_array= [ t[0] for t in tmp] 
+    elif str_cellarray.ndim ==1:
+        tmp= str_cellarray[0]
+        str_array= [tmp] 
+    return str_array 
 
+################################################################################
+# Loading of mat files
+################################################################################
+      
+def load_mat_file(file_path:str='',**kwargs):
+    """load all variables contained in a mat file in a dictionnary,
+    return the dict and the file_path (in case of selection by user)"""
+    _ , file_path= get_file_dir_path(file_path, extension=EXT_MAT, **kwargs)
+    file = loadmat(file_path)
+    var = {key: file[key] for key in file.keys() if ("__") not in key}
+    logger.debug(f'Loaded keys: {var.keys()} from file {os.path.split(file_path)[1]}')
+    return var, file_path
                                                                                 
 if __name__ == "__main__":
+    from eit_tf_workspace.utils.log import change_level, main_log
+    import logging
     main_log()
+    change_level(logging.DEBUG)
     file_path='E:/EIT_Project/05_Engineering/04_Software/Python/eit_app/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.mat'
-    get_MalabDataSet(file_path=file_path, nb_samples2load=10000)
+    # get_matlab_dataset(file_path=file_path, nb_samples2load=10000)
