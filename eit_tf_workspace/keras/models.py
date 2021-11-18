@@ -85,7 +85,6 @@ class StdKerasModel(ModelManagers):
 ################################################################################
 class StdAutokerasModel(ModelManagers):
     def _define_model(self, metadata:MetaData)-> None:
-
         self.name = "std_autokeras"
         self.model = ak.StructuredDataRegressor(
             max_trials = metadata.max_trials_autokeras, 
@@ -109,7 +108,7 @@ class StdAutokerasModel(ModelManagers):
             batch_size=metadata.batch_size)
         self.model=self.model.tuner.get_best_model()
 
-    def get_prediction(self, dataset:Datasets, metadata:MetaData, **kwargs)-> np.ndarray:
+    def predict(self, dataset:Datasets, metadata:MetaData, **kwargs)-> np.ndarray:
         # assert_keras_model_compiled(self.model)
         return self.model.predict(dataset.get_X('test'), steps=metadata._test_steps)
 
