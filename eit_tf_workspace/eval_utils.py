@@ -6,12 +6,12 @@ logger = getLogger(__name__)
 
 
 @dataclass
-class ImageEIT():
+class ImageEIT(object):
     data:np.ndarray=np.array([])
     label:str=''
     fwd_model:dict=None
 @dataclass
-class ImageDataset():
+class ImageDataset(object):
     data:np.ndarray=np.array([])
     label:str=''
     fwd_model:dict=None
