@@ -43,7 +43,7 @@ class RawSamples(ABC):
 # Methods using Rawdata
 ################################################################################
 
-def load_samples( raw_samples:RawSamples, src_path:str, metadata:MetaData)-> RawSamples:
+def load_samples(raw_samples:RawSamples, src_path:str, metadata:MetaData)-> RawSamples:
     """"""
     raw_samples=raw_samples
     raw_samples.load(
@@ -53,17 +53,14 @@ def load_samples( raw_samples:RawSamples, src_path:str, metadata:MetaData)-> Raw
     metadata.set_raw_src_file(raw_samples.file_path)
     return raw_samples
 
-def reload_samples(raw_samples:RawSamples, dir_path:str=''):
+def reload_samples(raw_samples:RawSamples, metadata:MetaData)->RawSamples:
     """"""
-    metadata=MetaData()
-    metadata.reload(dir_path)
-    raw_samples=raw_samples
-    print(metadata.raw_src_file)
     raw_samples.load(
         file_path=metadata.raw_src_file[0],
         nb_samples2load=metadata._nb_samples,
         data_sel= metadata.data_select)
-    return metadata, raw_samples
+    return raw_samples
+
 
 
 if __name__ == "__main__":

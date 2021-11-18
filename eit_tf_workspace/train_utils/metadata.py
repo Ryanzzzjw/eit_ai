@@ -238,6 +238,16 @@ def make_PoSIX_abs_rel(path:str, rel_path:str)-> list[str]:
     rel=os.path.relpath(path, start=rel_path)
     return [ get_POSIX_path(path), get_POSIX_path(rel)]
 
+################################################################################
+# Methods for use  metadata
+################################################################################
+
+
+def reload_metadata(dir_path:str='')-> MetaData:
+    """"""
+    metadata=MetaData()
+    metadata.reload(dir_path)
+    return metadata
 
 
 if __name__ == "__main__":

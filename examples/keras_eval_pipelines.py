@@ -7,6 +7,7 @@ from eit_tf_workspace.eval_utils import ImageDataset, compute_eval, trunc_img_da
 from eit_tf_workspace.raw_data.load_eidors import load_eidors_solution
 from eit_tf_workspace.raw_data.raw_samples import reload_samples
 from eit_tf_workspace.raw_data.matlab import MatlabSamples
+from eit_tf_workspace.train_utils.metadata import reload_metadata
 from eit_tf_workspace.train_utils.select_gen import select_gen
 
 
@@ -17,8 +18,9 @@ logger = getLogger(__name__)
 
 def std_eval_pipeline(dir_path:str=''):
     logger.info('### Start standard evaluation ###')
-
-    metadata, raw_samples= reload_samples(MatlabSamples(), dir_path=dir_path)
+    
+    metadata = reload_metadata(dir_path=dir_path)
+    raw_samples= reload_samples(MatlabSamples(),metadata)
     gen= select_gen(metadata)
     gen.load_model(metadata)
     gen.build_dataset(raw_samples, metadata)
