@@ -39,7 +39,6 @@ def get_elem_nodal_data(fwd_model, perm, compute:bool=False):
 
     for key in data.keys():
         data[key]= np.reshape(data[key], (data[key].shape[0],))
-
     return tri, pts, data
 
 def format_inputs(fwd_model, data):
@@ -48,7 +47,6 @@ def format_inputs(fwd_model, data):
         pts = np.array(fwd_model['nodes'])
         if data.shape[1]==pts.shape[0] or data.shape[1]==tri.shape[0]:
             data= data.T
-
     return data
 
 def plot_EIT_samples(fwd_model, perm, U):
@@ -159,15 +157,18 @@ def plot_compare_samples(
             idx_sample, idx_image= orient_swap(orient, row, col)
             image=img2plot[idx_image].get_single(idx_sample)
             show= [False] * 4
-            
             if idx_sample==0:
                 show[0]= True #title
-                show[3]= True #color
             if col==0 and row==n_row-1:
                 show[1]= True #x axis
                 show[2]= True #y axis
-            plot_EIT_mesh(fig, ax[row, col], image, show)
-
+            fig, ax[row, col], im= plot_EIT_mesh(fig, ax[row, col], image, show)   
+            if idx_sample== n_samples-1:
+                if orient==Orientation.Landscape:
+                    fig.colorbar(im, ax=ax[idx_image, :], location='right', shrink=0.6)
+                elif orient==Orientation.Portrait:
+                    fig.colorbar(im, ax=ax[:,idx_image], location='bottom', shrink=0.6)
+    # fig.set_tight_layout(True)        
     plt.show(block=False)
 
 def orient_swap(orient:Orientation, a:Any, b:Any)-> tuple[Any, Any]:#
@@ -178,7 +179,6 @@ def orient_swap(orient:Orientation, a:Any, b:Any)-> tuple[Any, Any]:#
     else:
         logger.error(f'wrong orientation type {orient}')
         return a, b
-
 
 def plot_EIT_mesh(fig:figure.Figure, ax:axes.Axes, image:ImageEIT, show:list[bool]=[True] * 4, colorbar_range:list[int]=[0,1])-> None:
     """[summary]
@@ -216,7 +216,7 @@ def plot_EIT_mesh(fig:figure.Figure, ax:axes.Axes, image:ImageEIT, show:list[boo
         ax.set_ylabel("Y axis")
     if show[3]:    
         fig.colorbar(im,ax=ax)
-    return fig, ax 
+    return fig, ax, im
     
     
 
