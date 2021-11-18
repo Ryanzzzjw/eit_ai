@@ -41,9 +41,6 @@ class Datasets(ABC):
         Y=raw_samples.Y
         self.fwd_model= raw_samples.fwd_model
         self._set_sizes_dataset(X, Y, metadata)
-        
-
-
         X, Y= self._preprocess(X, Y, metadata)
         if self._is_indexes(metadata):
             self._mk_dataset_from_indexes(X, Y, metadata)

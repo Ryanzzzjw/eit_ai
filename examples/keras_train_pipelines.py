@@ -2,6 +2,7 @@
 
 
 import logging
+from eit_tf_workspace.keras.const import KerasOptimizers
 from eit_tf_workspace.keras.dataset import KerasDatasets
 from eit_tf_workspace.keras.models import KerasModels
 from eit_tf_workspace.draw_data import *
@@ -29,14 +30,14 @@ def std_keras_train_pipeline(path:str= ''):
     metadata.set_ouput_dir(training_name='Std_keras_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1000)
+    metadata.set_4_dataset(batch_size=1000,)
     gen.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = gen.extract_samples(dataset_part='train', idx_samples=None)
     plot_EIT_samples(gen.getattr_dataset('fwd_model'), samples_y, samples_x)
         
     metadata.set_4_model(
-        epoch=2,
+        epoch=100,
         callbacks=[mk_callback_tensorboard(metadata)],
         metrics=['mse'])
 
