@@ -25,11 +25,9 @@ class GeneratorKeras(Generators):
         if model_type is None and dataset_type is None:
             model_type, dataset_type = metadata.model_type, metadata.dataset_type
         else:
-            if not isinstance(model_type, KerasModels):
-                raise WrongModelError(f'Wrong model: {model_type}')
-            if not isinstance(model_type, KerasDatasets):
-                raise WrongDatasetError(f'Wrong dataset: {dataset_type}')
-            model_type, dataset_type = model_type.value, dataset_type.value
+            if isinstance(model_type, KerasModels) and isinstance(model_type, KerasDatasets):
+                
+                model_type, dataset_type = model_type.value, dataset_type.value
 
         try:
             self.model_manager=KERAS_MODELS[KerasModels(model_type)]()
@@ -61,7 +59,7 @@ class GeneratorKeras(Generators):
 
     def get_prediction(self,metadata:MetaData, **kwargs)-> np.ndarray:
         prediction, duration =self._get_prediction(metadata, return_duration=True, **kwargs)
-        metadata.set_training_duration(duration)
+        # metadata.set_training_duration(duration)
         logger.info(f'### Prediction lasted: {duration} ###')
         return prediction
 
