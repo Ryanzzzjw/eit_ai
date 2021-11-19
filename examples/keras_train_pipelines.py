@@ -71,7 +71,6 @@ def std_auto_pipeline(path=''):
 
     build_train_save(gen, metadata)
 
-
 def build_train_save(gen:Generators, metadata:MetaData)-> tuple[Generators,MetaData]:
     gen.build_model(metadata) 
     metadata.save()# saving in case of bugs during training

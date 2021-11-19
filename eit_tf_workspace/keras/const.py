@@ -1,8 +1,5 @@
 
-import tensorflow as tf
 import tensorflow.keras as keras
-from enum import Enum
-
 from eit_tf_workspace.train_utils.lists import ListLosses, ListOptimizers
 
 
