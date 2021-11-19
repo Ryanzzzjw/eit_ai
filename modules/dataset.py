@@ -5,13 +5,21 @@ import pickle
 from logging import error
 from tkinter import Tk  # from tkinter import Tk for Python 3.x
 from tkinter.filedialog import askopenfilename
+<<<<<<< HEAD
+=======
+from typing import Any, List
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 
 import numpy as np
 import sklearn.model_selection
 import tensorflow as tf
 from scipy.io import loadmat
 from scipy.io.matlab.mio import savemat
+<<<<<<< HEAD
 
+=======
+import modules.interp2d as interp2d
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 
 from modules.path_utils import *
 # from modules.load_mat_files import *
@@ -350,6 +358,21 @@ class MatlabDataSet(object):
         tmpX['Xihn-Xh']= tmpX['Xihn']-tmpX['Xh']
         tmpX['Xihn-Xh']= tmpX['Xih']-tmpX['Xhn']
 
+<<<<<<< HEAD
+=======
+        #tri = np.array(self.fwd_model['elems'])
+        #pts = np.array(self.fwd_model['nodes'])
+
+        # perm= fwd_model['un2']    
+        #perm= np.reshape(perm, (perm.shape[0],))
+
+        #tri = tri-1 # matlab count from 1 python from 0
+        #tri= interp2d.check_order(pts, tri)
+        #data=dict()
+
+        #data_node= interp2d.pts2sim(pts, tri, perm)
+
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
         ## control input.... TODO
 
         if data_sel[0] not in tmpX.keys():
@@ -463,7 +486,11 @@ class EITDataset4ML(object):
         #     print(self.val_len )
         #     print(self.test_len )
     
+<<<<<<< HEAD
     def mk_std_dataset(self,X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
+=======
+    def mk_std_dataset(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
         self.use_tf_dataset= False
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
 
@@ -504,6 +531,43 @@ class EITDataset4ML(object):
             print('Length of val',self.val_len )
             print('Length of test',self.test_len )
 
+<<<<<<< HEAD
+=======
+    def mk_std_dataset_from_idx(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None, idx:List[Any]=[]):
+        self.use_tf_dataset= False
+        self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
+
+        scaler = MinMaxScaler()
+        # transform data
+        X=scaler.fit_transform(X)
+        Y=scaler.fit_transform(Y)
+        
+        #add indexes
+                
+        self.idx_train= idx[0]
+        self.idx_val= idx[1]
+        self.idx_test= idx[2]
+
+        self.train=FeaturesLabelsSet()
+        self.val=FeaturesLabelsSet()
+        self.test=FeaturesLabelsSet()
+        self.train.set_data(features=X[self.idx_train,:], labels=Y[self.idx_train,:])
+        self.val.set_data(features=X[self.idx_val,:], labels=Y[self.idx_val,:])
+        self.test.set_data(features=X[self.idx_test,:], labels=Y[self.idx_test,:])
+        # To do
+        # print('\n\nATTENTION self.train_len=[] / self.val_len=[] / self.test_len= []\n\n')
+        
+        self.train_len=self.idx_train.shape[0]
+        self.val_len=self.idx_val.shape[0]
+        self.test_len= self.idx_test.shape[0]
+
+        
+        if self.verbose:
+            print('\nLength of train', self.train_len)
+            print('Length of val',self.val_len )
+            print('Length of test',self.test_len )
+
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     def mk_tf_dataset(self, X, Y, batch_size = 32, test_ratio= 0.20, val_ratio=0.20, train_inputs:TrainInputs=None):
         self.use_tf_dataset= True       
         self.set_sizes_dataset(X, Y, batch_size, test_ratio, val_ratio)
@@ -609,7 +673,12 @@ def dataloader( raw_data,
                 use_tf_dataset=True, 
                 verbose=False, 
                 normalize=[True, True], 
+<<<<<<< HEAD
                 train_inputs:TrainInputs=None):
+=======
+                train_inputs:TrainInputs=None, 
+                idx:List[Any]=[]):
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     """[summary]
 
     Args:
@@ -647,13 +716,24 @@ def dataloader( raw_data,
 
     training_dataset= EITDataset4ML(verbose=verbose)
     training_dataset.src_file= raw_data.path_pkl
+<<<<<<< HEAD
 
+=======
+    training_dataset.fwd_model= raw_data.fwd_model
+
+    if idx:
+        training_dataset.mk_std_dataset_from_idx(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio, train_inputs= train_inputs, idx=idx)
+        return training_dataset
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     if use_tf_dataset:
         training_dataset.mk_tf_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio, train_inputs= train_inputs)
     else:
         training_dataset.mk_std_dataset(X, Y, batch_size=batch_size, test_ratio=test_ratio, val_ratio=val_ratio, train_inputs= train_inputs)
     
+<<<<<<< HEAD
     training_dataset.fwd_model= raw_data.fwd_model
+=======
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     # Reserve num_val_samples samples for validation
     return training_dataset
     

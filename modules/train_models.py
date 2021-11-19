@@ -30,6 +30,10 @@ class ModelGenerator(object):
     def select_model(self, train_inputs):
 
         train_inputs.model_func(train_inputs=train_inputs)
+<<<<<<< HEAD
+=======
+        print('model selected compiled')
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 
     def compile_model(  self,
                         optimizer=keras.optimizers.Adam(),
@@ -45,8 +49,14 @@ class ModelGenerator(object):
         if self.model_name and self.model_name.find('autokeras')==-1:
             self.info= self.info +''  # to do
             self.model.compile( optimizer=optimizer,
+<<<<<<< HEAD
                                 loss=loss,
                                 metrics=metrics)
+=======
+                                loss='mean_squared_error',
+                                metrics=['mse'])
+            print('model compiled')
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 
     def save_model(self, path, save_summary=True ):
         
@@ -187,6 +197,43 @@ class ModelGenerator(object):
 
         return self.model
 
+<<<<<<< HEAD
+=======
+    def opt_keras(self, train_inputs:TrainInputs=None):
+        self.model_name = "opt_keras"
+        input_size=train_inputs.input_size
+        output_size=train_inputs.output_size
+        layer_size=train_inputs.layer_size
+        layer_nb=train_inputs.layer_nb
+        dropout=train_inputs.dropout
+
+        self.model = keras.models.Sequential()
+
+        self.model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
+
+        for _ in range(layer_nb):
+            self.model.add(keras.layers.Dense(layer_size,activation=tf.nn.relu))
+            self.model.add(keras.layers.Dropout(dropout))
+        self.model.add(keras.layers.Dense(output_size,activation='linear'))
+
+        return self.model
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 
 if __name__ == "__main__":
     gen= ModelGenerator()
