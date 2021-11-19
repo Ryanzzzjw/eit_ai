@@ -46,14 +46,11 @@ class TrainInputs(object):
         self.learning_rate= None
         self.loss= None
         self.metrics= None
-<<<<<<< HEAD
-=======
 
         self.layer_size=None
         self.layer_nb=None
         self.dropout=None
 
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     
 
     def init_ouput(self, training_name, append_time= True):
@@ -85,11 +82,7 @@ class TrainInputs(object):
                             callbacks=[],
                             optimizer= keras.optimizers.Adam(),
                             learning_rate=None,
-<<<<<<< HEAD
-                            loss=keras.losses.CategoricalCrossentropy(),
-=======
                             loss=keras.losses.MeanSquaredError(),
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
                             metrics=[keras.metrics.Accuracy()]):
         if not self.batch_size:
             error('call first set_values4dataloader')
@@ -176,16 +169,10 @@ class TrainInputs(object):
     #     self=load_pickle(filename , self)
 
 
-<<<<<<< HEAD
-def mk_callback_tensorboard(train_inputs):
-
-    log_path= os.path.join(train_inputs.ouput_dir,const.TENSORBOARD_LOG_FOLDER)
-=======
 def mk_callback_tensorboard(NAME):
 
     # log_path= os.path.join(train_inputs.ouput_dir,"1st_dataset_logs/{}".format(train_inputs.training_name))
     log_path= "9th_dataset_2nd_logs/{}".format(NAME)
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     
     tensorboard = TensorBoard(log_dir= log_path)
     log_tensorboard(log_path)
