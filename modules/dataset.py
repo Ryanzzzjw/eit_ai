@@ -21,6 +21,8 @@ from modules.train_utils import *
 import modules.constants as const
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
+from modules.train_utils import TrainInputs
+
 class MatlabDataSet(object):
     def __init__(self,verbose=0, debug=0) -> None:
         
