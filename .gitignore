@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# eit_tf_workspace specific
+_test_scripts
+datasets
+outputs
