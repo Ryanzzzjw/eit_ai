@@ -4,6 +4,7 @@ from datetime import timedelta
 from logging import getLogger
 from eit_tf_workspace.raw_data.raw_samples import RawSamples
 import numpy as np
+from eit_tf_workspace.train_utils.dataset import Datasets
 from eit_tf_workspace.train_utils.gen import Generators, WrongDatasetError, WrongModelError, meas_duration
 from eit_tf_workspace.keras.models import KERAS_MODELS
 from eit_tf_workspace.keras.dataset import KERAS_DATASETS
@@ -20,20 +21,15 @@ logger = getLogger(__name__)
 class GeneratorKeras(Generators):
     """ Generator class for keras models """
 
-    def select_model_dataset(self, model_type:KerasModels=None, dataset_type:KerasDatasets=None, metadata:MetaData=None):
-        
+    def select_model_dataset(self, model_type:KerasModels=None, dataset_type:KerasDatasets=None, metadata:MetaData=None)-> None:
         if model_type is None and dataset_type is None:
             model_type, dataset_type = metadata.model_type, metadata.dataset_type
-        else:
-            if isinstance(model_type, KerasModels) and isinstance(model_type, KerasDatasets):
-                
-                model_type, dataset_type = model_type.value, dataset_type.value
-
+        elif isinstance(model_type, KerasModels) and isinstance(model_type, KerasDatasets):
+            model_type, dataset_type = model_type.value, dataset_type.value
         try:
             self.model_manager=KERAS_MODELS[KerasModels(model_type)]()
         except ValueError:
             raise WrongModelError(f'Wrong model: {model_type}')
-
         try:
             self.dataset=KERAS_DATASETS[KerasDatasets(dataset_type)]()
         except ValueError:
@@ -42,41 +38,48 @@ class GeneratorKeras(Generators):
         metadata.set_model_dataset_type(ListGenerators.Keras, KerasModels(model_type), KerasDatasets(dataset_type))
 
     def build_dataset(self, raw_samples:RawSamples, metadata:MetaData)-> None:
-        """"""
         self.dataset.build(raw_samples, metadata)
 
     def build_model(self, metadata:MetaData)-> None:
         self.model_manager.build(metadata=metadata)
 
-    def run_training(self,metadata:MetaData=None)-> None:
-        _, duration =self._run_training(metadata, return_duration=True)
+    def run_training(self,metadata:MetaData=None, dataset:Datasets=None)-> None:
+        logger.info('### Training started: ... ###')
+        _, duration =self._run_training(metadata,dataset=dataset, return_duration=True)
         metadata.set_training_duration(duration)
         logger.info(f'### Training lasted: {duration} ###')
 
     @meas_duration
     def _run_training(self,metadata:MetaData=None,**kwargs)-> None:
-        self.model_manager.train(dataset=self.dataset, metadata=metadata)
+        dataset_2_train=self.dataset
+        if 'dataset' in kwargs:
+            passed_dataset= kwargs.pop('dataset')
+            if passed_dataset and isinstance(passed_dataset, type(self.dataset)):
+                dataset_2_train=passed_dataset
+        self.model_manager.train(dataset=dataset_2_train, metadata=metadata)
 
-    def get_prediction(self,metadata:MetaData, **kwargs)-> np.ndarray:
-        prediction, duration =self._get_prediction(metadata, return_duration=True, **kwargs)
-        # metadata.set_training_duration(duration)
+    def get_prediction(self,metadata:MetaData,dataset:Datasets=None, **kwargs)-> np.ndarray:
+        logger.info('### Prediction started: ... ###')
+        prediction, duration =self._get_prediction(metadata, dataset= dataset, return_duration=True, **kwargs)
         logger.info(f'### Prediction lasted: {duration} ###')
         return prediction
 
     @meas_duration    
     def _get_prediction(self,metadata:MetaData, **kwargs)-> np.ndarray:
-        return self.model_manager.predict(dataset=self.dataset, metadata=metadata,**kwargs)
+        dataset_2_predict=self.dataset
+        if 'dataset' in kwargs:
+            passed_dataset= kwargs.pop('dataset')
+            if passed_dataset and isinstance(passed_dataset, type(self.dataset)):
+                dataset_2_predict=passed_dataset
+        return self.model_manager.predict(dataset=dataset_2_predict, metadata=metadata,**kwargs)
 
     def save_model(self, metadata:MetaData)-> None:
         model_saving_path=self.model_manager.save(metadata=metadata)
         metadata.set_model_saving_path(model_saving_path)
 
     def load_model(self,metadata:MetaData)-> None:
-        """select the model and dataset (need to be build after)"""
-
         self.select_model_dataset(metadata=metadata)
         self.model_manager.load(metadata=metadata)
-
 
 
 if __name__ == "__main__":
