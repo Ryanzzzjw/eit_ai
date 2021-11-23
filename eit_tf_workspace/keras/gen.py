@@ -56,14 +56,20 @@ class GeneratorKeras(Generators):
                 dataset_2_train=passed_dataset
         self.model_man.train(dataset=dataset_2_train, metadata=metadata)
 
-    def get_prediction(self,metadata:MetaData,dataset:Datasets=None, **kwargs)-> np.ndarray:
+    def get_prediction(
+        self,
+        metadata:MetaData,
+        dataset:Datasets=None,
+        single_X:np.ndarray= None,
+        **kwargs)-> np.ndarray:
+
         logger.info('### Prediction started: ... ###')
-        prediction, duration =self._get_prediction(metadata, dataset= dataset, return_duration=True, **kwargs)
+        prediction, duration =self._get_prediction(metadata, dataset= dataset,single_X=single_X, return_duration=True, **kwargs)
         logger.info(f'### Prediction lasted: {duration} ###')
         return prediction
 
     @meas_duration    
-    def get_prediction(
+    def _get_prediction(
         self,
         metadata:MetaData,
         dataset:Datasets=None,

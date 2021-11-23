@@ -196,13 +196,16 @@ def meas_duration(func):
         func ([type]): [description]
     """    
     def wrapper(*args, **kwargs)-> Union[tuple[Any, str], Any]:
+        return_duration= None
         start_time = time.time()
+        if 'return_duration' in kwargs:
+            return_duration= kwargs.pop('return_duration')
         result=func(*args, **kwargs)
         duration = timedelta(seconds=time.time() - start_time)
         duration= str(duration)
-        if 'return_duration' in kwargs and kwargs.pop('return_duration'):
-            return result, duration
-        return result
+        
+        return result, duration if return_duration else result
+        
     return wrapper
 
 if __name__ == "__main__":
