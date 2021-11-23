@@ -124,6 +124,7 @@ class MetaData(object):
 
     def set_raw_src_file(self, src_file):
         self.raw_src_file=make_PoSIX_abs_rel(src_file, self.ouput_dir)
+        
     def set_model_saving_path(self, model_saving_path):
         self.model_saving_path=make_PoSIX_abs_rel(model_saving_path, self.ouput_dir)
 
@@ -208,8 +209,12 @@ class MetaData(object):
             except DialogCancelledException as e:
                 logger.critical('User cancelled the loading')
                 sys.exit()
-            
-        self.read(os.path.join(dir_path,const.METADATA_FILENAME))
+        try:   
+            self.read(os.path.join(dir_path,const.METADATA_FILENAME))
+        except FileNotFoundError as e:
+            logger.critical(f'File "{const.METADATA_FILENAME}" not found in folder:\n{dir_path}\n({e})')
+            sys.exit()
+
 
 ################################################################################
 # Methods

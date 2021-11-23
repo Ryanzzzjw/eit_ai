@@ -2,7 +2,7 @@
 
 from typing import Any
 from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.models import ModelManagers, ListModels
+from eit_tf_workspace.train_utils.models import Models, ListModels
 from eit_tf_workspace.train_utils.metadata import MetaData
 
 from enum import Enum
@@ -37,7 +37,7 @@ PYTORCH_LOSS={
 ################################################################################
 # Std PyTorch Model
 ################################################################################
-class StdPyTorchModel(ModelManagers):
+class StdPyTorchModel(Models):
 
     def _define_model(self, metadata:MetaData):
         self.name = "std_pytorch"
