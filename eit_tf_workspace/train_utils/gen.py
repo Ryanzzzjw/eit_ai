@@ -6,7 +6,7 @@ import time
 from typing import Any, Union
 import numpy as np
 
-from eit_tf_workspace.train_utils.models import ModelManagers
+from eit_tf_workspace.train_utils.models import Models
 from eit_tf_workspace.train_utils.dataset import Datasets
 from eit_tf_workspace.train_utils.metadata import MetaData
 from eit_tf_workspace.train_utils.lists import ListModels, ListDatasets
@@ -25,10 +25,10 @@ class WrongDatasetError(Exception):
 ################################################################################
 
 class Generators(ABC):
-    """ Generator abstract class use to manage model and dataset
+    """Generator abstract class use to manage model and dataset  
     
     """
-    model_manager:ModelManagers = None
+    model_man:Models = None
     dataset:Datasets= None
 
     def __init__(self) -> None:
@@ -135,18 +135,30 @@ class Generators(ABC):
         """        
         
     @abstractmethod
-    def get_prediction(self,metadata:MetaData, dataset:Datasets=None, **kwargs)-> np.ndarray:
-        """Return prediction from 'test' part of the intern dataset
-        or the passed one.
+    def get_prediction(
+        self,
+        metadata:MetaData,
+        dataset:Datasets=None,
+        single_X:np.ndarray= None,
+        **kwargs)-> np.ndarray:
+        """Return prediction from:
+        - 'test'-part of the intern "self.dataset" (if dataset and single_X are None)
+        - 'test'-part of the passed dataset (if single_X is None)
+        - the single_X (eg. measurements) (fist single_X will be formated)
 
         Args:
-            metadata (MetaData): 
-            dataset (Datasets, optional): Defaults to None.
+            metadata (MetaData)
+            dataset (Datasets, optional): type of "self.dataset". Defaults to None.
+            single_X (np.ndarray, optional): array-like of shape (1, n_features). Defaults to None.
+            **kwargs: tranmitted to the "predict" method of the model....
+        Raises:
+            WrongDatasetError: raised if passed dataset is not the same type as "self.dataset"
 
         Returns:
-            np.ndarray: predicted samples values as matrix (n_samples, :)
-        """      
-        
+            np.ndarray: array-like of shape (n_samples, :)
+                        predicted samples values
+        """        
+
     @abstractmethod
     def save_model(self, metadata:MetaData)-> None:
         """Call the save model method of the model_manager, 

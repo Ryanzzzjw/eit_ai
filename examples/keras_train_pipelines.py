@@ -31,7 +31,7 @@ def std_keras_train_pipeline(path:str= ''):
     metadata.set_ouput_dir(training_name='Std_keras_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1000,)
+    metadata.set_4_dataset(batch_size=1000)
     gen.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = gen.extract_samples(dataset_part='train', idx_samples=None)
@@ -40,9 +40,10 @@ def std_keras_train_pipeline(path:str= ''):
     metadata.set_4_model(
         epoch=100,
         callbacks=[mk_callback_tensorboard(metadata)],
-        metrics=['mse'])
+        metrics=['mse'],
+        optimizer=KerasOptimizers.Adam)
 
-    build_train_save(gen, metadata)
+    build_train_save_model(gen, metadata)
 
 def std_auto_pipeline(path=''):
     logger.info('### Start standard autokeras training ###')
@@ -53,7 +54,6 @@ def std_auto_pipeline(path=''):
         model_type=KerasModels.StdAutokerasModel,
         dataset_type=KerasDatasets.StdDataset,
         metadata=metadata)
-
     metadata.set_ouput_dir(training_name='Std_autokeras_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
     raw_samples=load_samples(MatlabSamples(), path, metadata)
@@ -69,9 +69,9 @@ def std_auto_pipeline(path=''):
         metrics=['mse'],
         max_trials_autokeras=2)
 
-    build_train_save(gen, metadata)
+    build_train_save_model(gen, metadata)
 
-def build_train_save(gen:Generators, metadata:MetaData)-> tuple[Generators,MetaData]:
+def build_train_save_model(gen:Generators, metadata:MetaData)-> tuple[Generators,MetaData]:
     gen.build_model(metadata) 
     metadata.save()# saving in case of bugs during training
 

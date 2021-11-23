@@ -34,7 +34,7 @@ class MatlabSamples(RawSamples):
 
     def _load(self, file_path:str="", nb_samples2load:int=0, data_sel=['Xih','Yih'], time:str= None):
         self.loaded=False
-        self.dir_path , self.file_path= get_file_dir_path(file_path)
+        self.dir_path , self.file_path= get_file_dir_path(file_path, title= 'Please select *infos2py.mat-files from a matlab eit_dataset')
         log_file_loaded(file_path=self.file_path)
         self._load_metadata_from_dataset_matfile(self.file_path)
         self._load_samples(nb_samples2load=nb_samples2load)
