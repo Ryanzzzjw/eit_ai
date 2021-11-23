@@ -8,6 +8,9 @@ import datetime
 
 import  eit_tf_workspace.constants as const
 
+from logging import getLogger
+
+logger = getLogger(__name__)
 class DialogCancelledException(Exception):
     """"""
 
@@ -95,7 +98,7 @@ def get_file(filetypes=[("All files","*.*")], verbose:bool= False, initialdir:st
     return path, filename
     
 
-def verify_file(file_path, extension, debug=False):
+def verify_file(file_path, extension):
     """[summary]
 
     Args:
@@ -105,15 +108,13 @@ def verify_file(file_path, extension, debug=False):
     Returns:
         [type]: [description]
     """
-    path_out=""
-    if debug:
-        print(os.path.isfile(file_path))
-    if os.path.isfile(file_path):
-            _, file_extension = os.path.splitext(file_path)
-            if debug:
-                print(os.path.splitext(file_path),file_extension)
-            if file_extension==extension:
-                path_out= file_path
+    path_out=''
+    if not os.path.isfile(file_path):
+        logger.debug(f'file {file_path} does not exist or is not a file!')
+        return path_out
+    _, file_extension = os.path.splitext(file_path)
+    if file_extension==extension:
+        path_out= file_path
     return path_out
 
 def save_as_pickle(file_path, class2save, verbose=False, add_ext=True):
@@ -205,11 +206,11 @@ def load_pickle(filename, class2upload=None, verbose=True):
     # print_loading_verbose(filename, loaded_class, verbose)
     if not class2upload:
         return loaded_class
-    set_exixting_attr(class2upload, loaded_class)
+    set_existing_attrs(class2upload, loaded_class)
     return class2upload
 
 
-def set_exixting_attr(class2upload, newclass):
+def set_existing_attrs(class2upload, newclass):
 
     for key in newclass.__dict__.keys():
             if key in class2upload.__dict__.keys():
@@ -255,7 +256,7 @@ def get_file_dir_path( file_path:str='', extension=const.EXT_MAT, **kwargs):
     """
     title= kwargs.pop('title') if 'title' in kwargs else None # pop title
 
-    file_path= verify_file(file_path, extension=extension)
+    file_path= verify_file(file_path, extension=extension)        
     if not file_path:
         try: 
             file_path =get_file(
@@ -290,7 +291,7 @@ if __name__ == "__main__":
    
     path_pkl='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
     # path_pkl=path_pkl.replace('/','\\')
-    print(verify_file(path_pkl, extension=const.EXT_PKL, debug=True))
+    print(verify_file(path_pkl, extension=const.EXT_PKL))
 
     a= 'print_saving_verbose'
     print(os.path.splitext('hhhhhhhh'))
