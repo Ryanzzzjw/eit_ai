@@ -99,6 +99,6 @@ if __name__ == "__main__":
 
 
     dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_tf_workspace\outputs\Std_keras_test_20211117_165710'
-    std_eval_pipeline(get_POSIX_path(dir_path))
+    test_single_predict(get_POSIX_path(dir_path))
     plt.show()
     
