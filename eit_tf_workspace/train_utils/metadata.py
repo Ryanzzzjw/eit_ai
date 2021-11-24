@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from logging import error, getLogger
 import sys
 from eit_tf_workspace.train_utils.lists import ListDatasets, ListGenerators, ListLosses, ListModels, ListOptimizers
-from eit_tf_workspace.utils.inout_dir import DEFAULT_DIRS
+from glob_utils.pth.inout_dir import DEFAULT_DIRS
 from eit_tf_workspace.utils.path_utils import *
 from glob_utils.log.log  import highlight_msg
 from scipy.io.matlab.mio import savemat

@@ -16,7 +16,7 @@ from eit_tf_workspace.keras.tensorboard_k import mk_callback_tensorboard
 # from eit_tf_workspace.train_utils.dataloader import 
 from logging import getLogger
 
-from eit_tf_workspace.utils.inout_dir import DEFAULT_DIRS
+from glob_utils.pth.inout_dir import DEFAULT_DIRS
 
 logger = getLogger(__name__)
 
