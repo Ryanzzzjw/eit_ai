@@ -4,7 +4,8 @@ from typing import Any
 from eit_tf_workspace.train_utils.dataset import Datasets
 from eit_tf_workspace.train_utils.models import ModelManagers, ListModels
 from eit_tf_workspace.train_utils.metadata import MetaData
-
+import torch
+from torch import nn
 from enum import Enum
 
 
@@ -37,58 +38,19 @@ PYTORCH_LOSS={
 ################################################################################
 # Std PyTorch Model
 ################################################################################
-class StdPyTorchModel(ModelManagers):
+class stdModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(nn.Linear(4, 3),
+                                        nn.BatchNorm1d(3),
+                                        nn.ReLU(),
+                                        nn.Linear(3, 1)
+        )
+            
 
-    def _define_model(self, metadata:MetaData):
-        self.name = "std_pytorch"
-        in_size=metadata.input_size
-        out_size=metadata.output_size
-        # self.model = keras.models.Sequential()
-        # self.model.add(keras.layers.Dense(in_size, input_dim = in_size))
-        # self.model.add(keras.layers.Activation(tf.nn.relu))
-        # self.model.add(keras.layers.Dense(512))
-        # self.model.add(keras.layers.Activation(tf.nn.relu))
-        # self.model.add(keras.layers.Dense(512))
-        # self.model.add(keras.layers.Activation(tf.nn.relu))
-        # self.model.add(keras.layers.Dense(out_size)) 
-        # self.model.add(keras.layers.Activation(tf.nn.sigmoid))
+    def forward(self, x):
+        return self.layers(x)
 
-    def _prepare_model(self, metadata:MetaData):
-        if not self.model:
-            return
-        # optimizer, loss = get_keras_optimizer_loss(metadata)
-        # if metadata.learning_rate:
-        #     optimizer.learning_rate= metadata.learning_rate 
-        # if type(metadata.metrics) != type(list()):
-        #     error('metrics need to be a list')
-        # self.model.compile( 
-        #     optimizer=optimizer,
-        #     loss=loss,
-        #     metrics=metadata.metrics)
-
-    def train(self, dataset:Datasets, metadata:MetaData):  
-        """""" 
-        # self.model.fit(
-        #     x=dataset.get_X('train'),
-        #     y=dataset.get_Y('train'),
-        #     epochs=metadata.epoch,
-        #     validation_data=(dataset.get_X('val'), dataset.get_Y('val')),
-        #     steps_per_epoch=metadata._steps_per_epoch,
-        #     validation_steps=metadata._validation_steps,
-        #     callbacks=metadata.callbacks,
-        #     batch_size=metadata.batch_size)
-
-    def predict(self, dataset:Datasets, metadata:MetaData, **kwargs)->Any:
-        """"""
-        # return self.model.predict(dataset.get_X('test'), steps=metadata._test_steps)
-
-    def save(self, metadata:MetaData)-> str:
-        """"""
-        # return save_keras_model(self.model, dir_path=metadata.ouput_dir, save_summary=metadata.save_summary)
-
-    def load(self, metadata:MetaData)-> None:
-        """"""
-        # self.model=load_keras_model(dir_path=metadata.ouput_dir)
 
 
 ################################################################################
