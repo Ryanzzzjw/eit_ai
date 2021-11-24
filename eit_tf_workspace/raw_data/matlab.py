@@ -8,7 +8,7 @@ import numpy as np
 from eit_tf_workspace.constants import EXT_MAT
 from eit_tf_workspace.raw_data.raw_samples import RawSamples
 from glob_utils.log.log  import log_file_loaded
-from eit_tf_workspace.utils.path_utils import (LoadCancelledException,
+from glob_utils.pth.path_utils import (LoadCancelledException,
                                                WrongFileTypeSelectedError,
                                                get_file_dir_path)
 from scipy.io import loadmat

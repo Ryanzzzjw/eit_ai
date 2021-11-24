@@ -1,12 +1,18 @@
-
+import os
+import sys
 from dataclasses import dataclass
 from logging import error, getLogger
-import sys
-from eit_tf_workspace.train_utils.lists import ListDatasets, ListGenerators, ListLosses, ListModels, ListOptimizers
+
+from eit_tf_workspace.train_utils.lists import (ListDatasets, ListGenerators,
+                                                ListLosses, ListModels,
+                                                ListOptimizers)
+from glob_utils.files.files import (read_txt, save_as_mat, save_as_pickle,
+                                    save_as_txt)
+from glob_utils.log.log import highlight_msg
 from glob_utils.pth.inout_dir import DEFAULT_DIRS
-from eit_tf_workspace.utils.path_utils import *
-from glob_utils.log.log  import highlight_msg
-from scipy.io.matlab.mio import savemat
+from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
+                                       get_date_time, get_dir, get_POSIX_path,
+                                       mk_new_dir)
 
 logger = getLogger(__name__)
 
@@ -157,7 +163,7 @@ class MetaData(object):
         indexes = self.idx_samples
         time = self.time or get_date_time()
         path =  os.path.join(self.dir_path, f'{IDX_FILENAME}_{time}')
-        savemat(path, indexes)
+        save_as_mat(path, indexes)
         save_as_pickle(path, indexes)
         save_as_txt(path,indexes)
         self.set_idx_samples_file(path)
@@ -210,7 +216,7 @@ class MetaData(object):
             title= 'Select directory of model to evaluate'
             try: 
                 dir_path=get_dir(title=title)
-            except DialogCancelledException as e:
+            except OpenDialogDirCancelledException as e:
                 logger.critical('User cancelled the loading')
                 sys.exit()
         try:   
@@ -260,8 +266,9 @@ def reload_metadata(dir_path:str='')-> MetaData:
 
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level, main_log
     import logging
+
+    from glob_utils.log.log import change_level, main_log
     main_log()
     change_level(logging.DEBUG)
     a= MetaData()

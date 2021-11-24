@@ -13,7 +13,7 @@ from eit_tf_workspace.train_utils.select_gen import select_gen
 
 from logging import getLogger
 
-from eit_tf_workspace.utils.path_utils import get_POSIX_path
+from glob_utils.pth.path_utils import get_POSIX_path
 logger = getLogger(__name__)
 
 def std_eval_pipeline(dir_path:str=''):

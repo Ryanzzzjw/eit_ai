@@ -8,7 +8,7 @@ from eit_tf_workspace.constants import EXT_MAT
 
 from eit_tf_workspace.raw_data.matlab import load_mat_file
 from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.utils.path_utils import LoadCancelledException
+from glob_utils.pth.path_utils import LoadCancelledException
 from eit_tf_workspace.train_utils.dataset import scale_prepocess
 
 logger = getLogger(__name__)
