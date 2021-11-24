@@ -69,12 +69,12 @@ logger = getLogger(__name__)
 class torchDataset(Dataset):
 
     def __init__(self, loaded_data):
-        # loaded_data is Tensor
+        # loaded_data is np.array
         self.data = loaded_data
-        # self.X = torch.from_numpy(loaded_data[:, :-1])
-        # self.X = torch.from_numpy(loaded_data[:, [-1]])
-        self.X = loaded_data[:, :-1]
-        self.Y = loaded_data[:,[-1]]
+        self.X = torch.from_numpy(loaded_data[:, :-1])
+        self.Y = torch.from_numpy(loaded_data[:, [-1]])
+        # self.X = loaded_data[:, :-1]
+        # self.Y = loaded_data[:,[-1]]
 
     def __len__(self):
         return len(self.data)
@@ -84,15 +84,19 @@ class torchDataset(Dataset):
 
 
 # normalize the tensor in range (0, 1)
-def data_normal(origin_data):
-    d_min = origin_data.min()
-    if d_min < 0:
-        origin_data += torch.abs(d_min)
-        d_min = origin_data.min()
-    d_max = origin_data.max()
-    dst = d_max - d_min
-    norm_data = (origin_data - d_min).true_divide(dst)
-    return norm_data
+# def data_normal(origin_data):
+#     d_min = origin_data.min()
+#     if d_min < 0:
+#         origin_data += torch.abs(d_min)
+#         d_min = origin_data.min()
+#     d_max = origin_data.max()
+#     dst = d_max - d_min
+#     norm_data = (origin_data - d_min).true_divide(dst)
+#     return norm_data
+
+def normalization(data):
+    _range = np.max(data) - np.min(data)
+    return (data - np.min(data)) / _range
 
 
 if __name__ == "__main__":
@@ -109,8 +113,8 @@ if __name__ == "__main__":
 
     # create the normalized dataset
 
-    XY_tensor = data_normal(torch.Tensor(XY))
-    rdn_dataset = torchDataset(XY_tensor)
+    XY_normal = normalization(XY)
+    rdn_dataset = torchDataset(XY_normal)
 
     for i in range(len(rdn_dataset)):
         print(rdn_dataset[i])
@@ -136,7 +140,7 @@ class Model(torch.nn.Module):
         return x
 
 
-net = Model()
+net = Model().double()
 
 loss_mse = nn.MSELoss()
 optimizer = torch.optim.SGD(net.parameters(), lr=0.01)
