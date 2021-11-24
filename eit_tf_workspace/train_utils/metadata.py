@@ -199,6 +199,7 @@ class MetaData(object):
         logger.info(log_msg_highlight(f'Metadata loaded from: {path}, '))
         logger.info(f'Metadata loaded :\n{self.__dict__.keys()}')
         logger.debug(f'Metadata loaded (details):\n{self.__dict__}')
+        self.ouput_dir=os.path.split(path)[0]
 
     def reload(self, dir_path:str=''):
 
