@@ -4,39 +4,42 @@ import random
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+import os
+import sys
+sys.path.append('./')
 
-# from eit_tf_workspace.train_utils.dataset import Datasets, scale_prepocess
+from eit_tf_workspace.train_utils.dataset import Datasets, XYSet, scale_prepocess
 
-# from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_tf_workspace.train_utils.metadata import MetaData
 from logging import getLogger
 
 logger = getLogger(__name__)
 
-# class StdPytorchDataset(Datasets):
+# # class StdPytorchDataset(Datasets):
    
-#     def get_X(self, part:str='train'):
-#         return getattr(self._pytorch_dataset, part)[0]
+# #     def get_X(self, part:str='train'):
+# #         return getattr(self._pytorch_dataset, part)[0]
 
-#     def get_Y(self, part:str='train'):
-#         return getattr(self, part).get_set()[1]
+# #     def get_Y(self, part:str='train'):
+# #         return getattr(self, part).get_set()[1]
 
-#     def get_samples(self, part: str):
-#         return getattr(self, part).get_set()
+# #     def get_samples(self, part: str):
+# #         return getattr(self, part).get_set()
 
-#     def _preprocess(
-#         self,
-#         X:np.ndarray,
-#         Y:np.ndarray,
-#         metadata:MetaData)->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
-#         """return X, Y preprocessed"""
-#         self._pytorch_dataset=
-#         X=scale_prepocess(X, metadata.normalize[0])
-#         Y=scale_prepocess(Y, metadata.normalize[1])
-#         if Y is not None:
-#             logger.debug(f'Size of X and Y (after preprocess): {X.shape=}, {Y.shape=}')     
-#         else:
-#             logger.debug(f'Size of X (after preprocess): {X.shape=}')
-#         return X, Y
+# #     def _preprocess(
+# #         self,
+# #         X:np.ndarray,
+# #         Y:np.ndarray,
+# #         metadata:MetaData)->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
+# #         """return X, Y preprocessed"""
+# #         self._pytorch_dataset=
+# #         X=scale_prepocess(X, metadata.normalize[0])
+# #         Y=scale_prepocess(Y, metadata.normalize[1])
+# #         if Y is not None:
+# #             logger.debug(f'Size of X and Y (after preprocess): {X.shape=}, {Y.shape=}')     
+# #         else:
+# #             logger.debug(f'Size of X (after preprocess): {X.shape=}')
+# #         return X, Y
 
 #     def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
 #         """build the dataset"""
@@ -71,8 +74,8 @@ class torchDataset(Dataset):
     def __init__(self, loaded_data):
         # loaded_data is np.array
         self.data = loaded_data
-        self.X = torch.from_numpy(loaded_data[:, :-1])
-        self.Y = torch.from_numpy(loaded_data[:, [-1]])
+        self.X = torch.Tensor(loaded_data[:, :-1]).float()
+        self.Y = torch.Tensor(loaded_data[:, [-1]]).float()
         # self.X = loaded_data[:, :-1]
         # self.Y = loaded_data[:,[-1]]
 
@@ -82,78 +85,95 @@ class torchDataset(Dataset):
     def __getitem__(self, index):
         return self.X[index], self.Y[index]
 
-
-# normalize the tensor in range (0, 1)
-# def data_normal(origin_data):
-#     d_min = origin_data.min()
-#     if d_min < 0:
-#         origin_data += torch.abs(d_min)
-#         d_min = origin_data.min()
-#     d_max = origin_data.max()
-#     dst = d_max - d_min
-#     norm_data = (origin_data - d_min).true_divide(dst)
-#     return norm_data
-
 def normalization(data):
-    _range = np.max(data) - np.min(data)
-    return (data - np.min(data)) / _range
+    return (data - data.mean()) / data.std()
 
+
+def _mk_Dataloader(loaded_data, dataset_type):
+    loaded_data = torchDataset(loaded_data)
+    train_size = int(len(loaded_data) * 0.6)
+    val_size = int(len(loaded_data) * 0.2)
+    test_size = int(len(loaded_data) * 0.2)
+
+    train_set, val_set, test_set = torch.utils.data.random_split(loaded_data, [train_size, val_size, test_size])
+   
+    if(dataset_type == 'train_set'):
+        return DataLoader(train_set, batch_size=5, shuffle=True, num_workers=0)
+    if(dataset_type == 'val_set'):
+         return DataLoader(val_set, batch_size=5, shuffle=False, num_workers=0)
+    if(dataset_type == 'test_set'):
+         return DataLoader(test_set, batch_size=5, shuffle=False, num_workers=0)
+        
+    
+
+
+    
+    
+    
 
 if __name__ == "__main__":
-    # from eit_tf_workspace.utils.log import change_level, main_log
-    # import logging
-    # main_log()
-    # change_level(logging.DEBUG)
+    from eit_tf_workspace.utils.log import change_level, main_log
+    import logging
+    main_log()
+    change_level(logging.DEBUG)
 
-    X = np.array([[random.randint(0, 100) for _ in range(4)] for _ in range(100)])
-    Y = np.array([random.randint(0, 100) for _ in range(100)])
+    # X = np.array([[random.randint(0, 100) for _ in range(4)] for _ in range(100)])
+    # Y = np.array([random.randint(0, 100) for _ in range(100)])
     # print(f'{X}; {X.shape}\n; {Y}; {Y.shape}')
+    
+    X = np.random.randn(100, 4)
+    Y = np.random.randn(100)
 
     XY = np.concatenate((X, Y[:, np.newaxis]), axis=1)
 
     # create the normalized dataset
 
     XY_normal = normalization(XY)
-    rdn_dataset = torchDataset(XY_normal)
+#     rdn_dataset = torchDataset(XY_normal)
 
-    for i in range(len(rdn_dataset)):
-        print(rdn_dataset[i])
+#     for i in range(len(rdn_dataset)):
+#         print(rdn_dataset[i])
 
-train_size = int(len(rdn_dataset) * 0.6)
-val_size = int(len(rdn_dataset) * 0.2)
-test_size = int(len(rdn_dataset) * 0.2)
+# train_size = int(len(rdn_dataset) * 0.6)
+# val_size = int(len(rdn_dataset) * 0.2)
+# test_size = int(len(rdn_dataset) * 0.2)
 
-train_set, val_set, test_set = torch.utils.data.random_split(rdn_dataset, [train_size, val_size, test_size])
+# train_set, val_set, test_set = torch.utils.data.random_split(rdn_dataset, [train_size, val_size, test_size])
 
-train_loader = DataLoader(train_set, batch_size=5, shuffle=True, num_workers=0)
+# train_loader = DataLoader(train_set, batch_size=5, shuffle=True, num_workers=0)
 
-class Model(torch.nn.Module):
-    def __init__(self):
-        super(Model, self).__init__()
-        self.linear1 = torch.nn.Linear(4, 3)
-        self.linear2 = torch.nn.Linear(3, 1)
-        self.relu = torch.nn.ReLU()
+    train_loader = _mk_Dataloader(XY_normal, 'train_set')
 
-    def forward(self, x):
-        x = self.relu(self.linear1(x))
-        x = self.relu(self.linear2(x))
-        return x
+    class Model(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.layers = nn.Sequential(nn.Linear(4, 3),
+                                        nn.BatchNorm1d(3),
+                                        nn.ReLU(),
+                                        nn.Linear(3, 1)
+            )
+            
+
+        def forward(self, x):
+        
+            return self.layers(x)
 
 
-net = Model().double()
+    net = Model()
 
-loss_mse = nn.MSELoss()
-optimizer = torch.optim.SGD(net.parameters(), lr=0.01)
+    loss_mse = nn.MSELoss()
+    optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 
-for epoch in range(50):
-    for i, data in enumerate(train_loader):
-        inputs, labels = data
+    for epoch in range(10):
+        for i, data in enumerate(train_loader, 0):
+            inputs, labels = data
 
-        y_pred = net(inputs)
-        loss = loss_mse(y_pred, labels)
-        print(epoch, i, loss.item())
+            y_pred = net(inputs)
+            loss = loss_mse(y_pred, labels)
+            print(epoch, i, loss.item())
 
-        optimizer.zero_grad()
-        loss.backward()
+            optimizer.zero_grad()
+            loss.backward()
 
-        optimizer.step()
+            optimizer.step()
+        
