@@ -303,7 +303,7 @@ def get_file_dir_path( file_path:str='', extension:str=FileExt.txt.value, **kwar
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

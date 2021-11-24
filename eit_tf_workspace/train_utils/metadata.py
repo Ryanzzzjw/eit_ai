@@ -5,7 +5,7 @@ import sys
 from eit_tf_workspace.train_utils.lists import ListDatasets, ListGenerators, ListLosses, ListModels, ListOptimizers
 from eit_tf_workspace.utils.inout_dir import DEFAULT_DIRS
 from eit_tf_workspace.utils.path_utils import *
-from eit_tf_workspace.utils.log import highlight_msg
+from glob_utils.log.log  import highlight_msg
 from scipy.io.matlab.mio import savemat
 
 logger = getLogger(__name__)
@@ -260,7 +260,7 @@ def reload_metadata(dir_path:str='')-> MetaData:
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

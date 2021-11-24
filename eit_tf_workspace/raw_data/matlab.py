@@ -7,7 +7,7 @@ import traceback
 import numpy as np
 from eit_tf_workspace.constants import EXT_MAT
 from eit_tf_workspace.raw_data.raw_samples import RawSamples
-from eit_tf_workspace.utils.log import log_file_loaded
+from glob_utils.log.log  import log_file_loaded
 from eit_tf_workspace.utils.path_utils import (LoadCancelledException,
                                                WrongFileTypeSelectedError,
                                                get_file_dir_path)
@@ -265,7 +265,7 @@ def load_mat_file(file_path:str='',**kwargs):
     return var, file_path
                                                                                 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

@@ -27,7 +27,7 @@ class FileExt(Enum):
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import main_log
+    from glob_utils.log.log  import main_log
     main_log()
     f=f'f {FileExt.txt}'
     print(f,  FileExt.mat )
