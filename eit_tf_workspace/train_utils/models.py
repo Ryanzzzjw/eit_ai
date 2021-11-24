@@ -10,6 +10,7 @@ from enum import Enum
 from logging import getLogger
 logger = getLogger(__name__)
 
+MODEL_SUMMARY_FILENAME='model_summary'
 
 ################################################################################
 # Custom Exeptions/Errors for Models

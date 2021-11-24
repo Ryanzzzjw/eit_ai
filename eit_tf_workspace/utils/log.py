@@ -17,7 +17,7 @@ class MaxLevelFilter(logging.Filter):
 
 MAX_LOG_MSG_LENGTH= 80
 
-def log_msg_highlight(msg:str, symbol:str='#')->str:
+def highlight_msg(msg:str, symbol:str='#')->str:
     sym= symbol*MAX_LOG_MSG_LENGTH
     return f'\n{sym}\n{msg}\n{sym}'    
 
@@ -27,7 +27,7 @@ def log_trunc(msg:str, max_len_msg:int=MAX_LOG_MSG_LENGTH):
 def log_file_loaded(file_path:str=None):
     dir_path, filename= os.path.split(file_path)
     msg=f'Loading file: {filename}\n(dir: ...{dir_path})'
-    logger.info(log_msg_highlight(msg))
+    logger.info(highlight_msg(msg))
 
 
 def main_log(logfile:str='debug.log'):
@@ -62,4 +62,4 @@ def change_level(level=logging.DEBUG):
 if __name__ == '__main__':
     main_log()
     msg = 'Training results will be found in : huirhguihruhguher'
-    logger.info(log_msg_highlight(msg))
+    logger.info(highlight_msg(msg))

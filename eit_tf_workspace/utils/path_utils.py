@@ -5,46 +5,70 @@ from tkinter.filedialog import askdirectory, askopenfilename, askopenfilenames
 import pickle
 import json
 import datetime
+from typing import Union
 
 import  eit_tf_workspace.constants as const
 
 from logging import getLogger
+from eit_tf_workspace.utils.files import FileExt
 
 logger = getLogger(__name__)
 class DialogCancelledException(Exception):
     """"""
+FORMAT_DATE_TIME= "%Y%m%d_%H%M%S"
 
-def get_date_time():
+def get_date_time()->str:
     _now = datetime.datetime.now()
-    return _now.strftime(const.FORMAT_DATE_TIME)
+    return _now.strftime(FORMAT_DATE_TIME)
 
 def get_POSIX_path(path:str)->str:
 
     return path.replace('\\','/')
 
 
-def mk_ouput_dir(name, verbose= True, default_out_dir= const.DEFAULT_OUTPUTS_DIR ):
-    """[summary]
+def dir_exist(dir_path:str, create_auto:bool=False)->bool:
+    """Test if a directory exist
+    setting the create argument to `True` allow the automatic creation
+    of the directory 
 
     Args:
-        name ([type]): [description]
-        verbose (bool, optional): [description]. Defaults to True.
-        default_out_dir (str, optional): [description]. Defaults to 'outputs'.
+        dir_path (str): directory path to test / create
+        create_auto (bool, optional): allow the automatic creation
+    of the directory if it not exist . Defaults to False.
 
     Returns:
-        [type]: [description]
-    """
-    if not os.path.isdir(default_out_dir):
-        os.mkdir(default_out_dir)
+        bool: return `True` if dir_path is an existing dir or
+        if create_auto is set to `True`
+    """    
 
-    output_dir= os.path.join(default_out_dir, name)
+    exist= os.path.isdir(dir_path)
+    if not exist and create_auto:
+        os.mkdir(dir_path)
+        logger.info(f'Directory: {dir_path} - created')
+        exist= True
+    return exist
 
-    # if verbose:
-    #     print('\nResults are to found in:\n >> {}'.format(output_dir))
 
-    os.mkdir(output_dir)
+def mk_new_dir(dir_name:str, parent_dir:str= None )-> str:
+    """Create a directory in a specified parent directory
+    parent_dir is not specified the new dir will be created 
+    in the current working directory (cwd)
+    Args:
+        dir_name (str): name of the new directory to create
+        parent_dir (str, optional): . Defaults to None.
 
-    return output_dir
+    Returns:
+        [str]: the path of the created directory
+    """    
+    if not parent_dir:
+        parent_dir=os.getcwd()
+
+    dir_exist(parent_dir, create_auto=True)
+
+    new_dir_path= os.path.join(parent_dir, dir_name)
+    os.mkdir(new_dir_path)
+
+    return new_dir_path
 
 def get_dir(title:str='Select a directory', initialdir:str=None)->str:
     """Open an explorer dialog for selection of a directory
@@ -61,13 +85,15 @@ def get_dir(title:str='Select a directory', initialdir:str=None)->str:
     """    
     
     Tk().withdraw()
-    initialdir = initialdir or os.getcwd()
-    dir_path = askdirectory(initialdir=initialdir, title= title)
+    # show an "Open" dialog box and return the path to the selected directory
+    dir_path = askdirectory(
+        initialdir=initialdir or os.getcwd(),
+        title= title)
     if not dir_path :
         raise DialogCancelledException()
     return dir_path    
 
-def get_file(filetypes=[("All files","*.*")], verbose:bool= False, initialdir:str=None, title:str= '', split:bool=True):
+def get_file(file_types=[("All files","*.*")], verbose:bool= False, initialdir:str=None, title:str= '', split:bool=True):
     """used to get select files using gui (multiple types of file can be set!)
 
     Args:
@@ -81,24 +107,21 @@ def get_file(filetypes=[("All files","*.*")], verbose:bool= False, initialdir:st
 
     Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
 
-    initialdir = initialdir or os.getcwd()
-
-    whole_path = askopenfilename(
-                    initialdir=initialdir,
-                    filetypes=filetypes,
-                    title=title) # show an "Open" dialog box and return the path to the selected file
-    print(whole_path)
-    if not whole_path:
+    # show an "Open" dialog box and return the path to the selected file
+    file_path = askopenfilename(
+        initialdir=initialdir or os.getcwd(),
+        filetypes=file_types,
+        title=title) 
+    print(file_path)
+    if not file_path:
         raise DialogCancelledException()
     if not split:
-        return whole_path
-    path, filename = os.path.split(whole_path)
-    if verbose:
-        print(path, filename)
+        return file_path
+    path, filename = os.path.split(file_path)
+
     return path, filename
     
-
-def verify_file(file_path, extension):
+def verify_file(file_path:str, extension:Union[str, FileExt]):
     """[summary]
 
     Args:
@@ -110,19 +133,17 @@ def verify_file(file_path, extension):
     """
     path_out=''
     if not os.path.isfile(file_path):
-        logger.debug(f'file {file_path} does not exist or is not a file!')
+        logger.debug(f'File "{file_path}" does not exist or is not a file!')
         return path_out
     _, file_extension = os.path.splitext(file_path)
-    if file_extension==extension:
+    if file_extension== f'{extension}':
         path_out= file_path
     return path_out
 
-def save_as_pickle(file_path, class2save, verbose=False, add_ext=True):
+def save_as_pickle(file_path, class2save, verbose=False, append_ext=True):
     """
     """
-    file_path= add_extention(file_path, const.EXT_PKL) if add_ext else file_path
-
-
+    file_path= append_extention(file_path, FileExt.pkl) if append_ext else file_path
     with open(file_path, 'wb') as file:
         pickle.dump(class2save, file, pickle.HIGHEST_PROTOCOL)
     print_saving_verbose(file_path, class2save, verbose)
@@ -136,7 +157,7 @@ def save_as_txt(file_path, class2save, verbose=True, add_ext=True):
         verbose (bool, optional): [description]. Defaults to True.
         add_ext (bool, optional): [description]. Defaults to True.
     """
-    file_path= add_extention(file_path, const.EXT_TXT) if add_ext else file_path
+    file_path= append_extention(file_path, FileExt.txt) if add_ext else file_path
     
     list_of_strings = []
     if isinstance(class2save,str):
@@ -150,7 +171,6 @@ def save_as_txt(file_path, class2save, verbose=True, add_ext=True):
         list_of_strings.append('\n\nSingle attributes:')
         list_of_strings.extend([f'{key} = {class2save[key]},' for key in class2save ])      
     else:
-
         tmp_dict= class2save.__dict__
         list_of_strings.append('Dictionary form:')
         list_of_strings.append(json.dumps(class2save.__dict__))
@@ -164,8 +184,17 @@ def save_as_txt(file_path, class2save, verbose=True, add_ext=True):
 
     # print_saving_verbose(filepath, class2save, verbose)
 
-def add_extention(filepath:str, ext:str):
-    return os.path.splitext(filepath)[0] + ext
+def append_extention(file_path:str, ext:Union[str, FileExt])->str:
+    """ Append and or replace extention to the file path
+    
+    Args:
+        filepath (str): path of the file
+        ext (Union[str, FileExt]): extention 
+
+    Returns:
+        str: path of the file with extention
+    """    
+    return f'{os.path.splitext(file_path)[0]}{ext}'
 
 def read_txt(filepath):
     with open(filepath, 'r') as file:
@@ -189,7 +218,7 @@ def print_saving_verbose(filename, class2save= None, verbose=True):
         else:
             print('\n Some data were saved in : ...{}'.format(filename[-50:]))
 
-def load_pickle(filename, class2upload=None, verbose=True):
+def load_pickle(filename, class2upload=None):
     """[summary]
 
     Args:
@@ -208,7 +237,6 @@ def load_pickle(filename, class2upload=None, verbose=True):
         return loaded_class
     set_existing_attrs(class2upload, loaded_class)
     return class2upload
-
 
 def set_existing_attrs(class2upload, newclass):
 
@@ -234,13 +262,12 @@ def print_loading_verbose(filename, classloaded= None, verbose=True):
         else:
             print('\nSome data were loaded from : ...{}'.format(filename[-50:]))
 
-
 class LoadCancelledException(Exception):
     """"""
 class WrongFileTypeSelectedError(Exception):
     """"""
 
-def get_file_dir_path( file_path:str='', extension=const.EXT_MAT, **kwargs):
+def get_file_dir_path( file_path:str='', extension:str=FileExt.txt.value, **kwargs):
     """
 
     Args:
@@ -261,7 +288,7 @@ def get_file_dir_path( file_path:str='', extension=const.EXT_MAT, **kwargs):
         try: 
             file_path =get_file(
                 title=title or f'Please select *{extension} files',
-                filetypes=[(f"{extension}-file",f"*{extension}")],
+                file_types=[(f"{extension}-file",f"*{extension}")],
                 split=False,**kwargs)
         except DialogCancelledException:
             raise LoadCancelledException('Loading aborted from user')

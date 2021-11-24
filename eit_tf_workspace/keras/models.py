@@ -12,11 +12,18 @@ import tensorflow as tf
 import tensorflow.keras as keras
 from eit_tf_workspace.keras.const import (KERAS_LOSS,
                                           KERAS_MODEL_SAVE_FOLDERNAME,
-                                          KERAS_OPTIMIZER, KerasLosses, KerasOptimizers)
+                                          KERAS_OPTIMIZER, KerasLosses,
+                                          KerasOptimizers)
 from eit_tf_workspace.train_utils.dataset import Datasets
 from eit_tf_workspace.train_utils.lists import KerasModels
 from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.models import Models, ModelNotDefinedError, ModelNotPreparedError, WrongLearnRateError, WrongLossError, WrongMetricsError, WrongOptimizerError
+from eit_tf_workspace.train_utils.models import (MODEL_SUMMARY_FILENAME,
+                                                 ModelNotDefinedError,
+                                                 ModelNotPreparedError, Models,
+                                                 WrongLearnRateError,
+                                                 WrongLossError,
+                                                 WrongMetricsError,
+                                                 WrongOptimizerError)
 from genericpath import isdir
 
 logger = getLogger(__name__)
@@ -82,7 +89,7 @@ class StdKerasModel(Models):
 
     def save(self, metadata:MetaData)-> str:
         assert_keras_model_compiled(self.model)
-        return save_keras_model(self.model, dir_path=metadata.ouput_dir, save_summary=metadata.save_summary)
+        return save_keras_model(self.model, dir_path=metadata.dir_path, save_summary=metadata.save_summary)
 
     def load(self, metadata:MetaData)-> None:
         self.model=load_keras_model(metadata)
@@ -97,7 +104,7 @@ class StdAutokerasModel(Models):
         self.model = ak.StructuredDataRegressor(
             max_trials = metadata.max_trials_autokeras, 
             overwrite=True, 
-            directory=metadata.ouput_dir)
+            directory=metadata.dir_path)
     def _get_specific_var(self, metadata:MetaData)-> None:
         """"""
     def _prepare_model(self)-> None:
@@ -130,7 +137,7 @@ class StdAutokerasModel(Models):
 
     def save(self, metadata:MetaData)-> str:
         # assert_keras_model_compiled(self.model)
-        return save_keras_model(self.model, dir_path=metadata.ouput_dir, save_summary=metadata.save_summary)
+        return save_keras_model(self.model, dir_path=metadata.dir_path, save_summary=metadata.save_summary)
 
     def load(self, metadata:MetaData)-> None:
         self.model=load_keras_model(metadata)
@@ -205,7 +212,7 @@ def save_keras_model(model:keras.Model, dir_path:str='', save_summary:bool=False
     logger.info(f'Keras model saved in: {model_path}')
     
     if save_summary:
-        summary_path= os.path.join(dir_path, const.MODEL_SUMMARY_FILENAME)
+        summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
         with open(summary_path, 'w') as f:
             with redirect_stdout(f):
                 model.summary()
@@ -221,8 +228,8 @@ def load_keras_model(metadata:MetaData) -> keras.models.Model:
     #     return
     # model_path=get_path_keras_model(dir_path)
 
-    model_path=get_path_keras_model(metadata.ouput_dir)
-    if get_path_keras_model(metadata.ouput_dir,metadata.model_saving_path[1]) != model_path:
+    model_path=get_path_keras_model(metadata.dir_path)
+    if get_path_keras_model(metadata.dir_path,metadata.model_saving_path[1]) != model_path:
         logger.warning(f'The saved path in metadata "{metadata.model_saving_path}" is not the automatic one!')
 
     if not isdir(model_path):
@@ -253,8 +260,9 @@ KERAS_MODELS={
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
     import logging
+
+    from eit_tf_workspace.utils.log import change_level, main_log
     main_log()
     change_level(logging.DEBUG)
 

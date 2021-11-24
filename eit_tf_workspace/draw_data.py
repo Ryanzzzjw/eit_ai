@@ -218,8 +218,8 @@ def plot_EIT_mesh(fig:figure.Figure, ax:axes.Axes, image:ImageEIT, show:list[boo
         fig.colorbar(im,ax=ax)
     return fig, ax, im
     
-    
 
+   
 def generate_nb_samples2plot(
         image_data:list[ImageDataset],
         nb_samples:Union[int,list[int]]=3,
