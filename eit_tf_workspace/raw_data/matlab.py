@@ -37,7 +37,8 @@ class MatlabSamples(RawSamples):
         Args:
             file_path (str, optional): see "_load". Defaults to `None`.
             nb_samples2load (int, optional): see "_load". Defaults to `0`.
-            data_sel (list[str], optional): see "_load". Defaults to `['Xih','Yih']`.
+            data_sel (list[str], optional): see "_load". 
+            Defaults to `['Xih','Yih']`.
             exit (bool, optional): exit flag. Defaults to `True`.
         """        
         er=None
@@ -149,14 +150,17 @@ class MatlabSamples(RawSamples):
         # get the folder and filename of all batch samples mat-files 
         folder=os.path.join(self.dir_path, self.dataset["samplesfolder"][0])
         samples_batch_files= self.dataset["samplesfilenames"]
+        samples_batch_paths= [
+            os.path.join(folder,file) for file in samples_batch_files]
         # 
-        idx_batch_file,idx_last_samples=self._get_idx_for_samples2loading(nb_samples=nb_samples)
-        
-        self._verify_keys_of_samples(folder, samples_batch_files, keys=var_keys)
-        
+        self._set_nb_samples(nb_samples)
+        idx_batch_file, idx_last_samples = self._idx_batch_loading()
+        self._check_keys_in_batch_sample_files(samples_batch_paths,var_keys)
+
         for idx_batch in range(idx_batch_file+1):
-            batch_file_path= os.path.join(folder, samples_batch_files[idx_batch])
-            logger.info(f'Loading batch samples file : ...{batch_file_path[-50:]}')
+            batch_file_path= samples_batch_paths[idx_batch]
+            logger.info(
+                f'Loading batch samples file : ...{batch_file_path[-50:]}')
             batch_file=load_mat(batch_file_path, logging=False)
             for key in self.samples.keys():
                 if idx_batch==0:
@@ -179,7 +183,10 @@ class MatlabSamples(RawSamples):
             logger.debug(f'Size of "{key}": {self.samples[key].shape}')
            
     def _XY_selection(self, data_sel:list[str]= ['Xih','Yih'])->None:
-        """[summary]
+        """ 
+
+        this method set `self.X` (nb_samples, nbfeatures) and 
+        `self.Y` (nb_samples, nblabels)
 
         Args:
             data_sel (list, optional): [description]. Defaults to ['Xih','Yih'].
@@ -189,14 +196,18 @@ class MatlabSamples(RawSamples):
         """
          # data selection
         tmpX = {
-            'Xh': self.samples['X'][:, :, 0], #Voltages 
+            #Voltages meas homogenious
+            'Xh': self.samples['X'][:, :, 0],
+            #Voltages meas inhomogenious
             'Xih': self.samples['X'][:, :, 1],
+            #Voltages meas homogenious with noise  
             'Xhn': self.samples['X'][:, :, 2],
-            'Xihn': self.samples['X'][:, :, 3],
+            #Voltages meas inhomogenious with noise  
+            'Xihn': self.samples['X'][:, :, 3]
         }
         tmpY = {
-            'Yh': self.samples['y'][:,:,0],
-            'Yih': self.samples['y'][:,:,1]
+            'Yh': self.samples['y'][:,:,0], # Image elem_data homogenious
+            'Yih': self.samples['y'][:,:,1] # Image elem_data inhomogenious
         }
         # here we can create the differences
         tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
@@ -220,69 +231,88 @@ class MatlabSamples(RawSamples):
         self.Y= tmpY[data_sel[1]].T
     
     def _set_nb_samples(self,nb_samples:int=0)->None:
-        """ Get nb of samples to load (console input from user)
+        """Set nb of samples to load
+
+        this method set self.nb_samples
+
         Args:
-            number_samples2load (int, optional):if > 0 console input wont be asked. Defaults to 0.
-        Returns:
-            number_samples2load [int]: nb of samples to load
+            nb_samples (int, optional): number of samples to load automatically.
+             Defaults to `0` (user will be asked on terminal).
         """
-        if not isinstance(nb_samples, int): #
+        if not isinstance(nb_samples, int):
             nb_samples=0
         
         max_samples= np.amax(self.dataset["samplesindx"])
-        self.nb_samples= max_samples
-        if nb_samples<0:
-            logger.warning(f'Number of samples to load negativ: {nb_samples}')
-        elif nb_samples==0:
-            prompt= f"{max_samples} samples are availables. \nEnter the number of samples to load (Enter for all): \n"
+        self.nb_samples= max_samples # set the default number of samples
+
+        if nb_samples < 0: # if negativ >> default value
+            logger.warning(f'Number of samples to load negativ: {nb_samples=}')
+        elif nb_samples==0: # if 0 >> ask user
+            prompt= f"{max_samples} samples are availables. \n\
+                Enter the number of samples to load (Enter for all): \n"
             input_user=input(prompt)
             try:
                 self.nb_samples = int(input_user)
-            except ValueError:
-                logger.warning(f'Nb of Samples should be an int: you enter {input_user}')
-        elif nb_samples<=max_samples:
+            except ValueError: # if Enter pressed or wrong entry >> default value
+                logger.warning(
+                    f'Nb of Samples should be an int: you enter {input_user}')
+        elif nb_samples<=max_samples: # if lower than max value
             self.nb_samples=nb_samples
-        else:
-            logger.warning(f'Number of samples to load too high: {nb_samples}>{max_samples}')
+        else: # if higher than maxvalue >> default value
+            logger.warning(
+                f'Number of samples too high: {nb_samples=}>{max_samples=}')
+
         logger.info(f'{self.nb_samples} samples will be loaded')
 
 
-    def _get_idx_for_samples2loading(
-        self,
-        nb_samples:int=0)-> tuple[int,int]:
-        """ Get nb of samples to load (console input from user)
-        Args:
-            number_samples2load (int, optional):if > 0 console input wont be asked. Defaults to 0.
+    def _idx_batch_loading(self)-> tuple[int,int]:
+        """Determine the indexes of the last batch samples file to load and
+        in that one the last sample to load to obtain a total of 
+        "self.nb_samples" samples
+    
+        Raises:
+            Exception: if self.nb_samples is not before using "_set_nb_samples"
+
         Returns:
-            number_samples2load [int]: nb of samples to load
+            tuple[int,int]: (index of last batch file, index of last sample)
         """
-        self._set_nb_samples(nb_samples)
+        if self.nb_samples == 0:
+            raise Exception(
+                'Please set nb_samples (_set_nb_samples) before')
 
         tmp= np.where(self.dataset["samplesindx"]==self.nb_samples)
-        idx_lastbatch2load= int(tmp[0][0])
-        idx_lastsamplesoflastbatch2load= int(tmp[1][0])
+        idx_last_batch, idx_last_samples= int(tmp[0][0]),int(tmp[1][0])
 
-        return idx_lastbatch2load, idx_lastsamplesoflastbatch2load
+        return idx_last_batch, idx_last_samples
 
-    def _verify_keys_of_samples(
+    def _check_keys_in_batch_sample_files(
         self, 
-        folder:str, 
-        batch_files:list[str], 
-        keys:list[str]= MATLAB_DATASET_VAR_KEYS)->None:
-        """ verify the keys present in the first batch_file 
-        init the sample dict with given keys
-        """
-        batch_file=load_mat(os.path.join(folder, batch_files[0]),logging=False)
+        batch_file_paths:list[str], 
+        keys:list[str])->None:
+        """ Check if the passed keys are available in the batch samples files
+        (only the first will be checked)
+        
+        this method initialize the dict self.samples with the given keys
+        and val is np.array([])
+
+        Args:
+            batch_file_paths (list[str]): batch samples files paths
+            keys (list[str]): variables keys to load
+        """ 
+
+        batch_file=load_mat(batch_file_paths[0],logging=False)
         keys_batch_file= list(batch_file.keys())
+        # check if each keys is in the keys_batch_file available
         keys_available=True
-        for key in keys:# check if each keys is in the keys_batch_file
+        for key in keys:
             if key not in keys_batch_file:
                 logger.warning(
-                    f'Samples file do not contain the variable-{key=} as expected')
+                    f'Variable-{key=} not available in batch samples files')
                 keys_available=False
 
         if not keys_available: #keys_batch_file != keys: 
             keys=keys_batch_file
+
         logger.debug(
             f'Variables: {keys} will be loaded from the batch samples files')
         for key in keys:
@@ -299,7 +329,7 @@ def str_cellarray2str_list(str_cellarray):
         >>> here the loaded "strange" array is converted to an str list
 
     Args:
-        str_cellarray ("strange" ndarray): correponing to str cell array in matlab
+        str_cellarray ( ndarray): correponing to str cell array in matlab
 
     Returns:
         str list: 
