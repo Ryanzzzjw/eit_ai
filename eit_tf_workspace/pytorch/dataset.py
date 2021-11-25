@@ -69,47 +69,95 @@ logger = getLogger(__name__)
 #         self.test=XYSet(x=X[self._idx_test,:], y=Y[self._idx_test,:])
 
 
-class torchDataset(Dataset):
+class TorchDatasetWithIdx(Dataset):
 
-    def __init__(self, loaded_data):
-        # loaded_data is np.array
+    def __init__(self, loaded_data:np.ndarray):
+ 
         self.data = loaded_data
         self.X = torch.Tensor(loaded_data[:, :-1]).float()
         self.Y = torch.Tensor(loaded_data[:, [-1]]).float()
+        self.idx= torch.Tensor(np.array(range(loaded_data.shape[0]))).float()
         # self.X = loaded_data[:, :-1]
         # self.Y = loaded_data[:,[-1]]
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index)->tuple[torch.Tensor,torch.Tensor]:
+        return self.X[index], self.Y[index], self.idx[index]
+    
+    def get_idx(self)-> list[int]:
+        return self.idx.tolist()
+
+class STdtorchDataset(Dataset):
+    X= None
+    Y= None
+
+    def __init__(
+        self,
+        loaded_data:np.ndarray= None,
+        idx:list[int]=None,
+        dataset:TorchDatasetWithIdx= None)-> None:
+        """[summary]
+
+        Args:
+            loaded_data (np.ndarray, optional): [description]. Defaults to None.
+            idx (list[int], optional): [description]. Defaults to None.
+            dataset (TorchDatasetWithIdx, optional): [description]. Defaults to None.
+        """        
+       
+        
+        if loaded_data:
+            self.data = loaded_data
+            if idx:
+                self.X = torch.Tensor(loaded_data[idx, :-1]).float()
+                self.Y = torch.Tensor(loaded_data[idx, [-1]]).float()
+            else:
+                self.X = torch.Tensor(loaded_data[:, :-1]).float()
+                self.Y = torch.Tensor(loaded_data[:, [-1]]).float()
+
+        # self.X = X
+        # self.Y = Y
+        # self.X = loaded_data[:, :-1]
+        # self.Y = loaded_data[:,[-1]]
+
+    # def set_from_dataset(self):
+        if dataset:
+            self.X = dataset.X
+            self.Y = dataset.Y
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index)->tuple[torch.Tensor,torch.Tensor]:
         return self.X[index], self.Y[index]
 
 def normalization(data):
     return (data - data.mean()) / data.std()
 
 
-def _mk_Dataloader(loaded_data, dataset_type):
-    loaded_data = torchDataset(loaded_data)
+def _mk_Dataloader(loaded_data, dataset_type)-> DataLoader:
+    loaded_data = TorchDatasetWithIdx(loaded_data)
     train_size = int(len(loaded_data) * 0.6)
     val_size = int(len(loaded_data) * 0.2)
     test_size = int(len(loaded_data) * 0.2)
 
-    train_set, val_set, test_set = torch.utils.data.random_split(loaded_data, [train_size, val_size, test_size])
+    train_set, val_set, test_set = torch.utils.data.random_split(
+        loaded_data, [train_size, val_size, test_size])
+
+    _idx_train= train_set.get_idx()
+    train= STdtorchDataset(dataset=train_set)
+
+    train=STdtorchDataset(loaded_data=loaded_data, idx=_idx_train, dataset=train_set)
    
     if(dataset_type == 'train_set'):
-        return DataLoader(train_set, batch_size=5, shuffle=True, num_workers=0)
+        return DataLoader(train, batch_size=5, shuffle=True, num_workers=0)
     if(dataset_type == 'val_set'):
          return DataLoader(val_set, batch_size=5, shuffle=False, num_workers=0)
     if(dataset_type == 'test_set'):
          return DataLoader(test_set, batch_size=5, shuffle=False, num_workers=0)
         
-    
 
-
-    
-    
-    
 
 if __name__ == "__main__":
     from eit_tf_workspace.utils.log import change_level, main_log
@@ -153,13 +201,11 @@ if __name__ == "__main__":
                                         nn.Linear(3, 1)
             )
             
-
         def forward(self, x):
-        
             return self.layers(x)
 
 
-    net = Model()
+    net = Model() # self.model
 
     loss_mse = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
@@ -176,4 +222,11 @@ if __name__ == "__main__":
             loss.backward()
 
             optimizer.step()
+
+
+
+
+
+        
+
         
