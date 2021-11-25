@@ -10,10 +10,8 @@ from eit_tf_workspace.raw_data.matlab import MatlabSamples
 from eit_tf_workspace.train_utils.metadata import reload_metadata
 from eit_tf_workspace.train_utils.select_gen import select_gen
 
-
 from logging import getLogger
 
-from glob_utils.pth.path_utils import get_POSIX_path
 logger = getLogger(__name__)
 
 def std_eval_pipeline(dir_path:str=''):
@@ -92,10 +90,11 @@ def test_single_predict(dir_path:str=''):
     plot_eval_results(results, axis='linear')
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
+    from glob_utils.pth.path_utils import get_POSIX_path    
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
 
 
     dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_tf_workspace\outputs\Std_keras_test_20211117_165710'

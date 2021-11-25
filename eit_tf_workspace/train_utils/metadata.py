@@ -268,9 +268,9 @@ def reload_metadata(dir_path:str='')-> MetaData:
 if __name__ == "__main__":
     import logging
 
-    from glob_utils.log.log import change_level, main_log
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
     a= MetaData()
     a.reload()
     

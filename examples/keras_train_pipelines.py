@@ -89,10 +89,10 @@ def build_train_save_model(gen:Generators, metadata:MetaData)-> tuple[Generators
 #     return np.resize(image, (-1,image.shape[0])), label
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
 
     debug=True
 
