@@ -19,6 +19,8 @@ class WrongModelError(Exception):
     """"""
 class WrongDatasetError(Exception):
     """"""
+class WrongSingleXError(Exception):
+    """"""
 
 ################################################################################
 # Abstract Class for ModelGenerator

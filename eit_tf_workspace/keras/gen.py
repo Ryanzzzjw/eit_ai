@@ -1,14 +1,18 @@
 
 from logging import getLogger
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
-import numpy as np
-from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.gen import Generators, WrongDatasetError, WrongModelError, meas_duration
-from eit_tf_workspace.keras.models import KERAS_MODELS
-from eit_tf_workspace.keras.dataset import KERAS_DATASETS
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.lists import KerasDatasets, KerasModels, ListModels, ListDatasets, ListGenerators
 
+import numpy as np
+from eit_tf_workspace.keras.dataset import KERAS_DATASETS
+from eit_tf_workspace.keras.models import KERAS_MODELS
+from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_tf_workspace.train_utils.dataset import Datasets
+from eit_tf_workspace.train_utils.gen import (Generators, WrongDatasetError,
+                                              WrongModelError,
+                                              WrongSingleXError, meas_duration)
+from eit_tf_workspace.train_utils.lists import (KerasDatasets, KerasModels,
+                                                ListDatasets, ListGenerators,
+                                                ListModels)
+from eit_tf_workspace.train_utils.metadata import MetaData
 
 logger = getLogger(__name__)
 
@@ -77,12 +81,16 @@ class GeneratorKeras(Generators):
         **kwargs)-> np.ndarray:
 
         X_pred=self.dataset.get_X('test')
+        # another dataset can be here predicted (only test part)
         if dataset is not None:
-            if isinstance(dataset, type(self.dataset)): # another dataset can be here predicted (only test part)
-                X_pred=dataset.get_X('test')
-            else:
-                raise WrongDatasetError(f'{dataset= } and {self.dataset} dont have same type...')
-        if single_X is not None and isinstance(single_X, np.ndarray):
+            if not isinstance(dataset, type(self.dataset)): 
+                raise WrongDatasetError(
+                    f'{dataset= } and {self.dataset} dont have same type...')
+            X_pred=dataset.get_X('test')
+        # Single passed X can be here predicted, after been formated
+        if single_X is not None:
+            if not isinstance(single_X, np.ndarray):
+                raise WrongSingleXError(f'{single_X= } is not an np.ndarray ')
             X_pred= self.dataset.format_single_X(single_X, metadata)
 
         return self.model_man.predict(X_pred=X_pred, metadata=metadata, **kwargs)
@@ -98,8 +106,9 @@ class GeneratorKeras(Generators):
 
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level, main_log
     import logging
+
+    from glob_utils.log.log import change_level, main_log
     main_log()
     change_level(logging.DEBUG)
     """"""
