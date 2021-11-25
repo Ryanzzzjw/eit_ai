@@ -218,8 +218,8 @@ def plot_EIT_mesh(fig:figure.Figure, ax:axes.Axes, image:ImageEIT, show:list[boo
         fig.colorbar(im,ax=ax)
     return fig, ax, im
     
-    
 
+   
 def generate_nb_samples2plot(
         image_data:list[ImageDataset],
         nb_samples:Union[int,list[int]]=3,
@@ -269,10 +269,10 @@ def plot_eval_results(results:list[EvalResults], axis='linear', plot_type=None):
     plt.show(block=False)
     
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
 
     print()
     print([True for _ in range(4)])

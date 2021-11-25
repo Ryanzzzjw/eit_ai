@@ -1,16 +1,23 @@
-
+import os
+import sys
 from dataclasses import dataclass
 from logging import error, getLogger
-import sys
-from typing import List, Tuple
 
-import eit_tf_workspace.constants as const
-from eit_tf_workspace.train_utils.lists import ListDatasets, ListGenerators, ListLosses, ListModels, ListOptimizers
-from eit_tf_workspace.utils.path_utils import *
-from eit_tf_workspace.utils.log import log_msg_highlight
-from scipy.io.matlab.mio import savemat
+from eit_tf_workspace.train_utils.lists import (ListDatasets, ListGenerators,
+                                                ListLosses, ListModels,
+                                                ListOptimizers)
+from glob_utils.files.files import (read_txt, save_as_mat, save_as_pickle,
+                                    save_as_txt)
+from glob_utils.log.msg_trans import highlight_msg
+from glob_utils.pth.inout_dir import DEFAULT_DIRS
+from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
+                                       get_date_time, get_dir, get_POSIX_path,
+                                       mk_new_dir)
 
 logger = getLogger(__name__)
+
+METADATA_FILENAME= 'metadata'
+IDX_FILENAME= 'idx_samples'
 
 ################################################################################
 # Class MetaData
@@ -21,7 +28,7 @@ class MetaData(object):
     for the training and eval"""
     time:str=None
     training_name:str=None
-    ouput_dir:str=None
+    dir_path:str=None
 
     raw_src_file:List[str]=None
     # dataset_src_file_pkl:List[str]=None
@@ -73,11 +80,11 @@ class MetaData(object):
         if not training_name:
             training_name='training_default_name'
         self.training_name= f'{training_name}_{self.time}' if append_date_time else training_name
-        self.ouput_dir= mk_ouput_dir(
+        self.dir_path= mk_new_dir(
             self.training_name,
-            default_out_dir=const.DEFAULT_OUTPUTS_DIR)
-        msg=f'Training results will be found in : {self.ouput_dir}'
-        logger.info(log_msg_highlight(msg))
+            parent_dir=DEFAULT_DIRS.output)
+        msg=f'Training results will be found in : {self.dir_path}'
+        logger.info(highlight_msg(msg))
 
     def set_model_dataset_type(self, gen_type:ListGenerators, model_type:ListModels, dataset_type:ListDatasets):
         """"""
@@ -87,7 +94,9 @@ class MetaData(object):
 
     def set_4_dataset(  
             self, 
-            batch_size:int=32, test_ratio:float=0.2, val_ratio:float=0.2, 
+            batch_size:int=32,
+            test_ratio:float=0.2,
+            val_ratio:float=0.2, 
             # use_tf_dataset:bool=False, 
             normalize= [True, True]):
         """ """             
@@ -123,9 +132,10 @@ class MetaData(object):
         self._test_steps=compute_steps(self.batch_size, self._test_len)
 
     def set_raw_src_file(self, src_file):
-        self.raw_src_file=make_PoSIX_abs_rel(src_file, self.ouput_dir)
+        self.raw_src_file=make_PoSIX_abs_rel(src_file, self.dir_path)
+        
     def set_model_saving_path(self, model_saving_path):
-        self.model_saving_path=make_PoSIX_abs_rel(model_saving_path, self.ouput_dir)
+        self.model_saving_path=make_PoSIX_abs_rel(model_saving_path, self.dir_path)
 
     def set_idx_samples(self, idx_train:list=[], idx_val:list=[], idx_test:list=[], save:bool=True):
         self.idx_samples={
@@ -134,7 +144,7 @@ class MetaData(object):
             'idx_test': idx_test
         }
         if save:
-            self.save_idx_samples_2matfile()
+            self.save_idx_samples()
 
     def get_idx_samples(self):
         return [
@@ -144,16 +154,16 @@ class MetaData(object):
         ] 
 
     def set_idx_samples_file(self, path):
-        self.idx_samples_file=make_PoSIX_abs_rel(path, self.ouput_dir)
+        self.idx_samples_file=make_PoSIX_abs_rel(path, self.dir_path)
 
-    def save_idx_samples_2matfile(self):
+    def save_idx_samples(self):
         """ save the indexes of the samples used to build 
         the dataset train, val and test """
 
         indexes = self.idx_samples
         time = self.time or get_date_time()
-        path =  os.path.join(self.ouput_dir, f'{time}_{const.EXT_IDX_FILE}')
-        savemat(path, indexes)
+        path =  os.path.join(self.dir_path, f'{IDX_FILENAME}_{time}')
+        save_as_mat(path, indexes)
         save_as_pickle(path, indexes)
         save_as_txt(path,indexes)
         self.set_idx_samples_file(path)
@@ -166,10 +176,10 @@ class MetaData(object):
 
     def save(self, dir_path= None):
 
-        if not self.ouput_dir:
+        if not self.dir_path:
             return
-        dir_path = dir_path or self.ouput_dir
-        filename=os.path.join(dir_path,const.METADATA_FILENAME)
+        dir_path = dir_path or self.dir_path
+        filename=os.path.join(dir_path,METADATA_FILENAME)
         copy=MetaData()
         for key, val in self.__dict__.items():
             if hasattr(val, '__dict__'):
@@ -185,7 +195,7 @@ class MetaData(object):
             else:
                 setattr(copy, key, val)
         save_as_txt(filename, copy)
-        logger.info(log_msg_highlight(f'Metadata saved in: {filename}'))
+        logger.info(highlight_msg(f'Metadata saved in: {filename}'))
         
         
     def read(self, path):
@@ -195,9 +205,10 @@ class MetaData(object):
             if key in self.__dict__.keys():
                 setattr(self,key, load_dict[key])
 
-        logger.info(log_msg_highlight(f'Metadata loaded from: {path}, '))
+        logger.info(highlight_msg(f'Metadata loaded from: {path}, '))
         logger.info(f'Metadata loaded :\n{self.__dict__.keys()}')
         logger.debug(f'Metadata loaded (details):\n{self.__dict__}')
+        self.dir_path=os.path.split(path)[0]
 
     def reload(self, dir_path:str=''):
 
@@ -205,11 +216,15 @@ class MetaData(object):
             title= 'Select directory of model to evaluate'
             try: 
                 dir_path=get_dir(title=title)
-            except DialogCancelledException as e:
+            except OpenDialogDirCancelledException as e:
                 logger.critical('User cancelled the loading')
                 sys.exit()
-            
-        self.read(os.path.join(dir_path,const.METADATA_FILENAME))
+        try:   
+            self.read(os.path.join(dir_path,METADATA_FILENAME))
+        except FileNotFoundError as e:
+            logger.critical(f'File "{METADATA_FILENAME}" not found in folder:\n{dir_path}\n({e})')
+            sys.exit()
+
 
 ################################################################################
 # Methods
@@ -251,10 +266,11 @@ def reload_metadata(dir_path:str='')-> MetaData:
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
     import logging
+
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
     a= MetaData()
     a.reload()
     

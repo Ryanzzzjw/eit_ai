@@ -1,16 +1,18 @@
 
-import time
-from datetime import timedelta
 from logging import getLogger
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
-import numpy as np
-from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.gen import Generators, WrongDatasetError, WrongModelError, meas_duration
-from eit_tf_workspace.keras.models import KERAS_MODELS
-from eit_tf_workspace.keras.dataset import KERAS_DATASETS
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.lists import KerasDatasets, KerasModels, ListModels, ListDatasets, ListGenerators
 
+import numpy as np
+from eit_tf_workspace.keras.dataset import KERAS_DATASETS
+from eit_tf_workspace.keras.models import KERAS_MODELS
+from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_tf_workspace.train_utils.dataset import Datasets
+from eit_tf_workspace.train_utils.gen import (Generators, WrongDatasetError,
+                                              WrongModelError,
+                                              WrongSingleXError, meas_duration)
+from eit_tf_workspace.train_utils.lists import (KerasDatasets, KerasModels,
+                                                ListDatasets, ListGenerators,
+                                                ListModels)
+from eit_tf_workspace.train_utils.metadata import MetaData
 
 logger = getLogger(__name__)
 
@@ -27,7 +29,7 @@ class GeneratorKeras(Generators):
         elif isinstance(model_type, KerasModels) and isinstance(model_type, KerasDatasets):
             model_type, dataset_type = model_type.value, dataset_type.value
         try:
-            self.model_manager=KERAS_MODELS[KerasModels(model_type)]()
+            self.model_man=KERAS_MODELS[KerasModels(model_type)]()
         except ValueError:
             raise WrongModelError(f'Wrong model: {model_type}')
         try:
@@ -41,7 +43,7 @@ class GeneratorKeras(Generators):
         self.dataset.build(raw_samples, metadata)
 
     def build_model(self, metadata:MetaData)-> None:
-        self.model_manager.build(metadata=metadata)
+        self.model_man.build(metadata=metadata)
 
     def run_training(self,metadata:MetaData=None, dataset:Datasets=None)-> None:
         logger.info('### Training started: ... ###')
@@ -56,37 +58,59 @@ class GeneratorKeras(Generators):
             passed_dataset= kwargs.pop('dataset')
             if passed_dataset and isinstance(passed_dataset, type(self.dataset)):
                 dataset_2_train=passed_dataset
-        self.model_manager.train(dataset=dataset_2_train, metadata=metadata)
+        self.model_man.train(dataset=dataset_2_train, metadata=metadata)
 
-    def get_prediction(self,metadata:MetaData,dataset:Datasets=None, **kwargs)-> np.ndarray:
+    def get_prediction(
+        self,
+        metadata:MetaData,
+        dataset:Datasets=None,
+        single_X:np.ndarray= None,
+        **kwargs)-> np.ndarray:
+
         logger.info('### Prediction started: ... ###')
-        prediction, duration =self._get_prediction(metadata, dataset= dataset, return_duration=True, **kwargs)
+        prediction, duration =self._get_prediction(metadata, dataset= dataset,single_X=single_X, return_duration=True, **kwargs)
         logger.info(f'### Prediction lasted: {duration} ###')
         return prediction
 
     @meas_duration    
-    def _get_prediction(self,metadata:MetaData, **kwargs)-> np.ndarray:
-        dataset_2_predict=self.dataset
-        if 'dataset' in kwargs:
-            passed_dataset= kwargs.pop('dataset')
-            if passed_dataset and isinstance(passed_dataset, type(self.dataset)):
-                dataset_2_predict=passed_dataset
-        return self.model_manager.predict(dataset=dataset_2_predict, metadata=metadata,**kwargs)
+    def _get_prediction(
+        self,
+        metadata:MetaData,
+        dataset:Datasets=None,
+        single_X:np.ndarray= None,
+        **kwargs)-> np.ndarray:
+
+        X_pred=self.dataset.get_X('test')
+        # another dataset can be here predicted (only test part)
+        if dataset is not None:
+            if not isinstance(dataset, type(self.dataset)): 
+                raise WrongDatasetError(
+                    f'{dataset= } and {self.dataset} dont have same type...')
+            X_pred=dataset.get_X('test')
+        # Single passed X can be here predicted, after been formated
+        if single_X is not None:
+            if not isinstance(single_X, np.ndarray):
+                raise WrongSingleXError(f'{single_X= } is not an np.ndarray ')
+            X_pred= self.dataset.format_single_X(single_X, metadata)
+
+        return self.model_man.predict(X_pred=X_pred, metadata=metadata, **kwargs)
 
     def save_model(self, metadata:MetaData)-> None:
-        model_saving_path=self.model_manager.save(metadata=metadata)
+        model_saving_path=self.model_man.save(metadata=metadata)
         metadata.set_model_saving_path(model_saving_path)
 
     def load_model(self,metadata:MetaData)-> None:
         self.select_model_dataset(metadata=metadata)
-        self.model_manager.load(metadata=metadata)
+        self.model_man.load(metadata=metadata)
+
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
     import logging
+
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
     """"""
     
 

@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from logging import getLogger
+from typing import Any, Union
 
 import numpy as np
 import sklearn.model_selection
@@ -10,7 +11,11 @@ from eit_tf_workspace.raw_data.raw_samples import RawSamples
 from sklearn.preprocessing import MinMaxScaler
 
 logger = getLogger(__name__)
-
+################################################################################
+# Custom Exeptions/Errors for Dataset
+################################################################################
+class WrongSingleXError(Exception):
+    """"""
 ################################################################################
 # Abstract Class for Dataset
 ################################################################################
@@ -37,6 +42,12 @@ class Datasets(ABC):
         self.ouput_size:int= 0
 
     def build(self,raw_samples:RawSamples, metadata:MetaData):
+        """[summary]
+
+        Args:
+            raw_samples (RawSamples): [description]
+            metadata (MetaData): [description]
+        """        
         X=raw_samples.X
         Y=raw_samples.Y
         self.fwd_model= raw_samples.fwd_model
@@ -54,7 +65,15 @@ class Datasets(ABC):
         metadata.input_size=self.input_size
         metadata.output_size=self.ouput_size
 
-    def _set_sizes_dataset(self,X, Y, metadata:MetaData):
+    def _set_sizes_dataset(self,X:np.ndarray, Y:np.ndarray, metadata:MetaData):
+        """[summary]
+
+        Args:
+            X ([type]): [description]
+            Y ([type]): [description]
+            metadata (MetaData): [description]
+        """ 
+        logger.debug(f'Size of X and Y: {X.shape=}, {Y.shape=}')       
         self._nb_samples= np.shape(X)[0]
         self._batch_size = metadata.batch_size
         self._test_ratio= metadata.test_ratio
@@ -71,7 +90,28 @@ class Datasets(ABC):
         logger.info(f'Length of test: {self._test_len}')
 
     def _is_indexes(self, metadata:MetaData):
+        """[summary]
+
+        Args:
+            metadata (MetaData): [description]
+
+        Returns:
+            [type]: [description]
+        """        
         return metadata.idx_samples['idx_train']
+    
+    def format_single_X(self, single_X:np.ndarray, metadata:MetaData)->np.ndarray:
+
+        formated_X= single_X.flatten()
+
+        if formated_X.shape[0] != self.input_size:
+            raise WrongSingleXError(f'{single_X=}\n {formated_X.shape[0]=} != {self.input_size}')
+
+        formated_X= np.reshape(formated_X,(1, self.input_size))
+        # print(d, d.shape)
+        formated_X, _= self._preprocess(formated_X, None, metadata)
+             
+        return formated_X
 
     @abstractmethod
     def get_X(self, part:str='train'):
@@ -86,15 +126,15 @@ class Datasets(ABC):
         """Return all samples_x, and samples_y as a tuple"""
 
     @abstractmethod
-    def _preprocess(self, X, Y, metadata:MetaData):
+    def _preprocess(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
         """return X, Y preprocessed"""
 
     @abstractmethod
-    def _mk_dataset(self, X, Y, metadata:MetaData)-> None:
+    def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
         """build the dataset"""
 
     @abstractmethod
-    def _mk_dataset_from_indexes(self, X, Y, metadata:MetaData)-> None:
+    def _mk_dataset_from_indexes(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
         """rebuild the dataset with the indexes """
 
 
@@ -131,13 +171,22 @@ class StdDataset(Datasets):
     def get_samples(self, part: str):
         return getattr(self, part).get_set()
 
-    def _preprocess(self, X, Y, metadata:MetaData):
+    def _preprocess(
+        self,
+        X:np.ndarray,
+        Y:np.ndarray,
+        metadata:MetaData)->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
         """return X, Y preprocessed"""
+        
         X=scale_prepocess(X, metadata.normalize[0])
-        Y=scale_prepocess(Y, metadata.normalize[0])
+        Y=scale_prepocess(Y, metadata.normalize[1])
+        if Y is not None:
+            logger.debug(f'Size of X and Y (after preprocess): {X.shape=}, {Y.shape=}')     
+        else:
+            logger.debug(f'Size of X (after preprocess): {X.shape=}')
         return X, Y
 
-    def _mk_dataset(self, X, Y, metadata:MetaData)-> None:
+    def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
         """build the dataset"""
         idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
         X= np.concatenate(( X, idx ), axis=1)
@@ -153,7 +202,7 @@ class StdDataset(Datasets):
         self.val=XYSet(x=x_val[:,:-1], y=y_val)
         self.test=XYSet(x=x_test[:,:-1], y=y_test)
 
-    def _mk_dataset_from_indexes(self, X, Y, metadata:MetaData)-> None:
+    def _mk_dataset_from_indexes(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
         """rebuild the dataset with the indexes """
         self._idx_train= convert_vec_to_int(metadata.idx_samples['idx_train'])
         self._idx_val= convert_vec_to_int(metadata.idx_samples['idx_val'])
@@ -166,20 +215,31 @@ class StdDataset(Datasets):
 # Methods
 ################################################################################
 
-def scale_prepocess(x, scale:bool=True):
+def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
+    """Normalize input x using minMaxScaler 
+
+    Args:
+        x (np.ndarray): array-like of shape (n_samples, n_features)
+                        Input samples.
+        scale (bool, optional):. Defaults to True.
+
+    Returns:
+        np.ndarray: ndarray array of shape (n_samples, n_features_new)
+            Transformed array.
+    """    
     if scale:
         scaler = MinMaxScaler()
-        x= scaler.fit_transform(x)
-    return x
+        x= scaler.fit_transform(x) if x is not None else None
+    return x 
 
-def convert_to_int(x):
+def convert_to_int(x:Any)->int:
     return np.int(x)
 convert_vec_to_int = np.vectorize(convert_to_int)
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
 

@@ -2,7 +2,7 @@
 
 from typing import Any
 from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.models import ModelManagers, ListModels
+from eit_tf_workspace.train_utils.models import Models, ListModels
 from eit_tf_workspace.train_utils.metadata import MetaData
 import torch
 from torch import nn
@@ -226,10 +226,10 @@ PYTORCH_MODELS={
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
     
 
     

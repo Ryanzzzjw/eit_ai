@@ -6,7 +6,7 @@ import time
 from typing import Any, Union
 import numpy as np
 
-from eit_tf_workspace.train_utils.models import ModelManagers
+from eit_tf_workspace.train_utils.models import Models
 from eit_tf_workspace.train_utils.dataset import Datasets
 from eit_tf_workspace.train_utils.metadata import MetaData
 from eit_tf_workspace.train_utils.lists import ListModels, ListDatasets
@@ -19,16 +19,18 @@ class WrongModelError(Exception):
     """"""
 class WrongDatasetError(Exception):
     """"""
+class WrongSingleXError(Exception):
+    """"""
 
 ################################################################################
 # Abstract Class for ModelGenerator
 ################################################################################
 
 class Generators(ABC):
-    """ Generator abstract class use to manage model and dataset
+    """Generator abstract class use to manage model and dataset  
     
     """
-    model_manager:ModelManagers = None
+    model_man:Models = None
     dataset:Datasets= None
 
     def __init__(self) -> None:
@@ -135,18 +137,30 @@ class Generators(ABC):
         """        
         
     @abstractmethod
-    def get_prediction(self,metadata:MetaData, dataset:Datasets=None, **kwargs)-> np.ndarray:
-        """Return prediction from 'test' part of the intern dataset
-        or the passed one.
+    def get_prediction(
+        self,
+        metadata:MetaData,
+        dataset:Datasets=None,
+        single_X:np.ndarray= None,
+        **kwargs)-> np.ndarray:
+        """Return prediction from:
+        - 'test'-part of the intern "self.dataset" (if dataset and single_X are None)
+        - 'test'-part of the passed dataset (if single_X is None)
+        - the single_X (eg. measurements) (fist single_X will be formated)
 
         Args:
-            metadata (MetaData): 
-            dataset (Datasets, optional): Defaults to None.
+            metadata (MetaData)
+            dataset (Datasets, optional): type of "self.dataset". Defaults to None.
+            single_X (np.ndarray, optional): array-like of shape (1, n_features). Defaults to None.
+            **kwargs: tranmitted to the "predict" method of the model....
+        Raises:
+            WrongDatasetError: raised if passed dataset is not the same type as "self.dataset"
 
         Returns:
-            np.ndarray: predicted samples values as matrix (n_samples, :)
-        """      
-        
+            np.ndarray: array-like of shape (n_samples, :)
+                        predicted samples values
+        """        
+
     @abstractmethod
     def save_model(self, metadata:MetaData)-> None:
         """Call the save model method of the model_manager, 
@@ -184,18 +198,21 @@ def meas_duration(func):
         func ([type]): [description]
     """    
     def wrapper(*args, **kwargs)-> Union[tuple[Any, str], Any]:
+        return_duration= None
         start_time = time.time()
+        if 'return_duration' in kwargs:
+            return_duration= kwargs.pop('return_duration')
         result=func(*args, **kwargs)
         duration = timedelta(seconds=time.time() - start_time)
         duration= str(duration)
-        if 'return_duration' in kwargs and kwargs.pop('return_duration'):
-            return result, duration
-        return result
+        
+        return result, duration if return_duration else result
+        
     return wrapper
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
     """"""
