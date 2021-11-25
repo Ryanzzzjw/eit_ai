@@ -30,19 +30,19 @@ class MetaData(object):
     training_name:str=None
     dir_path:str=None
 
-    raw_src_file:List[str]=None
-    # dataset_src_file_pkl:List[str]=None
-    idx_samples_file:List[str]=None
-    model_saving_path:List[str]=None
+    raw_src_file:list[str]=None
+    # dataset_src_file_pkl:list[str]=None
+    idx_samples_file:list[str]=None
+    model_saving_path:list[str]=None
     save_summary:bool=None
 
-    data_select:List[str]=None
+    data_select:list[str]=None
     _nb_samples:int=None
     batch_size:int=None
     test_ratio:float=None
     val_ratio:float=None
     # use_tf_dataset:bool=None
-    normalize:List[bool]=None
+    normalize:list[bool]=None
     idx_samples:dict= None
     epoch:int=None
     max_trials_autokeras:int=None
@@ -58,7 +58,7 @@ class MetaData(object):
     optimizer:str=None
     learning_rate:float= None
     loss:str= None
-    metrics:List[str]= None
+    metrics:list[str]= None
 
     training_duration:str=None
     gen_type:ListGenerators=None
@@ -249,7 +249,7 @@ def check_ratios(val_ratio:float, test_ratio:float)-> Tuple[float, float]:
         logger.warning(f'val and test ratios:{val_ratio} and {test_ratio}')
     return val_ratio, test_ratio
 
-def make_PoSIX_abs_rel(path:str, rel_path:str)-> List[str]:
+def make_PoSIX_abs_rel(path:str, rel_path:str)-> list[str]:
     rel=os.path.relpath(path, start=rel_path)
     return [ get_POSIX_path(path), get_POSIX_path(rel)]
 
