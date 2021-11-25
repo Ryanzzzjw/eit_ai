@@ -8,7 +8,7 @@ from eit_tf_workspace.train_utils.lists import (ListDatasets, ListGenerators,
                                                 ListOptimizers)
 from glob_utils.files.files import (read_txt, save_as_mat, save_as_pickle,
                                     save_as_txt)
-from glob_utils.log.log import highlight_msg
+from glob_utils.log.msg_trans import highlight_msg
 from glob_utils.pth.inout_dir import DEFAULT_DIRS
 from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
                                        get_date_time, get_dir, get_POSIX_path,
