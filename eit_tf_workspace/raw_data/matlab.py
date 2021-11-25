@@ -24,7 +24,7 @@ class MatlabSamples(RawSamples):
     def load(
         self,
         file_path:str=None,
-        nb_samples2load:int=0,
+        nb_samples:int=0,
         data_sel:list[str]=['Xih','Yih'],
         exit:bool= True)->None:
         """Errors handling of the loading process "_load"
@@ -34,7 +34,7 @@ class MatlabSamples(RawSamples):
         
         Args:
             file_path (str, optional): see "_load". Defaults to `None`.
-            nb_samples2load (int, optional): see "_load". Defaults to `0`.
+            nb_samples (int, optional): see "_load". Defaults to `0`.
             data_sel (list[str], optional): see "_load". 
             Defaults to `['Xih','Yih']`.
             exit (bool, optional): exit flag. Defaults to `True`.
@@ -43,7 +43,7 @@ class MatlabSamples(RawSamples):
         try:
             self._load(
                 file_path=file_path, 
-                nb_samples=nb_samples2load, 
+                nb_samples=nb_samples, 
                 data_sel=data_sel)
         except (
             OpenDialogFileCancelledException, 

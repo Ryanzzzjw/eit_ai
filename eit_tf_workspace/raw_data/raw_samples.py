@@ -12,6 +12,8 @@ logger = getLogger(__name__)
 ################################################################################
 
 class RawSamples(ABC):
+    """Abstract Class to store external generated dataset
+    """    
     
     def __init__(self) -> None:
         super().__init__()
@@ -32,11 +34,36 @@ class RawSamples(ABC):
     @abstractmethod
     def load(
         self,
-        file_path:str='',
-        nb_samples2load:int=0,
+        file_path:str=None,
+        nb_samples:int=0,
         data_sel=None,
         time:str= None):
-        """"""
+        """Loading process of samples
+
+        should set:
+        
+        self.dataset
+        self.fwd_model
+        self.user_entry
+        self.samples
+        self.X
+        self.Y
+        self.file_path
+        self.dir_path
+        self.loaded
+        self.nb_samples
+
+        Args:
+            file_path (str, optional): Path of the external dataset .
+            if not passed or is wrong the user will be ask to select one.
+            Defaults to `None` (user will be ask).
+            nb_samples (int, optional): number of samples to 
+            load out of the external dataset, if 0 user will be asked on the 
+            terminal. Defaults to `0`.
+            data_sel (list[str], optional): Filterin /selection of the specific
+            loaded data. Defaults to `['Xih','Yih']`.
+
+        """ 
 
 
 ################################################################################
