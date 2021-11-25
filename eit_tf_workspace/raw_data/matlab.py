@@ -3,7 +3,7 @@
 import os
 import sys
 import traceback
-from logging import error, getLogger
+from logging import getLogger
 
 import numpy as np
 from eit_tf_workspace.raw_data.raw_samples import RawSamples
@@ -18,8 +18,6 @@ logger = getLogger(__name__)
 ################################################################################
 
 MATLAB_DATASET_VAR_KEYS=['X','y']
-
-
 
 class MatlabSamples(RawSamples):
 
@@ -183,7 +181,7 @@ class MatlabSamples(RawSamples):
             logger.debug(f'Size of "{key}": {self.samples[key].shape}')
            
     def _XY_selection(self, data_sel:list[str]= ['Xih','Yih'])->None:
-        """ 
+        """Select the specific data
 
         this method set `self.X` (nb_samples, nbfeatures) and 
         `self.Y` (nb_samples, nblabels)
@@ -209,7 +207,7 @@ class MatlabSamples(RawSamples):
             'Yh': self.samples['y'][:,:,0], # Image elem_data homogenious
             'Yih': self.samples['y'][:,:,1] # Image elem_data inhomogenious
         }
-        # here we can create the differences
+        # here we create the differences
         tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
         tmpY['Yih-Yh']= tmpY['Yih']-tmpY['Yh']
 
