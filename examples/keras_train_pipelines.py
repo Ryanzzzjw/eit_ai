@@ -16,11 +16,8 @@ from eit_tf_workspace.keras.tensorboard_k import mk_callback_tensorboard
 # from eit_tf_workspace.train_utils.dataloader import 
 from logging import getLogger
 
-from glob_utils.pth.inout_dir import DEFAULT_DIRS
-
 logger = getLogger(__name__)
 
-DEFAULT_DIRS.check_dirs()
 
 def std_keras_train_pipeline(path:str= ''):
     logger.info('### Start standard keras training ###')

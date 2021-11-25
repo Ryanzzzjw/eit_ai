@@ -6,7 +6,6 @@ from logging import error, getLogger
 from typing import Any
 
 import autokeras as ak
-import eit_tf_workspace.constants as const
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras

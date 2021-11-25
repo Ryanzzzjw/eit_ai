@@ -9,9 +9,11 @@ from eit_tf_workspace.train_utils.lists import (ListDatasets, ListGenerators,
 from glob_utils.files.files import (read_txt, save_as_mat, save_as_pickle,
                                     save_as_txt)
 from glob_utils.log.msg_trans import highlight_msg
-from glob_utils.pth.inout_dir import DEFAULT_DIRS
+# from glob_utils.pth.inout_dir import DEFAULT_DIRS
+
+from eit_tf_workspace.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
 from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
-                                       get_date_time, get_dir, get_POSIX_path,
+                                       get_datetime_s, get_dir, get_POSIX_path,
                                        mk_new_dir)
 
 logger = getLogger(__name__)
@@ -66,6 +68,7 @@ class MetaData(object):
     dataset_type:ListDatasets=None
 
     def __post_init__(self):
+        set_ai_default_dir()
         self.set_idx_samples(save=False)
     
     def set_ouput_dir(self, training_name:str='', append_date_time:bool= True) -> None:
@@ -76,13 +79,13 @@ class MetaData(object):
             append_date_time (bool, optional): Defaults to True.
         """
 
-        self.time = get_date_time()
+        self.time = get_datetime_s()
         if not training_name:
             training_name='training_default_name'
         self.training_name= f'{training_name}_{self.time}' if append_date_time else training_name
         self.dir_path= mk_new_dir(
             self.training_name,
-            parent_dir=DEFAULT_DIRS.output)
+            parent_dir=AI_DIRS.get(AiDirs.ai_models.value))
         msg=f'Training results will be found in : {self.dir_path}'
         logger.info(highlight_msg(msg))
 
@@ -161,7 +164,7 @@ class MetaData(object):
         the dataset train, val and test """
 
         indexes = self.idx_samples
-        time = self.time or get_date_time()
+        time = self.time or get_datetime_s()
         path =  os.path.join(self.dir_path, f'{IDX_FILENAME}_{time}')
         save_as_mat(path, indexes)
         save_as_pickle(path, indexes)
@@ -215,7 +218,10 @@ class MetaData(object):
         if not os.path.isdir(dir_path):
             title= 'Select directory of model to evaluate'
             try: 
-                dir_path=get_dir(title=title)
+                dir_path=get_dir(
+                    title=title,
+                    initialdir=AI_DIRS.get(AiDirs.ai_models.value)
+                )
             except OpenDialogDirCancelledException as e:
                 logger.critical('User cancelled the loading')
                 sys.exit()

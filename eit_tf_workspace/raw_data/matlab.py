@@ -6,6 +6,7 @@ import traceback
 from logging import getLogger
 
 import numpy as np
+from eit_tf_workspace.default.set_default_dir import AI_DIRS, AiDirs
 from eit_tf_workspace.raw_data.raw_samples import RawSamples
 from glob_utils.files.files import (FileExt, OpenDialogFileCancelledException,
                                     WrongFileExtError, NotFileError, check_file,
@@ -360,7 +361,10 @@ def load_mat_file(file_path:str=None,**kwargs)-> tuple[dict, str]:
     """    
 
     if check_file(file_path,ext=FileExt.mat) is None:
-        file_path= dialog_get_file_with_ext(ext=FileExt.mat, **kwargs)
+        file_path= dialog_get_file_with_ext(
+            ext=FileExt.mat,
+            initialdir=AI_DIRS.get(AiDirs.matlab_datasets.value),
+            **kwargs)
     var_dict= load_mat(file_path)
     return var_dict, file_path
                                                                                 

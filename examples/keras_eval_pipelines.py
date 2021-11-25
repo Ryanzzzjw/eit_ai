@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 
 def std_eval_pipeline(dir_path:str=''):
     logger.info('### Start standard evaluation ###')
-
+    
     metadata = reload_metadata(dir_path=dir_path)
     raw_samples= reload_samples(MatlabSamples(),metadata)
     gen= select_gen(metadata)
