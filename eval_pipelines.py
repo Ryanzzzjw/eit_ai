@@ -1,10 +1,7 @@
 
 
-<<<<<<< HEAD
-=======
 from math import perm
 from os import getcwd
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 from sys import modules
 
 import matplotlib.pyplot as plt
@@ -22,13 +19,10 @@ from modules.path_utils import get_dir, mk_ouput_dir, verify_file
 from modules.train_models import *
 import random
 
-<<<<<<< HEAD
-=======
 def f(x):
     return np.int(x)
 f2 = np.vectorize(f)
 
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 def std_eval_pipeline(verbose=False):
 
     title= 'Select directory of model to evaluate'
@@ -50,11 +44,7 @@ def std_eval_pipeline(verbose=False):
     data_sel= training_settings.data_select
     # Data loading
     raw_data=get_XY_from_MalabDataSet(path=path_pkl, data_sel= data_sel,verbose=verbose)#, type2load='.pkl')
-<<<<<<< HEAD
-    eval_dataset = dataloader(raw_data, use_tf_dataset=True,verbose=verbose, train_inputs=training_settings)
-=======
     eval_dataset = dataloader(raw_data, use_tf_dataset=False,verbose=verbose, train_inputs=training_settings)
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     
     if verbose:
         print(eval_dataset.use_tf_dataset)
@@ -75,22 +65,13 @@ def std_eval_pipeline(verbose=False):
     _, perm_real=extract_samples(eval_dataset, dataset_part='test', idx_samples='all', elem_idx = 1)
 
     print('\nperm_real',perm_real.shape)
-<<<<<<< HEAD
-    
-
-    # Load model
-=======
        # Load model
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     gen = ModelGenerator()
     gen.load_model(training_settings.model_saving_path)
     print(gen.model.summary())
 
-<<<<<<< HEAD
-=======
     gen.save_model('test', True)
 
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
     # make predictions
     steps = eval_dataset.test_len//eval_dataset.batch_size if eval_dataset.batch_size else None
     perm_nn = gen.mk_prediction(eval_dataset.test,steps=steps)
@@ -127,8 +108,6 @@ def std_eval_pipeline(verbose=False):
     
     plot_eval_results(results, axis='linear')
 
-<<<<<<< HEAD
-=======
 def std_eidors_eval_pipeline(verbose=False):
 
     title= 'Select directory of model to evaluate'
@@ -279,7 +258,7 @@ def std_eidors_eval_pipeline_lazy_version(verbose=False):
             for inputs, outputs in eval_dataset.test.as_numpy_iterator():
                 print('samples size:',inputs.shape, outputs.shape)
                 # Print the first element and the label
-                # print(inputs[0])
+                # print(inputs[0])bc
                 # print('label of this input is', outputs[0]
                 if eval_dataset.batch_size:
                     plot_EIT_samples(eval_dataset.fwd_model, outputs[0], inputs[0])
@@ -361,7 +340,7 @@ def std_several_ML_eval_pipline_lazy_version(verbose=False):
     
     nb_eidors=1000
     results= list()
-    for i in range(9):
+    for i in range(6):
         title= 'Select directory of model to evaluate'
         path_dir=get_dir(title=title)
 
@@ -431,7 +410,8 @@ def std_several_ML_eval_pipline_lazy_version(verbose=False):
 
         #  eval predictions vs
         
-        results.append(error_eval(perm_real[:nb_eidors,:], perm_nn[:nb_eidors,:], verbose=False, axis_samples=0, info=str(i+1)))
+        # results.append(error_eval(perm_real[:nb_eidors,:], perm_nn[:nb_eidors,:], verbose=False, axis_samples=0, info=str(i+1)))
+        results.append(error_eval(perm_real[:nb_eidors,:], perm_nn[:nb_eidors,:], verbose=False, axis_samples=0, info=i))
         # results.append(error_eval(perm_real[:nb_eidors,:], perm_nn(1)[:nb_eidors,:], verbose=False, axis_samples=0, info='Results 1st best optML'))
         # results.append(error_eval(perm_real[:nb_eidors,:], perm_nn(2)[:nb_eidors,:], verbose=False, axis_samples=0, info='Results 2nd best optML'))
     #Generate 5 random numbers between 10 and 30
@@ -442,7 +422,6 @@ def std_several_ML_eval_pipline_lazy_version(verbose=False):
     for i in range(3):
         plot_eval_one_results( i, results, axis='linear')
     
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
 
 if __name__ == "__main__":
 
@@ -454,12 +433,9 @@ if __name__ == "__main__":
     # print(verify_file(path_pkl, extension=".pkl", debug=True))
     # get_XY_from_MalabDataSet(path=path_pkl, data_sel= ['Xih','Yih'],verbose=True)
     std_eval_pipeline(verbose=True)
-<<<<<<< HEAD
-=======
-    #std_eidors_eval_pipeline(verbose=True)
+    # std_eidors_eval_pipeline(verbose=True)
     # std_eidors_eval_pipeline_lazy_version(verbose=False)
-    #std_several_ML_eval_pipline_lazy_version(verbose=False)
->>>>>>> c03e94d295b7ed88614f33427c4ac5e9cf7b069e
+    # std_several_ML_eval_pipline_lazy_version(verbose=False)
 
     plt.show()
     

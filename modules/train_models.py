@@ -201,9 +201,13 @@ class ModelGenerator(object):
 
         self.model.add(keras.layers.Dense(input_size, input_dim = input_size, activation=tf.nn.relu))
 
-        for _ in range(layer_nb):
+
+        for i in range(layer_nb):
             self.model.add(keras.layers.Dense(layer_size,activation=tf.nn.relu))
-            self.model.add(keras.layers.Dropout(dropout))
+            # self.model.add(keras.layers.Dense((2**i)*layer_size,activation=tf.nn.relu))
+            # self.model.add(keras.layers.Dropout(dropout))
+
+
         self.model.add(keras.layers.Dense(output_size,activation='linear'))
 
         return self.model

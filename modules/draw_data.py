@@ -323,7 +323,7 @@ def plot_eval_one_results(eval,results:List[EvalResults], axis='linear'):
             if eval ==0:
                 plt.ylim([0, 0.06])
             elif eval == 1:
-                plt.ylim([0, 0.3])
+                plt.ylim([0, 0.6])
             else:
                 plt.ylim([0, 1])
             plt.boxplot(tmp, labels=labels)

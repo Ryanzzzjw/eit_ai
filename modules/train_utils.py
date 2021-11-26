@@ -171,8 +171,8 @@ class TrainInputs(object):
 
 def mk_callback_tensorboard(NAME):
 
-    # log_path= os.path.join(train_inputs.ouput_dir,"1st_dataset_logs/{}".format(train_inputs.training_name))
-    log_path= "9th_dataset_2nd_logs/{}".format(NAME)
+    # log_path= os.path.join(train_inputs.ouput_dir,"logs/{}".format(train_inputs.training_name))
+    log_path= "1st_dataset_3nd_logs/{}".format(NAME)
     
     tensorboard = TensorBoard(log_dir= log_path)
     log_tensorboard(log_path)
