@@ -10,13 +10,13 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name="eit_tf_workspace",
+    name="eit_ai",
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
     version="0.0.1",
     description="Tensorflow/Keras workspace for ",
-    url="https://github.com/DavidMetzIMT/eit_tf_workspace",
+    url="https://github.com/DavidMetzIMT/eit_ai",
     # Author details
     author="David Metz",
     author_email="david.metz67@gmail.com",

@@ -12,7 +12,7 @@ import pyeit.mesh.utils
 from matplotlib import axes, figure
 from scipy.io import loadmat
 
-from eit_tf_workspace.eval_utils import EvalResults, ImageDataset, ImageEIT
+from eit_ai.eval_utils import EvalResults, ImageDataset, ImageEIT
 
 logger = getLogger(__name__)
 

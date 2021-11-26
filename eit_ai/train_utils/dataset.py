@@ -6,8 +6,8 @@ from typing import Any, Union
 
 import numpy as np
 import sklearn.model_selection
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.raw_data.raw_samples import RawSamples
 from sklearn.preprocessing import MinMaxScaler
 
 logger = getLogger(__name__)

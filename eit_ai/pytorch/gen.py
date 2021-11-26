@@ -2,7 +2,7 @@
 from logging import getLogger
 
 
-from eit_tf_workspace.train_utils.gen import Generators
+from eit_ai.train_utils.gen import Generators
 
 
 logger = getLogger(__name__)

@@ -3,7 +3,7 @@ import sys
 from dataclasses import dataclass
 from logging import error, getLogger
 
-from eit_tf_workspace.train_utils.lists import (ListDatasets, ListGenerators,
+from eit_ai.train_utils.lists import (ListDatasets, ListGenerators,
                                                 ListLosses, ListModels,
                                                 ListOptimizers)
 from glob_utils.files.files import (FileExt, read_txt, save_as_mat, save_as_pickle,
@@ -11,7 +11,7 @@ from glob_utils.files.files import (FileExt, read_txt, save_as_mat, save_as_pick
 from glob_utils.log.msg_trans import highlight_msg
 # from glob_utils.pth.inout_dir import DEFAULT_DIRS
 
-from eit_tf_workspace.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
+from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
 from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
                                        get_datetime_s, get_dir, get_POSIX_path,
                                        mk_new_dir)

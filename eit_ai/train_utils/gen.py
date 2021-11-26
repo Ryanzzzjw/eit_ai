@@ -6,11 +6,11 @@ import time
 from typing import Any, Union
 import numpy as np
 
-from eit_tf_workspace.train_utils.models import Models
-from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.lists import ListModels, ListDatasets
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_ai.train_utils.models import Models
+from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.lists import ListModels, ListDatasets
+from eit_ai.raw_data.raw_samples import RawSamples
 
 logger = getLogger(__name__)
 

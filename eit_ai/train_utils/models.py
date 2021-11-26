@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import numpy as np
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.dataset import Datasets
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.dataset import Datasets
 from enum import Enum
 
 from logging import getLogger

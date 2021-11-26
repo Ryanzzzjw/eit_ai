@@ -9,14 +9,14 @@ import autokeras as ak
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-from eit_tf_workspace.keras.const import (KERAS_LOSS,
+from eit_ai.keras.const import (KERAS_LOSS,
                                           KERAS_MODEL_SAVE_FOLDERNAME,
                                           KERAS_OPTIMIZER, KerasLosses,
                                           KerasOptimizers)
-from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.lists import KerasModels
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.models import (MODEL_SUMMARY_FILENAME,
+from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.lists import KerasModels
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME,
                                                  ModelNotDefinedError,
                                                  ModelNotPreparedError, Models,
                                                  WrongLearnRateError,

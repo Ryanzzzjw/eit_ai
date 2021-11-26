@@ -6,8 +6,8 @@ import traceback
 from logging import getLogger
 
 import numpy as np
-from eit_tf_workspace.default.set_default_dir import AI_DIRS, AiDirs
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_ai.default.set_default_dir import AI_DIRS, AiDirs
+from eit_ai.raw_data.raw_samples import RawSamples
 from glob_utils.files.files import (FileExt, OpenDialogFileCancelledException,
                                     WrongFileExtError, NotFileError, check_file,
                                     dialog_get_file_with_ext, load_mat)

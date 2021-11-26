@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 
-from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_ai.train_utils.metadata import MetaData
 
 
 logger = getLogger(__name__)
