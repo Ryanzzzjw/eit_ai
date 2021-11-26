@@ -11,7 +11,7 @@ logger = getLogger(__name__)
 # management of global default directory
 ################################################################################
 
-DEFAULT_AI_DIR_FILE='default_dirs.txt'
+DEFAULT_AI_DIR_FILE='ai_default_dirs.txt'
 AI_DIRS= DefaultDir()
 
 class AiDirs(Enum):
