@@ -136,7 +136,7 @@ def trunc_img_data_nb_samples(image_data:list[ImageDataset], max_nb:int=None)-> 
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
 
     main_log()

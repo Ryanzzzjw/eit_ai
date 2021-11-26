@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 
-# eit_tf_workspace specific
+# eit_ai specific
 _test_scripts
 datasets
 outputs

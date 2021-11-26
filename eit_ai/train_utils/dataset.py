@@ -5,8 +5,8 @@ from logging import getLogger
 
 import numpy as np
 import sklearn.model_selection
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.raw_data.raw_samples import RawSamples
 from sklearn.preprocessing import MinMaxScaler
 
 logger = getLogger(__name__)
@@ -178,7 +178,7 @@ convert_vec_to_int = np.vectorize(convert_to_int)
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

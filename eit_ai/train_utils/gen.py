@@ -6,11 +6,11 @@ import time
 from typing import Union
 import numpy as np
 
-from eit_tf_workspace.train_utils.models import ModelManagers
-from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.lists import ListModels, ListDatasets
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_ai.train_utils.models import ModelManagers
+from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.lists import ListModels, ListDatasets
+from eit_ai.raw_data.raw_samples import RawSamples
 
 logger = getLogger(__name__)
 
@@ -85,7 +85,7 @@ def meas_duration(func):
     return wrapper
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

@@ -6,17 +6,17 @@ from logging import error, getLogger
 from typing import Any
 
 import autokeras as ak
-import eit_tf_workspace.constants as const
+import eit_ai.constants as const
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-from eit_tf_workspace.keras.const import (KERAS_LOSS,
+from eit_ai.keras.const import (KERAS_LOSS,
                                           KERAS_MODEL_SAVE_FOLDERNAME,
                                           KERAS_OPTIMIZER, KerasLosses, KerasOptimizers)
-from eit_tf_workspace.train_utils.dataset import Datasets
-from eit_tf_workspace.train_utils.lists import KerasModels
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.models import ModelManagers, ModelNotDefinedError, ModelNotPreparedError, WrongLearnRateError, WrongLossError, WrongMetricsError, WrongOptimizerError
+from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.lists import KerasModels
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.models import ModelManagers, ModelNotDefinedError, ModelNotPreparedError, WrongLearnRateError, WrongLossError, WrongMetricsError, WrongOptimizerError
 from genericpath import isdir
 
 logger = getLogger(__name__)
@@ -229,7 +229,7 @@ KERAS_MODELS={
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

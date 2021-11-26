@@ -12,7 +12,7 @@ import pyeit.mesh.utils
 from matplotlib import axes, figure
 from scipy.io import loadmat
 
-from eit_tf_workspace.eval_utils import EvalResults, ImageDataset, ImageEIT
+from eit_ai.eval_utils import EvalResults, ImageDataset, ImageEIT
 
 logger = getLogger(__name__)
 
@@ -269,7 +269,7 @@ def plot_eval_results(results:list[EvalResults], axis='linear', plot_type=None):
     plt.show(block=False)
     
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

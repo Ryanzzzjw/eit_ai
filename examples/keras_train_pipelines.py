@@ -2,18 +2,18 @@
 
 
 import logging
-from eit_tf_workspace.keras.const import KerasOptimizers
-from eit_tf_workspace.keras.dataset import KerasDatasets
-from eit_tf_workspace.keras.models import KerasModels
-from eit_tf_workspace.draw_data import *
-from eit_tf_workspace.keras.gen import GeneratorKeras
-from eit_tf_workspace.raw_data.matlab import MatlabSamples
-from eit_tf_workspace.raw_data.raw_samples import load_samples
-from eit_tf_workspace.train_utils.gen import Generators
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.keras.tensorboard_k import mk_callback_tensorboard
+from eit_ai.keras.const import KerasOptimizers
+from eit_ai.keras.dataset import KerasDatasets
+from eit_ai.keras.models import KerasModels
+from eit_ai.draw_data import *
+from eit_ai.keras.gen import GeneratorKeras
+from eit_ai.raw_data.matlab import MatlabSamples
+from eit_ai.raw_data.raw_samples import load_samples
+from eit_ai.train_utils.gen import Generators
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.keras.tensorboard_k import mk_callback_tensorboard
 
-# from eit_tf_workspace.train_utils.dataloader import 
+# from eit_ai.train_utils.dataloader import 
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -85,7 +85,7 @@ def build_train_save(gen:Generators, metadata:MetaData)-> tuple[Generators,MetaD
 #     return np.resize(image, (-1,image.shape[0])), label
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

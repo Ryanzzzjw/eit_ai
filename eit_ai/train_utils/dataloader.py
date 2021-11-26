@@ -9,14 +9,14 @@ from logging import getLogger
 import numpy as np
 from scipy.io.matlab.mio import savemat
 
-import eit_tf_workspace.constants as const
-from eit_tf_workspace.train_utils.dataset import Datasets, scale_prepocess
-from eit_tf_workspace.raw_data.matlab import (LoadCancelledException, MatlabSamples,
+import eit_ai.constants as const
+from eit_ai.train_utils.dataset import Datasets, scale_prepocess
+from eit_ai.raw_data.matlab import (LoadCancelledException, MatlabSamples,
                                                load_predictions_EIDORS)
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
-from eit_tf_workspace.utils.path_utils import (get_date_time, save_as_pickle,
+from eit_ai.raw_data.raw_samples import RawSamples
+from eit_ai.utils.path_utils import (get_date_time, save_as_pickle,
                                          save_as_txt)
-from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_ai.train_utils.metadata import MetaData
 
 logger = getLogger(__name__)
 
@@ -140,7 +140,7 @@ logger = getLogger(__name__)
 
 if __name__ == "__main__":
 
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     l.append(a)
     print(l, l ==[])
 
-    path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
+    path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_ai/datasets/DStest/test10_infos2py.mat" 
 
     print(os.path.split(os.path.split(path)[0]))
     # 

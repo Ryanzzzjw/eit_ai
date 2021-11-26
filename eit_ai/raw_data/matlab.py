@@ -5,10 +5,10 @@ import sys
 from logging import getLogger
 import traceback
 import numpy as np
-from eit_tf_workspace.constants import EXT_MAT
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
-from eit_tf_workspace.utils.log import log_file_loaded
-from eit_tf_workspace.utils.path_utils import (LoadCancelledException,
+from eit_ai.constants import EXT_MAT
+from eit_ai.raw_data.raw_samples import RawSamples
+from eit_ai.utils.log import log_file_loaded
+from eit_ai.utils.path_utils import (LoadCancelledException,
                                                WrongFileTypeSelectedError,
                                                get_file_dir_path)
 from scipy.io import loadmat
@@ -265,7 +265,7 @@ def load_mat_file(file_path:str='',**kwargs):
     return var, file_path
                                                                                 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

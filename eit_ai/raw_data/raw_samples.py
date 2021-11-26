@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 
-from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_ai.train_utils.metadata import MetaData
 
 
 logger = getLogger(__name__)
@@ -64,7 +64,7 @@ def reload_samples(raw_samples:RawSamples, metadata:MetaData)->RawSamples:
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

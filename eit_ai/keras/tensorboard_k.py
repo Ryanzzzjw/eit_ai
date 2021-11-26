@@ -4,8 +4,8 @@ import os
 from tensorboard import program
 from tensorflow.keras.callbacks import TensorBoard
 
-import eit_tf_workspace.constants as const
-from eit_tf_workspace.train_utils.metadata import MetaData
+import eit_ai.constants as const
+from eit_ai.train_utils.metadata import MetaData
 
 logger = getLogger(__name__)
 
@@ -30,7 +30,7 @@ def log_tensorboard(log_path:str):
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

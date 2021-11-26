@@ -2,13 +2,13 @@
 import time
 from datetime import timedelta
 from logging import getLogger
-from eit_tf_workspace.raw_data.raw_samples import RawSamples
+from eit_ai.raw_data.raw_samples import RawSamples
 import numpy as np
-from eit_tf_workspace.train_utils.gen import Generators, WrongDatasetError, WrongModelError, meas_duration
-from eit_tf_workspace.keras.models import KERAS_MODELS
-from eit_tf_workspace.keras.dataset import KERAS_DATASETS
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.lists import KerasDatasets, KerasModels, ListModels, ListDatasets, ListGenerators
+from eit_ai.train_utils.gen import Generators, WrongDatasetError, WrongModelError, meas_duration
+from eit_ai.keras.models import KERAS_MODELS
+from eit_ai.keras.dataset import KERAS_DATASETS
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.lists import KerasDatasets, KerasModels, ListModels, ListDatasets, ListGenerators
 
 
 logger = getLogger(__name__)
@@ -80,7 +80,7 @@ class GeneratorKeras(Generators):
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

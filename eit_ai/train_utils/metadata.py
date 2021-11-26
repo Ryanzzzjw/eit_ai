@@ -4,10 +4,10 @@ from logging import error, getLogger
 import sys
 from typing import List
 
-import eit_tf_workspace.constants as const
-from eit_tf_workspace.train_utils.lists import ListDatasets, ListGenerators, ListLosses, ListModels, ListOptimizers
-from eit_tf_workspace.utils.path_utils import *
-from eit_tf_workspace.utils.log import log_msg_highlight
+import eit_ai.constants as const
+from eit_ai.train_utils.lists import ListDatasets, ListGenerators, ListLosses, ListModels, ListOptimizers
+from eit_ai.utils.path_utils import *
+from eit_ai.utils.log import log_msg_highlight
 from scipy.io.matlab.mio import savemat
 
 logger = getLogger(__name__)
@@ -251,7 +251,7 @@ def reload_metadata(dir_path:str='')-> MetaData:
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

@@ -1,11 +1,11 @@
 
 
 
-from eit_tf_workspace.train_utils.gen import Generators
-from eit_tf_workspace.train_utils.lists import ListGenerators
-# from eit_tf_workspace.keras.gen import GeneratorKeras
-# from eit_tf_workspace.pytorch.gen import GeneratorPyTorch
-from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_ai.train_utils.gen import Generators
+from eit_ai.train_utils.lists import ListGenerators
+# from eit_ai.keras.gen import GeneratorKeras
+# from eit_ai.pytorch.gen import GeneratorPyTorch
+from eit_ai.train_utils.metadata import MetaData
 
 
 class WrongGeneratorError(Exception):
@@ -19,11 +19,11 @@ def select_gen(metadata:MetaData) -> Generators:
         raise WrongGeneratorError(f'Wrong generator type: {metadata.gen_type}')
 
 def select_keras():
-    from eit_tf_workspace.keras.gen import GeneratorKeras
+    from eit_ai.keras.gen import GeneratorKeras
     return GeneratorKeras()
 
 def select_pytorch():
-    from eit_tf_workspace.pytorch.gen import GeneratorPyTorch
+    from eit_ai.pytorch.gen import GeneratorPyTorch
     return GeneratorPyTorch()
 
 
@@ -37,7 +37,7 @@ GEN_LIST={
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

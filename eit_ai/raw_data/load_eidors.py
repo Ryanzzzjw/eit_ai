@@ -2,14 +2,14 @@
 
 import os
 from logging import getLogger
-from eit_tf_workspace.constants import EXT_MAT
+from eit_ai.constants import EXT_MAT
 
 
 
-from eit_tf_workspace.raw_data.matlab import load_mat_file
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.utils.path_utils import LoadCancelledException
-from eit_tf_workspace.train_utils.dataset import scale_prepocess
+from eit_ai.raw_data.matlab import load_mat_file
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.utils.path_utils import LoadCancelledException
+from eit_ai.train_utils.dataset import scale_prepocess
 
 logger = getLogger(__name__)
 
@@ -33,7 +33,7 @@ def load_eidors_solution(metadata:MetaData, initialdir:str='', var_name:str= 'el
 
                                                                                 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)

@@ -6,7 +6,7 @@ import pickle
 import json
 import datetime
 
-import  eit_tf_workspace.constants as const
+import  eit_ai.constants as const
 
 class DialogCancelledException(Exception):
     """"""
@@ -275,7 +275,7 @@ def get_file_dir_path( file_path:str='', extension=const.EXT_MAT, **kwargs):
 
 
 if __name__ == "__main__":
-    from eit_tf_workspace.utils.log import change_level, main_log
+    from eit_ai.utils.log import change_level, main_log
     import logging
     main_log()
     change_level(logging.DEBUG)
@@ -288,7 +288,7 @@ if __name__ == "__main__":
     print(a.pop('DF') if 'DF' in a else None)
     print(a)
    
-    path_pkl='E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
+    path_pkl='E:/EIT_Project/05_Engineering/04_Software/Python/eit_ai/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.pkl'
     # path_pkl=path_pkl.replace('/','\\')
     print(verify_file(path_pkl, extension=const.EXT_PKL, debug=True))
 
@@ -297,6 +297,6 @@ if __name__ == "__main__":
     if os.path.splitext('hhhhhhhh')[1]:
         print_saving_verbose('ffffffffffffffffffffff', class2save= None, verbose=True)
 
-    path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
+    path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_ai/datasets/DStest/test10_infos2py.mat" 
 
     print(os.path.split(os.path.split(path)[0]))
