@@ -247,8 +247,7 @@ class MatlabSamples(RawSamples):
         if nb_samples < 0: # if negativ >> default value
             logger.warning(f'Number of samples to load negativ: {nb_samples=}')
         elif nb_samples==0: # if 0 >> ask user
-            prompt= f"{max_samples} samples are availables. \n\
-                Enter the number of samples to load (Enter for all): \n"
+            prompt= f"{max_samples} samples are availables. \nEnter the number of samples to load (Enter for all): \n"
             input_user=input(prompt)
             try:
                 self.nb_samples = int(input_user)
