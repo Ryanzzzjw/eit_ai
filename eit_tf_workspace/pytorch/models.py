@@ -75,12 +75,14 @@ class StdTorchModel(nn.Module):
             return out
     
     def save(self, metadata:MetaData)-> str:
-        assert_keras_model_compiled(self.model)
-        return save_keras_model(self.model, dir_path=metadata.ouput_dir, save_summary=metadata.save_summary)
+        
+        return torch.save(self.model, dir_path=metadata.ouput_dir, save_summary=metadata.save_summary)
 
     def load(self, metadata:MetaData)-> None:
-        self.model=load_keras_model(dir_path=metadata.ouput_dir)
-        assert_keras_model_compiled(self.model)
+        
+        
+        return torch.load(dir_path=metadata.ouput_dir)
+        
 
 
 
