@@ -11,7 +11,6 @@ https://github.com/DavidMetzIMT/glob_utils
 
 ### 1.1 Dependencies
 
-
 matplotlib==3.4.3
 pyeit
 scipy==1.7.1
@@ -31,7 +30,7 @@ glob_utils https://github.com/DavidMetzIMT/glob_utils
 ### 2.2 Install 
 ## 3. Run the app
 ### 3.1 examples of apps
-## 4. Contribute to `glob_utils`.
+## 4. Contribute to `eit_ai`.
 ## 5. Cite our work.
 
-**If you find `glob_utils` useful, please cite our work!**
+**If you find `eit_ai` useful, please cite our work!**
