@@ -65,10 +65,10 @@ def std_auto_pipeline(path=''):
     plot_EIT_samples(gen.getattr_dataset('fwd_model'), samples_y, samples_x)
         
     metadata.set_4_model(
-        epoch=10,
+        epoch=500,
         callbacks=[mk_callback_tensorboard(metadata)],
         metrics=['mse'],
-        max_trials_autokeras=2)
+        max_trials_autokeras=100)
 
     build_train_save_model(gen, metadata)
 
@@ -81,7 +81,6 @@ def build_train_save_model(gen:Generators, metadata:MetaData)-> tuple[Generators
     metadata.save() # final saving
     return gen, metadata
 
-
 # def normalize_image(image, label):
 #     return np.resize(image, (-1,image.shape[0])), label
 
@@ -89,7 +88,7 @@ if __name__ == "__main__":
     from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level_logging(logging.DEBUG)
+    change_level_logging(logging.INFO)
 
     debug=True
 
