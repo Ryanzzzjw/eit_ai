@@ -233,7 +233,7 @@ class MetaData(object):
 def compute_steps(batch_size:int, len_dataset:int)->int :
     return len_dataset // batch_size if batch_size or len_dataset==0 else None
 
-def check_ratios(val_ratio:float, test_ratio:float)-> Tuple[float, float]:
+def check_ratios(val_ratio:float, test_ratio:float)-> tuple[float, float]:
     """Check the ratios of val and test dataset"""
     if val_ratio <=0.0:
         val_ratio=0.2
