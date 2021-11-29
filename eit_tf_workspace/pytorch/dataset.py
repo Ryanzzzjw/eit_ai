@@ -18,37 +18,86 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+class StdPytorchDataset(Datasets):
+   
+    def get_X(self, part:str='train'):
+        return getattr(self, part).get_set()[0]
 
-class TorchDatasetWithIdx(Dataset):
+    def get_Y(self, part:str='train'):
+        return getattr(self, part).get_set()[1]
 
-    def __init__(self, loaded_data:np.ndarray, metadata: MetaData):
+    def get_samples(self, part: str):
+        return getattr(self, part).get_set()
+
+    def _preprocess(
+        self,
+        X:np.ndarray,
+        Y:np.ndarray,
+        metadata:MetaData)->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
+        """return X, Y preprocessed"""
+        
+        X=scale_prepocess(X, metadata.normalize[0])
+        Y=scale_prepocess(Y, metadata.normalize[1])
+        if Y is not None:
+            logger.debug(f'Size of X and Y (after preprocess): {X.shape=}, {Y.shape=}')     
+        else:
+            logger.debug(f'Size of X (after preprocess): {X.shape=}')
+        return X, Y
+
+    def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
+        """build the dataset"""
+        idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
+        X= np.concatenate(( X, idx ), axis=1)
+        x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y,test_size=self._test_ratio)
+        x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp, test_size=self._val_ratio)
+        
+        self._idx_train= x_train[:,-1].tolist()
+        self._idx_val= x_val[:,-1].tolist()
+        self._idx_test= x_test[:,-1].tolist()
+        metadata.set_idx_samples(self._idx_train, self._idx_val, self._idx_test)
+
+        self.train=XYSet(x=x_train[:,:-1], y=y_train)
+        self.val=XYSet(x=x_val[:,:-1], y=y_val)
+        self.test=XYSet(x=x_test[:,:-1], y=y_test)
+
+    def _mk_dataset_from_indexes(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
+        """rebuild the dataset with the indexes """
+        self._idx_train= convert_vec_to_int(metadata.idx_samples['idx_train'])
+        self._idx_val= convert_vec_to_int(metadata.idx_samples['idx_val'])
+        self._idx_test= convert_vec_to_int(metadata.idx_samples['idx_test'])   
+        self.train=TorchDataset(x=X[self._idx_train,:], y=Y[self._idx_train,:])
+        self.val=TorchDataset(x=X[self._idx_val,:], y=Y[self._idx_val,:])
+        self.test=TorchDataset(x=X[self._idx_test,:], y=Y[self._idx_test,:])
+
+class TorchDataset(Dataset):
+
+    def __init__(self, x, y, loaded_data:np.ndarray, metadata: MetaData):
  
         self.data = loaded_data
-        self.X = torch.Tensor(loaded_data[:, :-1]).float()
-        self.Y = torch.Tensor(loaded_data[:, [-1]]).float()
-        self.idx= torch.Tensor(np.array(range(loaded_data.shape[0]))).float()
-        
+        self.X = torch.Tensor(x[:, :-1]).float()
+        self.Y = torch.Tensor(y[:, [-1]]).float()
+        # self.idx= torch.Tensor(np.array(range(loaded_data.shape[0]))).float()
     
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, index)->tuple[torch.Tensor,torch.Tensor]:
-        idx = np.reshape(range(self.X.shape[0]), (self.X.shape[0], 1))
-        X = np.concatenate((self.X, idx), axis=1)
-        x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y, test_size=self._test_ratio)
-        x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp,
-                                                                                  test_size=self._val_ratio)
+    def __getitem__(self, index:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
+        # idx = np.reshape(range(self.X.shape[0]), (self.X.shape[0], 1))
+        # X = np.concatenate((self.X, idx), axis=1)
+        # x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y, test_size=self._test_ratio)
+        # x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp,
+        #                                                                           test_size=self._val_ratio)
 
-        self._idx_train = x_train[:, -1].tolist()
-        self._idx_val = x_val[:, -1].tolist()
-        self._idx_test = x_test[:, -1].tolist()
-        self.metadata.set_idx_samples(self._idx_train, self._idx_val, self._idx_test)
+        # self._idx_train = x_train[:, -1].tolist()
+        # self._idx_val = x_val[:, -1].tolist()
+        # self._idx_test = x_test[:, -1].tolist()
+        # self.metadata.set_idx_samples(self._idx_train, self._idx_val, self._idx_test)
         
-        self.train = XYSet(x=x_train[:, :-1], y=y_train)
-        self.val = XYSet(x=x_val[:, :-1], y=y_val)
-        self.test = XYSet(x=x_test[:, :-1], y=y_test)
-        return self.X[self._idx_train], self.Y[self._idx_train]
+        # self.train = XYSet(x=x_train[:, :-1], y=y_train)
+        # self.val = XYSet(x=x_val[:, :-1], y=y_val)
+        # self.test = XYSet(x=x_test[:, :-1], y=y_test)
+        return self.X[index], self.Y[index] if index else self.X, self.Y
 
     
     def get_idx(self)-> list[int]:
