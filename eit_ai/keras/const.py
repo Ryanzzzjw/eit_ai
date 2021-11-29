@@ -1,6 +1,6 @@
 
 import tensorflow.keras as keras
-from eit_tf_workspace.train_utils.lists import ListLosses, ListOptimizers
+from eit_ai.train_utils.lists import ListLosses, ListOptimizers
 
 
 

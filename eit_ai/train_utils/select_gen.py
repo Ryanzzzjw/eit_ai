@@ -1,9 +1,9 @@
 
 
 
-from eit_tf_workspace.train_utils.gen import Generators
-from eit_tf_workspace.train_utils.lists import ListGenerators
-from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_ai.train_utils.gen import Generators
+from eit_ai.train_utils.lists import ListGenerators
+from eit_ai.train_utils.metadata import MetaData
 
 class WrongGeneratorError(Exception):
     """"""
@@ -33,7 +33,7 @@ def select_gen_keras()-> Generators:
         [Generators]: Keras generator
     """
 
-    from eit_tf_workspace.keras.gen import GeneratorKeras
+    from eit_ai.keras.gen import GeneratorKeras
     return GeneratorKeras()
 
 def select_gen_pytorch()-> Generators:
@@ -42,7 +42,7 @@ def select_gen_pytorch()-> Generators:
     Returns:
         [Generators]: Pytorch generator
     """
-    from eit_tf_workspace.pytorch.gen import GeneratorPyTorch
+    from eit_ai.pytorch.gen import GeneratorPyTorch
     return GeneratorPyTorch()
 
 

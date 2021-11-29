@@ -5,10 +5,10 @@ from logging import getLogger
 
 import numpy as np
 import tensorflow as tf
-from eit_tf_workspace.train_utils.dataset import (Datasets, StdDataset,
+from eit_ai.train_utils.dataset import (Datasets, StdDataset,
                                           scale_prepocess)
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.lists import KerasDatasets
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.lists import KerasDatasets
 from sklearn.preprocessing import MinMaxScaler
 
 logger = getLogger(__name__)
@@ -130,5 +130,5 @@ if __name__ == "__main__":
     import logging
     main_log()
     change_level_logging(logging.DEBUG)
-    path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_tf_workspace/datasets/DStest/test10_infos2py.mat" 
+    path= "E:/EIT_Project/05_Engineering/04_Software/Python/eit_ai/datasets/DStest/test10_infos2py.mat" 
     print(os.path.split(os.path.split(path)[0]))

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 
-from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_ai.train_utils.metadata import MetaData
 
 
 logger = getLogger(__name__)
@@ -75,7 +75,7 @@ def load_samples(raw_samples:RawSamples, src_path:str, metadata:MetaData)-> RawS
     raw_samples=raw_samples
     raw_samples.load(
         file_path=src_path,
-        nb_samples2load=metadata._nb_samples,
+        nb_samples=metadata._nb_samples,
         data_sel= metadata.data_select)
     metadata.set_raw_src_file(raw_samples.file_path)
     return raw_samples
@@ -84,7 +84,7 @@ def reload_samples(raw_samples:RawSamples, metadata:MetaData)->RawSamples:
     """"""
     raw_samples.load(
         file_path=metadata.raw_src_file[0],
-        nb_samples2load=metadata._nb_samples,
+        nb_samples=metadata._nb_samples,
         data_sel= metadata.data_select)
     return raw_samples
 

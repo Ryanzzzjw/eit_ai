@@ -2,25 +2,22 @@
 
 
 import logging
-from eit_tf_workspace.keras.const import KerasOptimizers
-from eit_tf_workspace.keras.dataset import KerasDatasets
-from eit_tf_workspace.keras.models import KerasModels
-from eit_tf_workspace.draw_data import *
-from eit_tf_workspace.keras.gen import GeneratorKeras
-from eit_tf_workspace.raw_data.matlab import MatlabSamples
-from eit_tf_workspace.raw_data.raw_samples import load_samples
-from eit_tf_workspace.train_utils.gen import Generators
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.keras.tensorboard_k import mk_callback_tensorboard
+from eit_ai.keras.const import KerasOptimizers
+from eit_ai.keras.dataset import KerasDatasets
+from eit_ai.keras.models import KerasModels
+from eit_ai.draw_data import *
+from eit_ai.keras.gen import GeneratorKeras
+from eit_ai.raw_data.matlab import MatlabSamples
+from eit_ai.raw_data.raw_samples import load_samples
+from eit_ai.train_utils.gen import Generators
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.keras.tensorboard_k import mk_callback_tensorboard
 
-# from eit_tf_workspace.train_utils.dataloader import 
+# from eit_ai.train_utils.dataloader import 
 from logging import getLogger
-
-from glob_utils.pth.inout_dir import DEFAULT_DIRS
 
 logger = getLogger(__name__)
 
-DEFAULT_DIRS.check_dirs()
 
 def std_keras_train_pipeline(path:str= ''):
     logger.info('### Start standard keras training ###')

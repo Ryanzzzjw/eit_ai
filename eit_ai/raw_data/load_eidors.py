@@ -5,9 +5,9 @@ from logging import getLogger
 
 from glob_utils.files.files import FileExt, OpenDialogFileCancelledException
 from numpy import ndarray
-from eit_tf_workspace.raw_data.matlab import load_mat_file
-from eit_tf_workspace.train_utils.metadata import MetaData
-from eit_tf_workspace.train_utils.dataset import scale_prepocess
+from eit_ai.raw_data.matlab import load_mat_file
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.dataset import scale_prepocess
 
 logger = getLogger(__name__)
 

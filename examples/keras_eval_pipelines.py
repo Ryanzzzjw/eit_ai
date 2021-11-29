@@ -2,13 +2,13 @@
 import os
 import matplotlib.pyplot as plt
 
-from eit_tf_workspace.draw_data import *
-from eit_tf_workspace.eval_utils import ImageDataset, compute_eval, trunc_img_data_nb_samples
-from eit_tf_workspace.raw_data.load_eidors import load_eidors_solution
-from eit_tf_workspace.raw_data.raw_samples import reload_samples
-from eit_tf_workspace.raw_data.matlab import MatlabSamples
-from eit_tf_workspace.train_utils.metadata import reload_metadata
-from eit_tf_workspace.train_utils.select_gen import select_gen
+from eit_ai.draw_data import *
+from eit_ai.eval_utils import ImageDataset, compute_eval, trunc_img_data_nb_samples
+from eit_ai.raw_data.load_eidors import load_eidors_solution
+from eit_ai.raw_data.raw_samples import reload_samples
+from eit_ai.raw_data.matlab import MatlabSamples
+from eit_ai.train_utils.metadata import reload_metadata
+from eit_ai.train_utils.select_gen import select_gen
 
 from logging import getLogger
 
@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 
 def std_eval_pipeline(dir_path:str=''):
     logger.info('### Start standard evaluation ###')
-
+    
     metadata = reload_metadata(dir_path=dir_path)
     raw_samples= reload_samples(MatlabSamples(),metadata)
     gen= select_gen(metadata)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     change_level_logging(logging.DEBUG)
 
 
-    dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_tf_workspace\outputs\Std_keras_test_20211117_165710'
+    dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_ai\outputs\Std_keras_test_20211117_165710'
     test_single_predict(get_POSIX_path(dir_path))
     plt.show()
     

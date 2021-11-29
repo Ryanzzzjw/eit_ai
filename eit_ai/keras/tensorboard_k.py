@@ -4,8 +4,8 @@ import os
 from tensorboard import program
 from tensorflow.keras.callbacks import TensorBoard
 
-from eit_tf_workspace.train_utils.metadata import MetaData
-from glob_utils.log.log  import highlight_msg
+from eit_ai.train_utils.metadata import MetaData
+from glob_utils.log.msg_trans  import highlight_msg
 
 logger = getLogger(__name__)
 
