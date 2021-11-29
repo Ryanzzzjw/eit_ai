@@ -133,4 +133,4 @@ dmypy.json
 _test_scripts
 datasets
 outputs
-*dirs.txt
+*default_dirs.txt
