@@ -11,9 +11,9 @@ import os
 import sys
 sys.path.append('./')
 
-from eit_tf_workspace.train_utils.dataset import Datasets, XYSet, scale_prepocess
+from eit_ai.train_utils.dataset import Datasets, XYSet, scale_prepocess
 
-from eit_tf_workspace.train_utils.metadata import MetaData
+from eit_ai.train_utils.metadata import MetaData
 from logging import getLogger
 
 logger = getLogger(__name__)
