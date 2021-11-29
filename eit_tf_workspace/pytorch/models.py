@@ -1,11 +1,14 @@
 
 
 from typing import Any
+
+from torch.utils import data
 from eit_tf_workspace.train_utils.dataset import Datasets
 from eit_tf_workspace.train_utils.models import Models, ListModels
 from eit_tf_workspace.train_utils.metadata import MetaData
 import torch
 from torch import nn
+import torch.nn.functional as f
 from enum import Enum
 
 
@@ -38,53 +41,39 @@ PYTORCH_LOSS={
 ################################################################################
 # Std PyTorch ModelManager
 ################################################################################
-class StdKerasModel(ModelManagers):
-
-    def _define_model(self, metadata:MetaData)-> None:
-        self.name = "std_keras"
+class StdTorchModel(nn.Module):
+    def __init__(self, metadata: Models) -> None:
+        super(StdTorchModel, self).__init__()
         in_size=metadata.input_size
         out_size=metadata.output_size
-        self.model = keras.models.Sequential()
-        self.model.add(keras.layers.Dense(in_size, input_dim = in_size))
-        self.model.add(keras.layers.Activation(tf.nn.relu))
-        self.model.add(keras.layers.Dense(512))
-        self.model.add(keras.layers.Activation(tf.nn.relu))
-        self.model.add(keras.layers.Dense(512))
-        self.model.add(keras.layers.Activation(tf.nn.relu))
-        self.model.add(keras.layers.Dense(out_size)) 
-        self.model.add(keras.layers.Activation(tf.nn.sigmoid))
+        self.linear1 = nn.Linear(in_size, 3)
+        self.linear2 = nn.Linear(3, out_size)
+        self.relu = nn.ReLU()
+        
+    def forward(self, data, task='train'):
+        
+        # self.specific_var['optimizer']= get_pytorch_optimizer(metadata)
+        # self.specific_var['loss'] = get_pytorch_loss(metadata)
+        loss= nn.MSELoss()
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
     
-    def _get_specific_var(self, metadata:MetaData)-> None:
-
-        self.specific_var['optimizer']= get_keras_optimizer(metadata)
-        self.specific_var['loss'] = get_keras_loss(metadata)
-        if not isinstance(metadata.metrics ,list):
-            raise WrongMetricsError(f'Wrong metrics type: {metadata.metrics}') 
-        self.specific_var['metrics']=metadata.metrics
-
-    def _prepare_model(self)-> None:
-        assert_keras_model_defined(self.model)
-        self.model.compile( 
-            optimizer=self.specific_var['optimizer'],
-            loss=self.specific_var['loss'],
-            metrics=self.specific_var['metrics'])
-
-    def train(self, dataset:Datasets, metadata:MetaData)-> None:
-        assert_keras_model_compiled(self.model)
-        self.model.fit(
-            x=dataset.get_X('train'),
-            y=dataset.get_Y('train'),
-            epochs=metadata.epoch,
-            validation_data=(dataset.get_X('val'), dataset.get_Y('val')),
-            steps_per_epoch=metadata._steps_per_epoch,
-            validation_steps=metadata._validation_steps,
-            callbacks=metadata.callbacks,
-            batch_size=metadata.batch_size)
-
-    def predict(self, dataset:Datasets, metadata:MetaData, **kwargs)-> np.ndarray:
-        assert_keras_model_compiled(self.model)
-        return self.model.predict(dataset.get_X('test'), steps=metadata._test_steps)
-
+        # batch = [b.cuda() for b in batch] # if needs GPU
+        if task == 'train':
+            input,  labels = data
+            x = self.relu(self.linear1(input))
+            out = self.relu(self.linear2(x))
+            
+            loss = loss(out, labels)
+            optimizer.zero_grad() 
+            loss.backward() 
+            optimizer.step() 
+            
+        elif task == 'eval':
+            
+            
+            
+            return out
+    
     def save(self, metadata:MetaData)-> str:
         assert_keras_model_compiled(self.model)
         return save_keras_model(self.model, dir_path=metadata.ouput_dir, save_summary=metadata.save_summary)
@@ -93,23 +82,6 @@ class StdKerasModel(ModelManagers):
         self.model=load_keras_model(dir_path=metadata.ouput_dir)
         assert_keras_model_compiled(self.model)
 
-
-
-
-
-
-class stdModel(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.layers = nn.Sequential(nn.Linear(4, 3),
-                                        nn.BatchNorm1d(3),
-                                        nn.ReLU(),
-                                        nn.Linear(3, 1)
-        )
-            
-
-    def forward(self, x):
-        return self.layers(x)
 
 
 
