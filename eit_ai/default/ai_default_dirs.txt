@@ -1,7 +1,0 @@
-Dictionary form:
-{"Matlab datasets": "E:/Software_dev/Python/eit_ai/examples", "AI Models": "E:/Software_dev/Python/eit_ai/examples"}
-
-
-Single attributes:
-Matlab datasets = E:/Software_dev/Python/eit_ai/examples,
-AI Models = E:/Software_dev/Python/eit_ai/examples,
