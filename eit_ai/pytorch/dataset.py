@@ -80,6 +80,16 @@ class TorchDataset(Dataset):
         
         return self.X, self.Y
 
+class StdDataloader(DataLoader):
+    def __int__(self, loaded_dataset, metadata:MetaData):
+        self.train = StdPytorchDataset().train
+        self.val = StdPytorchDataset().val
+        self.test = StdPytorchDataset().test
+
+    def _mk_dataloader(self):
+        self.trainLoader = DataLoader(self.train, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
+        self.valLoader = DataLoader(self.val, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
+        self.trainLoader = DataLoader(self.train, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
 
 if __name__ == "__main__":
     from glob_utils.log.log  import change_level_logging, main_log
@@ -98,6 +108,7 @@ if __name__ == "__main__":
 
     
     rdn_dataset = StdPytorchDataset()
+    trainLoader = StdDataloader(rdn_dataset.train)
 
 
 # train_size = int(len(rdn_dataset) * 0.6)
