@@ -3,18 +3,18 @@ import sys
 from dataclasses import dataclass
 from logging import error, getLogger
 
-from eit_ai.train_utils.lists import (ListDatasets, ListGenerators,
-                                                ListLosses, ListModels,
-                                                ListOptimizers)
-from glob_utils.files.files import (FileExt, read_txt, save_as_mat, save_as_pickle,
-                                    save_as_txt)
-from glob_utils.log.msg_trans import highlight_msg
-# from glob_utils.pth.inout_dir import DEFAULT_DIRS
-
 from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
+from eit_ai.train_utils.lists import (ListDatasets, ListGenerators, ListLosses,
+                                      ListModels, ListOptimizers)
+from glob_utils.files.files import (FileExt, find_file, is_file, read_txt,
+                                    save_as_mat, save_as_pickle, save_as_txt, )
+from glob_utils.log.msg_trans import highlight_msg
 from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
                                        get_datetime_s, get_dir, get_POSIX_path,
                                        mk_new_dir)
+
+# from glob_utils.pth.inout_dir import DEFAULT_DIRS
+
 
 logger = getLogger(__name__)
 
@@ -212,6 +212,25 @@ class MetaData(object):
         logger.info(f'Metadata loaded :\n{self.__dict__.keys()}')
         logger.debug(f'Metadata loaded (details):\n{self.__dict__}')
         self.dir_path=os.path.split(path)[0]
+        self.check_raw_src_file()
+        
+
+    def check_raw_src_file(self)->None:
+
+        if is_file(self.raw_src_file[0]) or is_file(self.raw_src_file[1]):
+            return
+
+        file_name = os.path.split(self.raw_src_file[0])[1]
+        try:
+            files_paths= find_file(file_name,AI_DIRS.get(AiDirs.matlab_datasets.value))
+            self.raw_src_file=make_PoSIX_abs_rel(files_paths[0], self.dir_path)
+            logger.info(f'Raw src file has been set to "{files_paths[0]}"')
+        except FileNotFoundError as e:
+            logger.info(f'raw src file not found it have to selected by user({e})')
+
+
+        
+        
 
     def reload(self, dir_path:str=''):
 
