@@ -46,8 +46,8 @@ class RawSamples(ABC):
         self.fwd_model
         self.user_entry
         self.samples
-        self.X
-        self.Y
+        self.X: ArrayLike(n_samples, n_features)
+        self.Y: ArrayLike(n_samples, n_labels)
         self.file_path
         self.dir_path
         self.loaded
