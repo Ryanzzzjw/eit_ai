@@ -80,6 +80,7 @@ class GeneratorKeras(Generators):
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
+        preprocess=kwargs.pop('preprocess')if 'preprocess' in kwargs else False
         X_pred=self.dataset.get_X('test')
         # another dataset can be here predicted (only test part)
         if dataset is not None:
@@ -91,7 +92,8 @@ class GeneratorKeras(Generators):
         if single_X is not None:
             if not isinstance(single_X, np.ndarray):
                 raise WrongSingleXError(f'{single_X= } is not an np.ndarray ')
-            X_pred= self.dataset.format_single_X(single_X, metadata)
+            X_pred= self.dataset.format_single_X(single_X, metadata,preprocess= preprocess)
+            # return self.model_man.predict(X_pred=X_pred, metadata=metadata, **kwargs), X_pred
 
         return self.model_man.predict(X_pred=X_pred, metadata=metadata, **kwargs)
 
