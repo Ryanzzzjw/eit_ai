@@ -143,14 +143,20 @@ def plot_compare_samples(
         return
     
     idx_list= generate_nb_samples2plot(image_data, nb_samples, rand)
+    logger.debug(f'{idx_list=}, {idx_list.__len__()=}')
     img2plot= [ImageDataset(id.data[idx_list,:], id.label, id.fwd_model) for id in image_data]
 
     n_img= len(img2plot)
     n_samples= len(idx_list)
 
-    n_row, n_col= orient_swap(orient, n_samples, n_img)
 
-    fig, ax = plt.subplots(n_row,n_col)
+    n_row, n_col= orient_swap(orient, n_samples, n_img)
+    if n_row==1:
+        fig, ax = plt.subplots(n_row+1,n_col)
+    elif n_col==1:
+        fig, ax = plt.subplots(n_row,n_col+1)
+    else:
+        fig, ax = plt.subplots(n_row,n_col)
 
     for row in range(n_row):
         for col in range(n_col):
@@ -240,9 +246,13 @@ def generate_nb_samples2plot(
         if nb_samples==0:
             nb_samples=1
         if nb_samples>nb_samples_total:
-            return None
+            logger.error(f'List of indexes : {nb_samples=}>{nb_samples_total=}')
+            nb_samples=1
+
         if rand:
             return random.sample(range(nb_samples_total), nb_samples)
+        else:
+            nb_samples_total=nb_samples
         return range(nb_samples_total)
 
 
