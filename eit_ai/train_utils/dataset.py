@@ -42,15 +42,19 @@ class Datasets(ABC):
         self.ouput_size:int= 0
 
     def build(self,raw_samples:RawSamples, metadata:MetaData):
-        """[summary]
+        """
 
         Args:
             raw_samples (RawSamples): [description]
+                self.X: ArrayLike(n_samples, n_features)
+                self.Y: ArrayLike(n_samples, n_labels)
             metadata (MetaData): [description]
         """        
         X=raw_samples.X
         Y=raw_samples.Y
         self.fwd_model= raw_samples.fwd_model
+        metadata._nb_samples= raw_samples.nb_samples
+
         self._set_sizes_dataset(X, Y, metadata)
         X, Y= self._preprocess(X, Y, metadata)
         if self._is_indexes(metadata):
@@ -75,6 +79,8 @@ class Datasets(ABC):
         """ 
         logger.debug(f'Size of X and Y: {X.shape=}, {Y.shape=}')       
         self._nb_samples= np.shape(X)[0]
+        if metadata._nb_samples != self._nb_samples:
+            raise TypeError(f'wrong shape {X=}, {X.shape=}; {Y=}, {Y.shape=}')
         self._batch_size = metadata.batch_size
         self._test_ratio= metadata.test_ratio
         self._val_ratio = metadata.val_ratio
@@ -100,29 +106,32 @@ class Datasets(ABC):
         """        
         return metadata.idx_samples['idx_train']
     
-    def format_single_X(self, single_X:np.ndarray, metadata:MetaData)->np.ndarray:
+    def format_single_X(self, single_X:np.ndarray, metadata:MetaData, preprocess:bool=False)->np.ndarray:
 
         formated_X= single_X.flatten()
 
         if formated_X.shape[0] != self.input_size:
-            raise WrongSingleXError(f'{single_X=}\n {formated_X.shape[0]=} != {self.input_size}')
+            raise WrongSingleXError(
+                f'{single_X=}\n {formated_X.shape[0]=} != {self.input_size}')
 
         formated_X= np.reshape(formated_X,(1, self.input_size))
-        # print(d, d.shape)
-        formated_X, _= self._preprocess(formated_X, None, metadata)
-             
-        return formated_X
+        logger.debug(f'{formated_X=}, {formated_X.shape=}')
+
+        prepro_X= self._preprocess(formated_X, None, metadata)[0]
+        logger.debug(f'{prepro_X=}, {prepro_X.shape=}')
+        
+        return prepro_X if preprocess else formated_X
 
     @abstractmethod
-    def get_X(self, part:str='train'):
+    def get_X(self, part:str='train')->np.ndarray:
         """return X from a dataset part (train, val, test)"""
 
     @abstractmethod
-    def get_Y(self, part:str='train'):
+    def get_Y(self, part:str='train')->np.ndarray:
         """return Y from a dataset part (train, val, test)"""
 
     @abstractmethod
-    def get_samples(self, part: str):
+    def get_samples(self, part: str)->tuple[np.ndarray,np.ndarray]:
         """Return all samples_x, and samples_y as a tuple"""
 
     @abstractmethod
@@ -145,15 +154,15 @@ class Datasets(ABC):
 class XYSet(object):
     x=np.array([])
     y = np.array([])
-    def __init__(self,x=np.array([]), y=np.array([])) -> None:
+    def __init__(self,x:np.ndarray=np.array([]), y:np.ndarray=np.array([])) -> None:
         super().__init__()
         self.set_data(x, y)
  
-    def set_data(self, x, y):
+    def set_data(self, x:np.ndarray, y:np.ndarray)-> None:
         self.x=x
         self.y=y
 
-    def get_set(self):
+    def get_set(self)->tuple[np.ndarray,np.ndarray]:
         return self.x, self.y
     
 ################################################################################
@@ -162,13 +171,13 @@ class XYSet(object):
 
 class StdDataset(Datasets):
    
-    def get_X(self, part:str='train'):
+    def get_X(self, part:str='train')->np.ndarray:
         return getattr(self, part).get_set()[0]
 
-    def get_Y(self, part:str='train'):
+    def get_Y(self, part:str='train')->np.ndarray:
         return getattr(self, part).get_set()[1]
 
-    def get_samples(self, part: str):
+    def get_samples(self, part: str)->tuple[np.ndarray,np.ndarray]:
         return getattr(self, part).get_set()
 
     def _preprocess(
@@ -181,9 +190,12 @@ class StdDataset(Datasets):
         X=scale_prepocess(X, metadata.normalize[0])
         Y=scale_prepocess(Y, metadata.normalize[1])
         if Y is not None:
-            logger.debug(f'Size of X and Y (after preprocess): {X.shape=}, {Y.shape=}')     
+            logger.info(f'Size of X and Y (after preprocess): {X.shape=}, {Y.shape=}') 
+            logger.debug(f'X and Y (after preprocess): {X.shape}, {Y.shape}') 
         else:
-            logger.debug(f'Size of X (after preprocess): {X.shape=}')
+            logger.info(f'Size of X (after preprocess): {X.shape=}')
+            logger.debug(f'X (after preprocess): {X.shape}')
+
         return X, Y
 
     def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
@@ -217,6 +229,7 @@ class StdDataset(Datasets):
 
 def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
     """Normalize input x using minMaxScaler 
+    Attention: if x.shape is (1,n) it wont work
 
     Args:
         x (np.ndarray): array-like of shape (n_samples, n_features)
@@ -229,7 +242,7 @@ def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
     """    
     if scale:
         scaler = MinMaxScaler()
-        x= scaler.fit_transform(x) if x is not None else None
+        x= scaler.fit_transform(x.T).T if x is not None else None
     return x 
 
 def convert_to_int(x:Any)->int:
