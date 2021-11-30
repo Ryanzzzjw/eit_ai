@@ -83,7 +83,7 @@ class StdKerasModel(Models):
         assert_keras_model_compiled(self.model)
         steps=metadata._test_steps
         if X_pred.shape[0]==1:
-            steps= 1
+            steps= None
         return self.model.predict(X_pred, steps=steps, **kwargs)
 
     def save(self, metadata:MetaData)-> str:
@@ -131,6 +131,7 @@ class StdAutokerasModel(Models):
         # assert_keras_model_compiled(self.model)
         steps=metadata._test_steps
         if X_pred.shape[0]==1:
+            logger.debug(f'{X_pred=}, {X_pred.shape=}')
             steps= 1
         return self.model.predict(X_pred, steps=steps, **kwargs)
 
