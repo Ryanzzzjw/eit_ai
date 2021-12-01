@@ -1,10 +1,12 @@
 
 from logging import getLogger
+from eit_ai.pytorch.dataset import PYTORCH_DATASETS
 from eit_ai.raw_data.raw_samples import RawSamples
 import numpy as np
 from eit_ai.train_utils.gen import Generators, WrongDatasetError, WrongModelError, meas_duration
 from eit_ai.pytorch.models import PyTorchModels, PYTORCH_MODELS
-from eit_ai.pytorch.dataset import StdPytorchDataset, TorchDataset
+
+from eit_ai.train_utils.lists import ListGenerators, PytorchDatasets, PytorchModels
 from eit_ai.train_utils.metadata import MetaData
 # from eit_ai.train_utils.lists import KerasDatasets, KerasModels, ListModels, ListDatasets, ListGenerators
 
@@ -18,25 +20,26 @@ logger = getLogger(__name__)
 
 class GeneratorPyTorch(Generators):
     """ Generator class for keras models """
-    def select_model_dataset(self, model_type: PyTorchModels = None, dataset_type: StdPytorchDataset = None,
+    def select_model_dataset(self, model_type: PytorchModels = None, dataset_type: PytorchDatasets = None,
                              metadata: MetaData = None):
+
         if model_type is None and dataset_type is None:
-            model_type, dataset_type = metadata.model_type, metadata.dataset_type
+            model_type, dataset_type = metadata.model_type, metadata.dataset_type # get the data from metadata
         else:
-            if isinstance(model_type, PyTorchModels) and isinstance(model_type, StdPytorchDataset):
-                model_type, dataset_type = model_type.value, dataset_type.value
+            if isinstance(model_type, PytorchModels) and isinstance(model_type, PytorchDatasets):
+                model_type, dataset_type = model_type.value, dataset_type.value# convert to string
 
         try:
-            self.model_manager = PYTORCH_MODELS[PyTorchModels(model_type)]()
+            self.model_manager = PYTORCH_MODELS[PytorchModels(model_type)]()
         except ValueError:
             raise WrongModelError(f'Wrong model: {model_type}')
 
         try:
-            self.dataset = StdPytorchDataset[StdPytorchDataset(dataset_type)]()
+            self.dataset = PYTORCH_DATASETS[PytorchDatasets(dataset_type)]()
         except ValueError:
             raise WrongDatasetError(f'Wrong dataset: {dataset_type}')
 
-        metadata.set_model_dataset_type(ListGenerators.Pytorch, PyTorchModels(model_type), StdPytorchDataset(dataset_type))
+        metadata.set_model_dataset_type(ListGenerators.Pytorch, PytorchModels(model_type), PytorchDatasets(dataset_type))
 
 
     def build_dataset(self, raw_samples: RawSamples, metadata: MetaData) -> None:

@@ -1,16 +1,18 @@
-from typing import Union
-import numpy as np
 import random
-from sklearn import model_selection
-import torch
-from torch import nn
-from torch.utils.data import Dataset, DataLoader
-import sklearn.model_selection
-
-from eit_ai.train_utils.dataset import Datasets, scale_prepocess
-
-from eit_ai.train_utils.metadata import MetaData
 from logging import getLogger
+from typing import Union
+
+import numpy as np
+import sklearn.model_selection
+import torch
+from eit_ai.train_utils.dataset import (Datasets, convert_vec_to_int,
+                                        scale_prepocess)
+from eit_ai.train_utils.lists import PytorchDatasets
+from eit_ai.train_utils.metadata import MetaData
+from sklearn import model_selection
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
+
 logger = getLogger(__name__)
 
 class StdPytorchDataset(Datasets):
@@ -21,7 +23,7 @@ class StdPytorchDataset(Datasets):
     def get_Y(self, part:str='train'):
         return getattr(self, part).get_set()[1]
 
-    def get_samples(self, part: str):
+    def get_samples(self, part:str='train'):
         return getattr(self, part).get_set()
 
     def _preprocess(
@@ -54,45 +56,80 @@ class StdPytorchDataset(Datasets):
         self.train=TorchDataset(x=x_train[:,:-1], y=y_train)
         self.val=TorchDataset(x=x_val[:,:-1], y=y_val)
         self.test=TorchDataset(x=x_test[:,:-1], y=y_test)
+        # gen=DataloaderGenerator()
+        # self.train=gen.make(dataset=train,metadata=metadata)
+        # self.val=gen.make(dataset=val,metadata=metadata)
+        # self.test=gen.make(dataset=test,metadata=metadata)
+        
+
 
     def _mk_dataset_from_indexes(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
         """rebuild the dataset with the indexes """
-        # self._idx_train= convert_vec_to_int(metadata.idx_samples['idx_train'])
-        # self._idx_val= convert_vec_to_int(metadata.idx_samples['idx_val'])
-        # self._idx_test= convert_vec_to_int(metadata.idx_samples['idx_test'])   
-        # self.train=TorchDataset(x=X[self._idx_train,:], y=Y[self._idx_train,:])
-        # self.val=TorchDataset(x=X[self._idx_val,:], y=Y[self._idx_val,:])
-        # self.test=TorchDataset(x=X[self._idx_test,:], y=Y[self._idx_test,:])
+        self._idx_train= convert_vec_to_int(metadata.idx_samples['idx_train'])
+        self._idx_val= convert_vec_to_int(metadata.idx_samples['idx_val'])
+        self._idx_test= convert_vec_to_int(metadata.idx_samples['idx_test'])   
+        self.train=TorchDataset(x=X[self._idx_train,:], y=Y[self._idx_train,:])
+        self.val=TorchDataset(x=X[self._idx_val,:], y=Y[self._idx_val,:])
+        self.test=TorchDataset(x=X[self._idx_test,:], y=Y[self._idx_test,:])
+        # gen=DataloaderGenerator()
+        # self.train=gen.make(dataset=train,metadata=metadata)
+        # self.val=gen.make(dataset=val,metadata=metadata)
+        # self.test=gen.make(dataset=test,metadata=metadata)
 
 class TorchDataset(Dataset):
 
-    def __init__(self, x, y):
- 
+    def __init__(self, x:np.ndarray, y:np.ndarray)-> None:
+        """[summary]
+
+        Args:
+            x (np.ndarray): ArrayLike (n_samples, n_features)
+            y (np.ndarray): ArrayLike (n_samples, n_labels)
+        """        
+        if x.shape[0]!=y.shape[0]:
+            raise TypeError(
+                f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
+            
         self.X = x
         self.Y = y
-    
 
     def __len__(self):
-        return len(self.x.shape[0])
+        return len(self.X.shape[0])
 
     def __getitem__(self, index:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
         
-        return self.x[index], self.y[index]
+        return self.X[index], self.Y[index]
+        
+    def get_set(self)->tuple[np.ndarray,np.ndarray]:
+        return self.X, self.Y
 
-class StdDataloader(DataLoader):
-    def __int__(self, loaded_dataset, metadata:MetaData):
-        self.train = StdPytorchDataset().train
-        self.val = StdPytorchDataset().val
-        self.test = StdPytorchDataset().test
+class DataloaderGenerator(object):
+    def make(self, dataset:TorchDataset, metadata:MetaData)->DataLoader:
+        # self.train = StdPytorchDataset().train
+        # self.val = StdPytorchDataset().val
+        # self.test = StdPytorchDataset().test
+        return DataLoader(dataset, batch_size=metadata.batch_size, shuffle=True, num_workers=0)
+class DataloaderGenerator_old(object):
+    def make(self, dataset:StdPytorchDataset, part:str, metadata:MetaData)->DataLoader:
+        # self.train = StdPytorchDataset().train
+        # self.val = StdPytorchDataset().val
+        # self.test = StdPytorchDataset().test
+        return DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0)
+    # def _mk_dataloader(self):
+    #     self.trainLoader = DataLoader(self.train, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
+    #     self.valLoader = DataLoader(self.val, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
+    #     self.trainLoader = DataLoader(self.train, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
 
-    def _mk_dataloader(self):
-        self.trainLoader = DataLoader(self.train, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
-        self.valLoader = DataLoader(self.val, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
-        self.trainLoader = DataLoader(self.train, batch_size=MetaData.batch_size, shuffle=True, num_workers=0)
+
+PYTORCH_DATASETS={
+    PytorchDatasets.StdDataset: StdPytorchDataset
+}
+
+
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level_logging, main_log
     import logging
+
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
     change_level_logging(logging.DEBUG)
 
@@ -107,7 +144,7 @@ if __name__ == "__main__":
 
     
     rdn_dataset = StdPytorchDataset()
-    trainLoader = StdDataloader(rdn_dataset.train)
+    trainLoader = DataloaderGenerator(rdn_dataset.train)
 
 
 # train_size = int(len(rdn_dataset) * 0.6)

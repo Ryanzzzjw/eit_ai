@@ -26,7 +26,7 @@ class GeneratorKeras(Generators):
     def select_model_dataset(self, model_type:KerasModels=None, dataset_type:KerasDatasets=None, metadata:MetaData=None)-> None:
         if model_type is None and dataset_type is None:
             model_type, dataset_type = metadata.model_type, metadata.dataset_type
-        elif isinstance(model_type, KerasModels) and isinstance(model_type, KerasDatasets):
+        elif isinstance(model_type, KerasModels) and isinstance(dataset_type, KerasDatasets):
             model_type, dataset_type = model_type.value, dataset_type.value
         try:
             self.model_man=KERAS_MODELS[KerasModels(model_type)]()

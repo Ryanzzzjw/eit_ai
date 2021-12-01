@@ -1,43 +1,28 @@
 import os
-from typing import Any
-from eit_ai.pytorch.dataset import X
-import numpy as np
-from eit_ai.train_utils.dataset import Datasets
-from eit_ai.train_utils.models import Models, ListModels, ModelNotDefinedError, ModelNotPreparedError, WrongLearnRateError, WrongLossError, WrongMetricsError, WrongOptimizerError
-from eit_ai.train_utils.metadata import MetaData
-from torch.utils import data
-import torch
-from torch import nn
 # import torch.nn.functional as f
 from enum import Enum
-from torch.utils.data import DataLoader
-from genericpath import isdir
-
 from logging import getLogger
+from typing import Any
+
+import numpy as np
+import torch
+from eit_ai.pytorch.const import PYTORCH_LOSS, PYTORCH_OPTIMIZER, PytorchLosses, PytorchOptimizers
+from eit_ai.pytorch.dataset import X, DataloaderGenerator, DataloaderGenerator_old, StdPytorchDataset
+from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.lists import PytorchModels
+from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.models import (ListModels, ModelNotDefinedError,
+                                       ModelNotPreparedError, Models,
+                                       WrongLearnRateError, WrongLossError,
+                                       WrongMetricsError, WrongOptimizerError)
+from genericpath import isdir
+from torch import nn
+from torch.utils import data
+from torch.utils.data import DataLoader
+
 logger = getLogger(__name__)
 
-PYTORCH_MODEL_SAVE_FOLDERNAME='torch_model'
 
-################################################################################
-# Optimizers
-################################################################################
-
-class PytorchOptimizers(Enum):
-    Adam='Adam'
-
-PYTORCH_OPTIMIZER={
-    PytorchOptimizers.Adam: torch.optim.Adam
-}
-################################################################################
-# Losses
-################################################################################
-
-class PytorchLosses(Enum):
-    MSELoss='MSELoss'
-
-PYTORCH_LOSS={
-    PytorchLosses.MSELoss: nn.MSELoss
-}
 
 ################################################################################
 # Std PyTorch ModelManager
@@ -119,7 +104,7 @@ class StdPytorchModelManager(Models):
             WrongLearnRateError: raised if passed metadata.learning_rate >= 1.0 
         """     
         self.specific_var['optimizer'] = get_torch_optimizer(metadata)
-        self.specific_var['lr'] = metadata.learning_rate
+        # self.specific_var['lr'] = metadata.learning_rate
         self.specific_var['loss'] = get_torch_loss(metadata)
         if not isinstance(metadata.metrics, list):
             raise WrongMetricsError(f'Wrong metrics type: {metadata.metrics}')
@@ -139,7 +124,6 @@ class StdPytorchModelManager(Models):
             self.specific_var['loss']  )
 
 
-
     def train(self, dataset:Datasets, metadata:MetaData)-> None:
         """Train the model with "train" and "val"-part of the dataset, with the
         metadata. Before training the model is tested if it exist and ready
@@ -151,11 +135,12 @@ class StdPytorchModelManager(Models):
         Raises:
             ModelNotDefinedError: if "self.model" is not a Model type
             ModelNotPreparedError: if "self.model" is not compiled or similar
-        """     
-        train_loader = DataLoader(dataset.train, batch_size= metadata.batch_size,shuffle=True, num_workers=0)
+        """ 
+        gen=DataloaderGenerator_old()
+        train_dataloader=gen.make(dataset, 'train', metadata=metadata)
 
         for e in range(metadata.epoch):
-            for data_i in enumerate(train_loader):
+            for data_i in enumerate(train_dataloader):
                 self.model.forward(data_i)   
 
 
@@ -192,9 +177,9 @@ class StdPytorchModelManager(Models):
 
         Returns:
             str: the saving path which is automatically set using
-            metadata.outputdir
+            metadata.dirpath
         """     
-        return save_torch_model(self.model, dir_path=metadata.output_dir)
+        return save_torch_model(self.model, dir_path=metadata.dir_path)
 
 
 
@@ -204,13 +189,13 @@ class StdPytorchModelManager(Models):
         Args:
             metadata (MetaData)
         """  
-        return load_torch_model(self.model, dir_path=metadata.output_dir)
+        self.model=load_torch_model(dir_path=metadata.dir_path)
 
 
 ################################################################################
 # common methods
 ################################################################################
-PYTORCH_MODEL_SAVE_FOLDERNAME= 'pytorch_model'
+PYTORCH_MODEL_SAVE_FOLDERNAME= 'model.torch'
 
 def assert_torch_model_defined(model:Any)-> nn.Module:
     """allow to react if model not  defined
@@ -229,21 +214,20 @@ def assert_torch_model_defined(model:Any)-> nn.Module:
     return model
 
 
-def get_torch_optimizer(metadata:MetaData)-> torch.optim.Optimizer:
+def get_torch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimizer:
 
     if not metadata.optimizer:
         metadata.optimizer=list(PYTORCH_OPTIMIZER.keys())[0].value
     try:
-        optimizer=PYTORCH_OPTIMIZER[PytorchOptimizers(metadata.optimizer)]()
+        optimizer=PYTORCH_OPTIMIZER[PytorchOptimizers(metadata.optimizer)]
     except ValueError:
         raise WrongOptimizerError(f'Wrong optimizer type: {metadata.optimizer}')
 
     if metadata.learning_rate:
         if metadata.learning_rate >= 1.0:
-            raise WrongLearnRateError(f'Wrong learning rate type (>= 1.0): {metadata.learning_rate}') 
-        optimizer.learning_rate= metadata.learning_rate
-
-    return optimizer
+            raise WrongLearnRateError(f'Wrong learning rate type (>= 1.0): {metadata.learning_rate}')
+        return optimizer(net.parameters(), lr= metadata.learning_rate)
+    return optimizer(net.parameters())
 
 def get_torch_loss(metadata:MetaData):
 
@@ -299,17 +283,16 @@ def load_torch_model(dir_path:str='') -> nn.Module:
 # pytorch Models
 ################################################################################
 
-class PyTorchModels(ListModels):
-    StdPyTorchModel='StdPyTorchModel'
 
 PYTORCH_MODELS={
-    PyTorchModels.StdPyTorchModel: StdTorchModel,
+    PytorchModels.StdTorchModel: StdTorchModel,
 }
 
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level_logging, main_log
     import logging
+
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
     change_level_logging(logging.DEBUG)
     

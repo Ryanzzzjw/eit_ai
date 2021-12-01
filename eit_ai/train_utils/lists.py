@@ -20,9 +20,8 @@ class KerasModels(ListModels):
     StdKerasModel='StdKerasModel'
     StdAutokerasModel='StdAutokerasModel'
 
-# class PytorchModels(ListModels):
-#     StdKerasModel='StdKerasModel',
-#     StdAutokerasModel='StdAutokerasModel'
+class PytorchModels(ListModels):
+    StdTorchModel='StdTorchModel',
 
 class ListDatasets(Enum):
     """"""
@@ -31,8 +30,8 @@ class KerasDatasets(ListDatasets):
     StdDataset='StdDataset'
     TfDataset='TfDataset'
 
-# class PytorchDatasets(ListDatasets):
-#     TorchDataset='TorchDataset'
+class PytorchDatasets(ListDatasets):
+    StdDataset='StdTorchDataset'
 
 
 class ListOptimizers(Enum):
