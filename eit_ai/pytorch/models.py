@@ -36,7 +36,7 @@ class StdTorchModel(nn.Module):
         self.linear2 = nn.Linear(3, out_size)
         self.relu = nn.ReLU()
 
-    def prepare(self, op, loss):
+    def prepare(self, op:torch.optim.Optimizer, loss):
         self.optimizer= op
         self.loss= loss
         
@@ -54,7 +54,7 @@ class StdTorchModel(nn.Module):
         
         self.loss = self.loss(out, labels)
         self.optimizer.zero_grad() 
-        self.loss.backward() 
+        self.loss.backward()
         self.optimizer.step() 
     
 
@@ -140,8 +140,11 @@ class StdPytorchModelManager(Models):
         train_dataloader=gen.make(dataset, 'train', metadata=metadata)
 
         for e in range(metadata.epoch):
-            for data_i in enumerate(train_dataloader):
-                self.model.forward(data_i)   
+            logger.info(f'Epoch {e}/{metadata.epoch}')
+            for idx, data_i in enumerate(train_dataloader):
+                logger.debug(f'Batch {idx}')
+                self.model.forward(data_i)
+                
 
 
     def predict(

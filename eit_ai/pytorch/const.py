@@ -34,5 +34,3 @@ if __name__ == "__main__":
     import logging
     main_log()
     change_level_logging(logging.DEBUG)
-
-    op= optim.Adam(get_para)
