@@ -66,19 +66,18 @@ class StdPytorchDataset(Datasets):
 
 class TorchDataset(Dataset):
 
-    def __init__(self, x, y, loaded_data:np.ndarray):
+    def __init__(self, x, y):
  
-        self.data = loaded_data
         self.X = x
         self.Y = y
     
 
     def __len__(self):
-        return len(self.data)
+        return len(self.x.shape[0])
 
     def __getitem__(self, index:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
         
-        return self.X, self.Y
+        return self.x[index], self.y[index]
 
 class StdDataloader(DataLoader):
     def __int__(self, loaded_dataset, metadata:MetaData):
