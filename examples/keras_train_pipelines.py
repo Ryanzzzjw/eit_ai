@@ -65,10 +65,10 @@ def std_auto_pipeline(path=''):
     plot_EIT_samples(gen.getattr_dataset('fwd_model'), samples_y, samples_x)
         
     metadata.set_4_model(
-        epoch=500,
+        epoch=2,
         callbacks=[mk_callback_tensorboard(metadata)],
         metrics=['mse'],
-        max_trials_autokeras=100)
+        max_trials_autokeras=2)
 
     build_train_save_model(gen, metadata)
 
