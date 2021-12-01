@@ -6,6 +6,7 @@ from typing import Any, Union
 
 import numpy as np
 import sklearn.model_selection
+from scipy.stats import zscore
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.raw_data.raw_samples import RawSamples
 from sklearn.preprocessing import MinMaxScaler
@@ -227,6 +228,11 @@ class StdDataset(Datasets):
 # Methods
 ################################################################################
 
+
+def convert_to_int(x:Any)->int:
+    return np.int(x)
+convert_vec_to_int = np.vectorize(convert_to_int)
+
 def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
     """Normalize input x using minMaxScaler 
     Attention: if x.shape is (1,n) it wont work
@@ -243,16 +249,116 @@ def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
     if scale:
         scaler = MinMaxScaler()
         x= scaler.fit_transform(x.T).T if x is not None else None
+    return x
+################################################################################
+# preporcessing methods
+################################################################################
+def _prepocess_identity(x:np.ndarray)->np.ndarray:
+    """Normalize input x using minMaxScaler 
+    Attention: if x.shape is (1,n) it wont work
+
+    Args:
+        x (np.ndarray): array-like of shape (n_samples, n_features)
+                        Input samples.
+        scale (bool, optional):. Defaults to True.
+
+    Returns:
+        np.ndarray: ndarray array of shape (n_samples, n_features_new)
+            Transformed array.
+    """    
+ 
+    return x
+
+def _prepocess_zscore(x:np.ndarray)->np.ndarray:
+    """Normalize input x using minMaxScaler 
+    Attention: if x.shape is (1,n) it wont work
+
+    Args:
+        x (np.ndarray): array-like of shape (n_samples, n_features)
+                        Input samples.
+        scale (bool, optional):. Defaults to True.
+
+    Returns:
+        np.ndarray: ndarray array of shape (n_samples, n_features_new)
+            Transformed array.
+    """    
+    return zscore(x, axis=1)
+
+def _prepocess_minmax_01(x:np.ndarray)->Union[np.ndarray,None]:
+    """Normalize input x using minMaxScaler 
+    Attention: if x.shape is (1,n) it wont work
+
+    Args:
+        x (np.ndarray): array-like of shape (n_samples, n_features)
+                        Input samples.
+        scale (bool, optional):. Defaults to True.
+
+    Returns:
+        np.ndarray: ndarray array of shape (n_samples, n_features_new)
+            Transformed array.
+    """    
+    
+    scaler = MinMaxScaler(feature_range=(0,1))
+    x= scaler.fit_transform(x.T).T if x is not None else None
     return x 
 
-def convert_to_int(x:Any)->int:
-    return np.int(x)
-convert_vec_to_int = np.vectorize(convert_to_int)
+def _prepocess_minmax_11(x:np.ndarray)->Union[np.ndarray,None]:
+    """Normalize input x using minMaxScaler 
+    Attention: if x.shape is (1,n) it wont work
+
+    Args:
+        x (np.ndarray): array-like of shape (n_samples, n_features)
+                        Input samples.
+        scale (bool, optional):. Defaults to True.
+
+    Returns:
+        np.ndarray: ndarray array of shape (n_samples, n_features_new)
+            Transformed array.
+    """    
+    
+    scaler = MinMaxScaler(feature_range=(-1,1))
+    x= scaler.fit_transform(x.T).T if x is not None else None
+    return x 
+class ScalingList(Enum):
+    Identity='Identity'
+    MinMax_01='MinMax01'
+    MinMax_11='MinMax-11'
+    Norm='Norm'
+
+
+SCALING_LIST={
+    ScalingList.Identity.value:_prepocess_identity,
+    ScalingList.MinMax_01.value:_prepocess_minmax_01,
+    ScalingList.MinMax_11.value:_prepocess_minmax_11,
+    ScalingList.Norm.value:_prepocess_zscore
+}
+
+
 
 
 if __name__ == "__main__":
     from glob_utils.log.log  import change_level_logging, main_log
     import logging
+    from matplotlib import pyplot as plt
+    import random
     main_log()
     change_level_logging(logging.DEBUG)
+
+    rge=4
+    x= np.array(
+        [[random.random()*(row+1)+5 for col in range(100)] for row in range(rge)]
+    )
+    print(f'{x=}, {x.shape=}')
+
+    for idx in range(rge):
+        plt.figure()
+        plt.plot(x[idx], label='x')
+        plt.plot(_prepocess_identity(x)[idx],label='ident(x)')
+        plt.plot(_prepocess_minmax_11(x)[idx],label='mm-11(x)')
+        plt.plot(_prepocess_minmax_01(x)[idx],label='mm01(x)')
+        plt.plot(_prepocess_zscore(x)[idx],label='zscore(x)')
+        plt.legend()
+        # plt.show(block=False)
+
+    plt.show()
 
