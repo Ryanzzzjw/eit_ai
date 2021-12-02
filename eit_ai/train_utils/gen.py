@@ -7,7 +7,7 @@ from typing import Any, Union
 import numpy as np
 
 from eit_ai.train_utils.models import Models
-from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.dataset import AiDataset
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.lists import ListModels, ListDatasets
 from eit_ai.raw_data.raw_samples import RawSamples
@@ -31,7 +31,7 @@ class Generators(ABC):
     
     """
     model_man:Models = None
-    dataset:Datasets= None
+    dataset:AiDataset= None
 
     def __init__(self) -> None:
         super().__init__()
@@ -127,7 +127,7 @@ class Generators(ABC):
         """        
 
     @abstractmethod
-    def run_training(self,metadata:MetaData, dataset:Datasets=None)-> None:
+    def run_training(self,metadata:MetaData, dataset:AiDataset=None)-> None:
         """Start training with the 'train' and 'val' part of the intern dataset
         or with the passed one.
 
@@ -140,7 +140,7 @@ class Generators(ABC):
     def get_prediction(
         self,
         metadata:MetaData,
-        dataset:Datasets=None,
+        dataset:AiDataset=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
         """Return prediction from:

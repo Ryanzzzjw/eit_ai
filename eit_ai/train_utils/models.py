@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.dataset import AiDataset
 from enum import Enum
 
 from logging import getLogger
@@ -109,7 +109,7 @@ class Models(ABC):
 
 
     @abstractmethod
-    def train(self, dataset:Datasets, metadata:MetaData)-> None:
+    def train(self, dataset:AiDataset, metadata:MetaData)-> None:
         """Train the model with "train" and "val"-part of the dataset, with the
         metadata. Before training the model is tested if it exist and ready
 

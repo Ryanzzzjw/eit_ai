@@ -1,7 +1,7 @@
 
 
 from typing import Any
-from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.dataset import AiDataset
 from eit_ai.train_utils.models import Models, ListModels
 from eit_ai.train_utils.metadata import MetaData
 
@@ -66,7 +66,7 @@ class StdPyTorchModel(Models):
         #     loss=loss,
         #     metrics=metadata.metrics)
 
-    def train(self, dataset:Datasets, metadata:MetaData):  
+    def train(self, dataset:AiDataset, metadata:MetaData):  
         """""" 
         # self.model.fit(
         #     x=dataset.get_X('train'),
@@ -78,7 +78,7 @@ class StdPyTorchModel(Models):
         #     callbacks=metadata.callbacks,
         #     batch_size=metadata.batch_size)
 
-    def predict(self, dataset:Datasets, metadata:MetaData, **kwargs)->Any:
+    def predict(self, dataset:AiDataset, metadata:MetaData, **kwargs)->Any:
         """"""
         # return self.model.predict(dataset.get_X('test'), steps=metadata._test_steps)
 
