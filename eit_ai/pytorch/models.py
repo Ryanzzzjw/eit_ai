@@ -7,7 +7,7 @@ from contextlib import redirect_stdout
 import numpy as np
 import torch
 from eit_ai.pytorch.const import PYTORCH_LOSS, PYTORCH_OPTIMIZER, PytorchLosses, PytorchOptimizers
-from eit_ai.pytorch.dataset import X, DataloaderGenerator, DataloaderGenerator_old, StdPytorchDataset
+from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset
 from eit_ai.train_utils.dataset import Datasets
 from eit_ai.train_utils.lists import PytorchModels
 from eit_ai.train_utils.metadata import MetaData
@@ -45,11 +45,11 @@ class StdPytorchModel(nn.Module):
         self.optimizer= op
         self.loss= loss
         
-    def forward(self, dataloader):
+    def forward(self, x):
         
         # inputs,  labels = dataloader
         # x = self.relu(self.linear1(inputs))
-        return self.model(dataloader)
+        return self.model(x)
         
         # self.loss = self.loss(out, labels)
         # self.optimizer.zero_grad() 
@@ -59,11 +59,13 @@ class StdPytorchModel(nn.Module):
 
     def predict(self, x_pred: np.ndarray):
         """[summary]
+        predict the new x
         """
-        self.model.eval()
-        with torch.no_grad:
-            out = self.model(torch.Tensor(x_pred))        
-            return out
+        # self.model.eval()
+        
+        out = self.model(torch.Tensor(x_pred))        
+        return out
+    
 class StdPytorchModelManager(Models):
 
     # model=None
@@ -144,12 +146,13 @@ class StdPytorchModelManager(Models):
                 inputs, labels = data_i
                 y_pred = self.model(inputs)
                 loss_value = self.model.loss(y_pred, labels)
-               
+                
+                #backward propagation
                 self.model.optimizer.zero_grad()
                 loss_value.backward()
-                self.model.optimizer.step() 
-                if (epoch+1) % 20 == 0:
-                    print('Epoch[{}/{}], loss: {:.6f}'.format(epoch+1,
+                self.model.optimizer.step()  #update
+                
+                print('Epoch[{}/{}], loss: {:.6f}'.format(epoch+1,
                                                   metadata.epoch,
                                                   loss_value.item()))
                 
@@ -179,13 +182,13 @@ class StdPytorchModelManager(Models):
         """
         # X_pred preprocess if needed
         if X_pred.shape[0]==1:
-            return self.model.predict(X_pred)
+            return self.model.predict(X_pred).detach().numpy()
         else:
-            res = []
+            res = np.array([])
             for i in range(X_pred.shape[0]):
-                pred = self.model.predict(X_pred[[i], :]).numpy().tolist()
-                res.append[pred]
-                return res  
+                pred = self.model.predict(X_pred[i]).detach().numpy()
+                res = np.append(res, pred)
+            return res  
 
 
     def save(self, metadata:MetaData)-> str:
@@ -246,7 +249,7 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
         if metadata.learning_rate >= 1.0:
             raise WrongLearnRateError(f'Wrong learning rate type (>= 1.0): {metadata.learning_rate}')
         return optimizer(net.parameters(), lr= metadata.learning_rate)
-    return optimizer(net.parameters(), lr=metadata.learning_rate)
+    # return optimizer(net.parameters(), lr=metadata.learning_rate)
 
 def get_pytorch_loss(metadata:MetaData):
 
@@ -289,7 +292,7 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loading - failed, {PYTORCH_MODEL_SAVE_FOLDERNAME} do not exist in {dir_path}')
         return None
     try:
-        model:nn.Module = torch.load(model_path)
+        model:nn.Module.modules = torch.load(model_path)
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
         model.summary()
