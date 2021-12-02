@@ -2,10 +2,11 @@
 
 
 import logging
-from eit_ai.keras.const import KerasOptimizers
-from eit_ai.keras.dataset import KerasDatasets
-from eit_ai.keras.models import KerasModels
-from eit_ai.draw_data import *
+import matplotlib.pyplot as plt
+from eit_ai.keras.const import ListKerasOptimizers
+from eit_ai.keras.dataset import ListKerasDatasets
+from eit_ai.keras.models import ListKerasModels
+from eit_ai.draw_data import plot_EIT_samples  
 from eit_ai.keras.gen import GeneratorKeras
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.raw_data.raw_samples import load_samples
@@ -25,8 +26,8 @@ def std_keras_train_pipeline(path:str= ''):
     metadata=MetaData()
     gen = GeneratorKeras()# Create a model generator
     gen.select_model_dataset(
-        model_type=KerasModels.StdKerasModel,
-        dataset_type=KerasDatasets.StdDataset,
+        model_type=ListKerasModels.StdKerasModel,
+        dataset_type=ListKerasDatasets.StdDataset,
         metadata=metadata)
 
     metadata.set_ouput_dir(training_name='Std_keras_test', append_date_time= True)
@@ -42,7 +43,7 @@ def std_keras_train_pipeline(path:str= ''):
         epoch=100,
         callbacks=[mk_callback_tensorboard(metadata)],
         metrics=['mse'],
-        optimizer=KerasOptimizers.Adam)
+        optimizer=ListKerasOptimizers.Adam)
 
     build_train_save_model(gen, metadata)
 
@@ -52,8 +53,8 @@ def std_auto_pipeline(path=''):
     metadata=MetaData()
     gen = GeneratorKeras()# Create a model generator
     gen.select_model_dataset(
-        model_type=KerasModels.StdAutokerasModel,
-        dataset_type=KerasDatasets.StdDataset,
+        model_type=ListKerasModels.StdAutokerasModel,
+        dataset_type=ListKerasDatasets.StdDataset,
         metadata=metadata)
     metadata.set_ouput_dir(training_name='Std_autokeras_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
@@ -88,11 +89,10 @@ if __name__ == "__main__":
     from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level_logging(logging.INFO)
+    change_level_logging(logging.DEBUG)
 
     debug=True
 
-    
     if debug:
         path='E:/EIT_Project/05_Engineering/04_Software/Python/eit_app/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.mat'
     else:
