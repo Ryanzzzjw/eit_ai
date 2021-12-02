@@ -5,10 +5,10 @@ from logging import getLogger
 
 import numpy as np
 import tensorflow as tf
-from eit_ai.train_utils.dataset import (Datasets, StdDataset,
+from eit_ai.train_utils.dataset import (AiDataset, StdDataset,
                                           scale_prepocess)
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.lists import KerasDatasets
+from eit_ai.train_utils.lists import ListKerasDatasets
 from sklearn.preprocessing import MinMaxScaler
 
 logger = getLogger(__name__)
@@ -17,7 +17,7 @@ logger = getLogger(__name__)
 # Dataset for Keras Model using the tf.data.Dataset class
 ################################################################################
 
-class TfDataset(Datasets):
+class TfDataset(AiDataset):
    
     def get_X(self, part:str='train'):
         return getattr(self, part)
@@ -111,14 +111,14 @@ class TfDataset(Datasets):
 ################################################################################
 # Keras Datasets
 ################################################################################
-
-# class KerasDatasets(ListDatasets):
-#     TfDataset='TfDataset'
-
+""" Dictionary listing all Keras datasets available
+"""
 KERAS_DATASETS={
-    KerasDatasets.StdDataset: StdDataset,
-    KerasDatasets.TfDataset: TfDataset
+    ListKerasDatasets.StdDataset: StdDataset,
+    ListKerasDatasets.TfDataset: TfDataset
 }
+
+
 
 
 

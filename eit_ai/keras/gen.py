@@ -2,16 +2,16 @@
 from logging import getLogger
 
 import numpy as np
-from eit_ai.keras.dataset import KERAS_DATASETS
 from eit_ai.keras.models import KERAS_MODELS
+from eit_ai.keras.dataset import KERAS_DATASETS
 from eit_ai.raw_data.raw_samples import RawSamples
-from eit_ai.train_utils.dataset import Datasets
+from eit_ai.train_utils.dataset import AiDataset
 from eit_ai.train_utils.gen import (Generators, WrongDatasetError,
                                               WrongModelError,
                                               WrongSingleXError, meas_duration)
-from eit_ai.train_utils.lists import (KerasDatasets, KerasModels,
+from eit_ai.train_utils.lists import (ListKerasDatasets, ListKerasModels,
                                                 ListDatasets, ListGenerators,
-                                                ListModels)
+                                                ListModels, get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
 
 logger = getLogger(__name__)
@@ -23,21 +23,24 @@ logger = getLogger(__name__)
 class GeneratorKeras(Generators):
     """ Generator class for keras models """
 
-    def select_model_dataset(self, model_type:KerasModels=None, dataset_type:KerasDatasets=None, metadata:MetaData=None)-> None:
+    def select_model_dataset(
+        self, 
+        model_type:ListKerasModels=None, 
+        dataset_type:ListKerasDatasets=None, 
+        metadata:MetaData=None)-> None:
+        
         if model_type is None and dataset_type is None:
-            model_type, dataset_type = metadata.model_type, metadata.dataset_type
-        elif isinstance(model_type, KerasModels) and isinstance(model_type, KerasDatasets):
-            model_type, dataset_type = model_type.value, dataset_type.value
-        try:
-            self.model_man=KERAS_MODELS[KerasModels(model_type)]()
-        except ValueError:
-            raise WrongModelError(f'Wrong model: {model_type}')
-        try:
-            self.dataset=KERAS_DATASETS[KerasDatasets(dataset_type)]()
-        except ValueError:
-            raise WrongDatasetError(f'Wrong dataset: {dataset_type}')
+            model_type = metadata.model_type
+            dataset_type = metadata.dataset_type
 
-        metadata.set_model_dataset_type(ListGenerators.Keras, KerasModels(model_type), KerasDatasets(dataset_type))
+        model_man,listmodobj = get_from_dict(
+            model_type, KERAS_MODELS, ListKerasModels, True)
+        dataset,listdataobj= get_from_dict(
+            dataset_type,KERAS_DATASETS, ListKerasDatasets, True)
+        self.model_man = model_man()
+        self.dataset = dataset()
+        metadata.set_model_dataset_type(
+            ListGenerators.Keras, listmodobj, listdataobj)
 
     def build_dataset(self, raw_samples:RawSamples, metadata:MetaData)-> None:
         self.dataset.build(raw_samples, metadata)
@@ -45,7 +48,7 @@ class GeneratorKeras(Generators):
     def build_model(self, metadata:MetaData)-> None:
         self.model_man.build(metadata=metadata)
 
-    def run_training(self,metadata:MetaData=None, dataset:Datasets=None)-> None:
+    def run_training(self,metadata:MetaData=None, dataset:AiDataset=None)-> None:
         logger.info('### Training started: ... ###')
         _, duration =self._run_training(metadata,dataset=dataset, return_duration=True)
         metadata.set_training_duration(duration)
@@ -63,7 +66,7 @@ class GeneratorKeras(Generators):
     def get_prediction(
         self,
         metadata:MetaData,
-        dataset:Datasets=None,
+        dataset:AiDataset=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
@@ -76,7 +79,7 @@ class GeneratorKeras(Generators):
     def _get_prediction(
         self,
         metadata:MetaData,
-        dataset:Datasets=None,
+        dataset:AiDataset=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 

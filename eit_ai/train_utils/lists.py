@@ -5,18 +5,45 @@
 
 
 from enum import Enum
+from typing import Any, Union
+
+"""Those Enumerations lists are used save and select classes
+
+"""
+
+class ExtendedEnum(Enum):
+
+    @classmethod
+    def list_values(cls):
+        return list(map(lambda c: c.value, cls))
+
+    @classmethod
+    def list_keys_name(cls):
+        return cls._member_names_
+
+    @classmethod
+    def list_items(cls):
+        return cls._member_map_
 
 
 
-class ListGenerators(Enum):
+
+################################################################################
+# Generators
+################################################################################
+
+class ListGenerators(ExtendedEnum):
     Keras='Keras'
     Pytorch='Pytorch'
 
+################################################################################
+# Models
+################################################################################
 
-class ListModels(Enum):
+class ListModels(ExtendedEnum):
     """"""
 
-class KerasModels(ListModels):
+class ListKerasModels(ListModels):
     StdKerasModel='StdKerasModel'
     StdAutokerasModel='StdAutokerasModel'
 
@@ -24,22 +51,81 @@ class KerasModels(ListModels):
 #     StdKerasModel='StdKerasModel',
 #     StdAutokerasModel='StdAutokerasModel'
 
-class ListDatasets(Enum):
+################################################################################
+# Datasets
+################################################################################
+
+class ListDatasets(ExtendedEnum):
     """"""
 
-class KerasDatasets(ListDatasets):
+class ListKerasDatasets(ListDatasets):
     StdDataset='StdDataset'
     TfDataset='TfDataset'
 
 # class PytorchDatasets(ListDatasets):
 #     TorchDataset='TorchDataset'
 
+################################################################################
+# Optimizers
+################################################################################
 
-class ListOptimizers(Enum):
+class ListOptimizers(ExtendedEnum):
     """ """
-    
-class ListLosses(Enum):
+class ListKerasOptimizers(ListOptimizers):
+    Adam='Adam'
+
+################################################################################
+# Losses
+################################################################################
+
+class ListLosses(ExtendedEnum):
     """ """
+class ListKerasLosses(ListLosses):
+    CategoricalCrossentropy='CategoricalCrossentropy'
+
+
+class ListNormalizations(ExtendedEnum):
+    Identity='Identity'
+    MinMax_01='MinMax01'
+    MinMax_11='MinMax-11'
+    Norm='Norm'
+
+
+
+
+################################################################################
+# Methods
+################################################################################
+
+
+def get_from_dict(
+    list_item:Union[str, Enum],
+    dict_obj:dict, 
+    list_instance:Enum,
+    return_listobj:bool=False)->tuple[Any, Enum]:
+    """[summary]
+
+    Args:
+        list_item (Union[str, Enum]): [description]
+        dict_obj (dict): [description]
+        list_instance (Enum): [description]
+
+    Raises:
+        ValueError: [description]
+
+    Returns:
+        tuple[Any, Enum]: [description]
+    """    
+    if isinstance(list_item, Enum):
+        list_item=list_item.value
+    try:
+
+
+        if return_listobj:
+            return dict_obj[list_instance(list_item)], list_instance(list_item)
+        return dict_obj[list_instance(list_item)]
+    except ValueError:
+        raise ValueError(f'Wrong {list_instance.__name__}: {list_item}')
 
 
 if __name__ == "__main__":
@@ -47,3 +133,18 @@ if __name__ == "__main__":
     import logging
     main_log()
     change_level_logging(logging.DEBUG)
+    from glob_utils.debug.debugging_help import print_obj_type_dict
+
+
+    class TestEnum(ExtendedEnum):
+        name1='val1',
+        name2= 2
+    TEST={
+        TestEnum.name1:'test1',
+        TestEnum.name2:'test2'
+    }
+    print_obj_type_dict(TEST.keys())
+    print(isinstance(ListGenerators.Keras, TestEnum))
+
+
+    

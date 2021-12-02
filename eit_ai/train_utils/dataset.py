@@ -6,9 +6,10 @@ from typing import Any, Union
 
 import numpy as np
 import sklearn.model_selection
-from scipy.stats import zscore
-from eit_ai.train_utils.metadata import MetaData
 from eit_ai.raw_data.raw_samples import RawSamples
+from eit_ai.train_utils.lists import ListNormalizations, get_from_dict
+from eit_ai.train_utils.metadata import MetaData
+from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
 
 logger = getLogger(__name__)
@@ -21,7 +22,7 @@ class WrongSingleXError(Exception):
 # Abstract Class for Dataset
 ################################################################################
 
-class Datasets(ABC):
+class AiDataset(ABC):
     def __init__(self) -> None:
         super().__init__()
         self.train=None
@@ -117,11 +118,11 @@ class Datasets(ABC):
 
         formated_X= np.reshape(formated_X,(1, self.input_size))
         logger.debug(f'{formated_X=}, {formated_X.shape=}')
-
+        if not preprocess:
+            return formated_X
         prepro_X= self._preprocess(formated_X, None, metadata)[0]
         logger.debug(f'{prepro_X=}, {prepro_X.shape=}')
-        
-        return prepro_X if preprocess else formated_X
+        return prepro_X
 
     @abstractmethod
     def get_X(self, part:str='train')->np.ndarray:
@@ -170,7 +171,7 @@ class XYSet(object):
 # Custom standard dataset
 ################################################################################
 
-class StdDataset(Datasets):
+class StdDataset(AiDataset):
    
     def get_X(self, part:str='train')->np.ndarray:
         return getattr(self, part).get_set()[0]
@@ -185,18 +186,24 @@ class StdDataset(Datasets):
         self,
         X:np.ndarray,
         Y:np.ndarray,
-        metadata:MetaData)->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
+        metadata:MetaData
+        )->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
         """return X, Y preprocessed"""
-        
-        X=scale_prepocess(X, metadata.normalize[0])
-        Y=scale_prepocess(Y, metadata.normalize[1])
-        if Y is not None:
-            logger.info(f'Size of X and Y (after preprocess): {X.shape=}, {Y.shape=}') 
-            logger.debug(f'X and Y (after preprocess): {X.shape}, {Y.shape}') 
+        if isinstance(metadata.normalize[0], bool):
+            X=scale_prepocess(X, metadata.normalize[0])
+            Y=scale_prepocess(Y, metadata.normalize[1])
         else:
-            logger.info(f'Size of X (after preprocess): {X.shape=}')
-            logger.debug(f'X (after preprocess): {X.shape}')
-
+            X= get_from_dict(
+                metadata.normalize[0],NORMALIZATIONS,ListNormalizations)(X)
+            Y= get_from_dict(
+                metadata.normalize[1],NORMALIZATIONS,ListNormalizations)(Y)
+        log_msg='Preprocessing - Done :'
+        if Y is not None:
+            logger.info(f'{log_msg} {X.shape=}\n, {Y.shape=}') 
+            logger.debug(f'{log_msg} {X=}\n, {Y=}') 
+        else:
+            logger.info(f'{log_msg} {X.shape=}')
+            logger.debug(f'{log_msg} {X=}')
         return X, Y
 
     def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
@@ -228,9 +235,9 @@ class StdDataset(Datasets):
 # Methods
 ################################################################################
 
-
 def convert_to_int(x:Any)->int:
     return np.int(x)
+
 convert_vec_to_int = np.vectorize(convert_to_int)
 
 def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
@@ -249,116 +256,153 @@ def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
     if scale:
         scaler = MinMaxScaler()
         x= scaler.fit_transform(x.T).T if x is not None else None
+        logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
     return x
 ################################################################################
-# preporcessing methods
+# Preprocessing methods
 ################################################################################
 def _prepocess_identity(x:np.ndarray)->np.ndarray:
-    """Normalize input x using minMaxScaler 
-    Attention: if x.shape is (1,n) it wont work
-
+    """Preprocessing returning indentity of x  
+    
     Args:
         x (np.ndarray): array-like of shape (n_samples, n_features)
                         Input samples.
-        scale (bool, optional):. Defaults to True.
 
     Returns:
         np.ndarray: ndarray array of shape (n_samples, n_features_new)
             Transformed array.
     """    
- 
-    return x
+    x= preprocess_guard(x)
+    return x if x.size > 0 else x
 
 def _prepocess_zscore(x:np.ndarray)->np.ndarray:
-    """Normalize input x using minMaxScaler 
-    Attention: if x.shape is (1,n) it wont work
+    """Preprocessing returning zscore of x  
 
     Args:
         x (np.ndarray): array-like of shape (n_samples, n_features)
                         Input samples.
-        scale (bool, optional):. Defaults to True.
 
     Returns:
         np.ndarray: ndarray array of shape (n_samples, n_features_new)
             Transformed array.
-    """    
-    return zscore(x, axis=1)
+    """
+    x= preprocess_guard(x)    
+    return zscore(x, axis=1) if x.size > 0 else x
 
 def _prepocess_minmax_01(x:np.ndarray)->Union[np.ndarray,None]:
-    """Normalize input x using minMaxScaler 
-    Attention: if x.shape is (1,n) it wont work
+    """Preprocessing returning MinMax of x with scaling range [0,1]
 
     Args:
         x (np.ndarray): array-like of shape (n_samples, n_features)
                         Input samples.
-        scale (bool, optional):. Defaults to True.
 
     Returns:
         np.ndarray: ndarray array of shape (n_samples, n_features_new)
             Transformed array.
     """    
-    
+    x= preprocess_guard(x)
+    if x.size== 0:
+        return x
     scaler = MinMaxScaler(feature_range=(0,1))
-    x= scaler.fit_transform(x.T).T if x is not None else None
-    return x 
+    x=scaler.fit_transform(x.T).T
+    logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
+    return x
 
-def _prepocess_minmax_11(x:np.ndarray)->Union[np.ndarray,None]:
-    """Normalize input x using minMaxScaler 
-    Attention: if x.shape is (1,n) it wont work
+def _prepocess_minmax_11(x:np.ndarray)->np.ndarray:
+    """Preprocessing returning MinMax of x wth scaling range [-1,1]
 
     Args:
         x (np.ndarray): array-like of shape (n_samples, n_features)
                         Input samples.
-        scale (bool, optional):. Defaults to True.
 
     Returns:
         np.ndarray: ndarray array of shape (n_samples, n_features_new)
             Transformed array.
     """    
-    
+    x= preprocess_guard(x)
+    if x.size== 0:
+        return x
     scaler = MinMaxScaler(feature_range=(-1,1))
-    x= scaler.fit_transform(x.T).T if x is not None else None
-    return x 
-class ScalingList(Enum):
-    Identity='Identity'
-    MinMax_01='MinMax01'
-    MinMax_11='MinMax-11'
-    Norm='Norm'
+    x=scaler.fit_transform(x.T).T
+    logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
+    return x
 
 
-SCALING_LIST={
-    ScalingList.Identity.value:_prepocess_identity,
-    ScalingList.MinMax_01.value:_prepocess_minmax_01,
-    ScalingList.MinMax_11.value:_prepocess_minmax_11,
-    ScalingList.Norm.value:_prepocess_zscore
+def preprocess_guard(x:np.ndarray)->np.ndarray:
+    """Check if x is a 2d `ndarray`
+    
+    if x ==`None`>> convert to 2d array
+
+    Args:
+        x (np.ndarray): a 2d `ndarray`
+
+    Raises:
+        TypeError: raise if x is not a 2d `ndarray`
+
+    Returns:
+        np.ndarray: x or empty 2d array if x is `None`
+    """    
+    if x is None:
+        return np.array([[]])
+    if not isinstance(x, np.ndarray) or x.ndim !=2:
+        raise TypeError(f'x is not an 2d ndarray{x=}')
+    return x
+
+NORMALIZATIONS={
+    ListNormalizations.Identity:_prepocess_identity,
+    ListNormalizations.MinMax_01:_prepocess_minmax_01,
+    ListNormalizations.MinMax_11:_prepocess_minmax_11,
+    ListNormalizations.Norm:_prepocess_zscore
 }
 
 
 
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level_logging, main_log
     import logging
-    from matplotlib import pyplot as plt
     import random
+
+    from glob_utils.log.log import change_level_logging, main_log
+    from matplotlib import pyplot as plt
     main_log()
     change_level_logging(logging.DEBUG)
+    if not np.array([[]]):
+        print('array empty')
+
+
+    data = np.array([[-1, 2], [-0.5, 6], [0, 10], [1, 18]])
+    scaler = MinMaxScaler()
+    print(f'{data=}')
+    print(scaler.fit(data))
+    print(scaler.data_max_)
+    print(scaler.transform(data))
+    print(scaler.transform([[2, 2]]))
 
     rge=4
     x= np.array(
-        [[random.random()*(row+1)+5 for col in range(100)] for row in range(rge)]
+        [[random.random()*(row+1)+2 for col in range(100)] for row in range(rge)]
     )
     print(f'{x=}, {x.shape=}')
 
     for idx in range(rge):
         plt.figure()
         plt.plot(x[idx], label='x')
-        plt.plot(_prepocess_identity(x)[idx],label='ident(x)')
+        # plt.plot(_prepocess_identity(x)[idx],label='ident(x)')
         plt.plot(_prepocess_minmax_11(x)[idx],label='mm-11(x)')
         plt.plot(_prepocess_minmax_01(x)[idx],label='mm01(x)')
         plt.plot(_prepocess_zscore(x)[idx],label='zscore(x)')
+
+
+
+        plt.legend()
+        plt.figure()
+        plt.boxplot([
+            x[idx],
+            _prepocess_minmax_11(x)[idx],
+            _prepocess_minmax_01(x)[idx],
+            _prepocess_zscore(x)[idx]],labels=['x','mm-11(x)','mm01(x)','zscore(x)'])
         plt.legend()
         # plt.show(block=False)
-
+    change_level_logging(logging.INFO)
     plt.show()
 

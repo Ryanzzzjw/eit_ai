@@ -9,20 +9,17 @@ import autokeras as ak
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
-from eit_ai.keras.const import (KERAS_LOSS,
-                                          KERAS_MODEL_SAVE_FOLDERNAME,
-                                          KERAS_OPTIMIZER, KerasLosses,
-                                          KerasOptimizers)
-from eit_ai.train_utils.dataset import Datasets
-from eit_ai.train_utils.lists import KerasModels
+from eit_ai.keras.const import (KERAS_LOSSES, KERAS_MODEL_SAVE_FOLDERNAME,
+                                KERAS_OPTIMIZERS)
+from eit_ai.train_utils.dataset import AiDataset
+from eit_ai.train_utils.lists import (ListKerasLosses, ListKerasModels,
+                                      ListKerasOptimizers, get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME,
-                                                 ModelNotDefinedError,
-                                                 ModelNotPreparedError, Models,
-                                                 WrongLearnRateError,
-                                                 WrongLossError,
-                                                 WrongMetricsError,
-                                                 WrongOptimizerError)
+                                       ModelNotDefinedError,
+                                       ModelNotPreparedError, Models,
+                                       WrongLearnRateError, WrongLossError,
+                                       WrongMetricsError, WrongOptimizerError)
 from genericpath import isdir
 
 logger = getLogger(__name__)
@@ -62,7 +59,7 @@ class StdKerasModel(Models):
             loss=self.specific_var['loss'],
             metrics=self.specific_var['metrics'])
 
-    def train(self, dataset:Datasets, metadata:MetaData)-> None:
+    def train(self, dataset:AiDataset, metadata:MetaData)-> None:
         assert_keras_model_compiled(self.model)
         self.model.fit(
             x=dataset.get_X('train'),
@@ -109,7 +106,7 @@ class StdAutokerasModel(Models):
     def _prepare_model(self)-> None:
         # assert_keras_model_defined(self.model)
         """ """
-    def train(self, dataset:Datasets, metadata:MetaData)-> None: 
+    def train(self, dataset:AiDataset, metadata:MetaData)-> None: 
         # assert_keras_model_compiled(self.model)   
         self.model.fit(
             x=dataset.get_X('train'),
@@ -176,13 +173,12 @@ def assert_keras_model_compiled(model:Any)->None:
 
 
 def get_keras_optimizer(metadata:MetaData)-> keras.optimizers.Optimizer:
-
     if not metadata.optimizer:
-        metadata.optimizer=list(KERAS_OPTIMIZER.keys())[0].value
-    try:
-        optimizer=KERAS_OPTIMIZER[KerasOptimizers(metadata.optimizer)]()
-    except ValueError:
-        raise WrongOptimizerError(f'Wrong optimizer type: {metadata.optimizer}')
+        metadata.optimizer=list(KERAS_OPTIMIZERS.keys())[0].value
+
+    op_cls=get_from_dict(
+        metadata.optimizer, KERAS_OPTIMIZERS, ListKerasOptimizers)
+    optimizer=op_cls()
 
     if metadata.learning_rate:
         if metadata.learning_rate >= 1.0:
@@ -192,15 +188,11 @@ def get_keras_optimizer(metadata:MetaData)-> keras.optimizers.Optimizer:
     return optimizer
 
 def get_keras_loss(metadata:MetaData)-> keras.losses.Loss:
-
     if not metadata.loss:
-        metadata.loss=list(KERAS_LOSS.keys())[0].value
-    try:
-        loss=KERAS_LOSS[KerasLosses(metadata.loss)]()
-    except ValueError:
-        raise WrongLossError(f'Wrong loss type: {metadata.loss}')
+        metadata.loss=list(KERAS_LOSSES.keys())[0].value
 
-    return loss
+    loss_cls=get_from_dict(metadata.loss, KERAS_LOSSES, ListKerasLosses)
+    return loss_cls()
 
 def save_keras_model(model:keras.Model, dir_path:str='', save_summary:bool=False)-> str:
     """Save a Keras model, additionnaly can be the summary of the model be saved"""
@@ -252,20 +244,28 @@ def get_path_keras_model(dir_path:str, default_filename:str=KERAS_MODEL_SAVE_FOL
 ################################################################################
 # Keras Models
 ################################################################################
-
+""" Dictionary listing all Keras models available
+"""
 KERAS_MODELS={
-    KerasModels.StdKerasModel: StdKerasModel,
-    KerasModels.StdAutokerasModel: StdAutokerasModel
+    ListKerasModels.StdKerasModel: StdKerasModel,
+    ListKerasModels.StdAutokerasModel: StdAutokerasModel
 }
-
 
 if __name__ == "__main__":
     import logging
 
-    from glob_utils.log.log  import change_level_logging, main_log
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
     change_level_logging(logging.DEBUG)
 
+    print(ListKerasOptimizers.__name__)
+
+    obj, item=get_from_dict(ListKerasLosses.CategoricalCrossentropy, KERAS_LOSSES, ListKerasLosses, True)
+    print(obj(), item)
+    obj, item=get_from_dict('CategoricalCrossentropy', KERAS_LOSSES, ListKerasLosses, True)
+    print(obj(), item)
+
+    
     """"""
     
 

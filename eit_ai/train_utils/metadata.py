@@ -1,11 +1,13 @@
+from enum import Enum
 import os
 import sys
 from dataclasses import dataclass
 from logging import error, getLogger
+from typing import Union
 
 from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
 from eit_ai.train_utils.lists import (ListDatasets, ListGenerators, ListLosses,
-                                      ListModels, ListOptimizers)
+                                      ListModels, ListOptimizers,ListNormalizations)
 from glob_utils.files.files import (FileExt, find_file, is_file, read_txt,
                                     save_as_mat, save_as_pickle, save_as_txt, )
 from glob_utils.log.msg_trans import highlight_msg
@@ -91,6 +93,7 @@ class MetaData(object):
 
     def set_model_dataset_type(self, gen_type:ListGenerators, model_type:ListModels, dataset_type:ListDatasets):
         """"""
+
         self.gen_type= gen_type.value
         self.model_type= model_type.value
         self.dataset_type= dataset_type.value
@@ -101,11 +104,27 @@ class MetaData(object):
             test_ratio:float=0.2,
             val_ratio:float=0.2, 
             # use_tf_dataset:bool=False, 
-            normalize= [True, True]):
+            #normalize:list[Union[str, Enum]]= ['', '']
+            normalize:list[bool]= [True, True])->None:
         """ """             
         self.batch_size = batch_size
         self.val_ratio, self.test_ratio =check_ratios(val_ratio, test_ratio)
-        self.normalize=normalize 
+        
+        self.set_normalize(normalize)
+
+    def set_normalize(self, normalize:list[Union[str, Enum]]= ['', '']) -> None:
+        
+        if not isinstance(normalize, list) or len(normalize) != 2:
+            raise ValueError(f'{normalize=} is not a list with 2 elements')
+        self.normalize=[ListNormalizations.Identity.name for _ in range(2)]
+        for i, norm in enumerate(normalize):
+            if isinstance(norm, str) and norm in ListNormalizations.list_keys_name():
+                self.normalize[i]=norm
+            elif isinstance(norm, ListNormalizations):
+                self.normalize[i]=norm.name
+            elif isinstance(norm, bool): # back compatibility
+                self.normalize[i]=norm
+        logger.info(f'Normalize has been set to {self.normalize}')
 
     def set_4_model(   
             self,
@@ -227,10 +246,6 @@ class MetaData(object):
             logger.info(f'Raw src file has been set to "{files_paths[0]}"')
         except FileNotFoundError as e:
             logger.info(f'raw src file not found it have to selected by user({e})')
-
-
-        
-        
 
     def reload(self, dir_path:str=''):
 
