@@ -4,22 +4,21 @@ from eit_ai.pytorch.dataset import PYTORCH_DATASETS
 from eit_ai.raw_data.raw_samples import RawSamples
 import numpy as np
 from eit_ai.train_utils.gen import Generators, WrongDatasetError, WrongModelError, meas_duration
-from eit_ai.pytorch.models import PyTorchModels, PYTORCH_MODELS
+from eit_ai.pytorch.models import PYTORCH_MODELS
 
 from eit_ai.train_utils.lists import ListGenerators, PytorchDatasets, PytorchModels
 from eit_ai.train_utils.metadata import MetaData
-# from eit_ai.train_utils.lists import KerasDatasets, KerasModels, ListModels, ListDatasets, ListGenerators
 
 
 
 logger = getLogger(__name__)
 
 ################################################################################
-# Keras Models
+# Pytorch Models
 ################################################################################
 
 class GeneratorPyTorch(Generators):
-    """ Generator class for keras models """
+    """ Generator class for pytorch models """
     def select_model_dataset(self, model_type: PytorchModels = None, dataset_type: PytorchDatasets = None,
                              metadata: MetaData = None):
 
