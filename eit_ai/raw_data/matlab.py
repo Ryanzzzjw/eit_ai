@@ -177,8 +177,10 @@ class MatlabSamples(RawSamples):
                 else:
                    self.samples[key]=np.append(
                        self.samples[key],batch_file[key],axis=1)
-        # Logging
+
+        # transform matlab (switch axes 0(features) and 1 (samples))
         for key in self.samples.keys():
+            self.samples[key]= np.swapaxes(self.samples[key],0,1)
             logger.debug(f'Size of "{key}": {self.samples[key].shape}')
            
     def _XY_selection(self, data_sel:list[str]= ['Xih','Yih'])->None:
@@ -194,7 +196,7 @@ class MatlabSamples(RawSamples):
         - X and Y have shape (nb_samples, nbfeatures) and (nb_samples, nblabels)
         """
          # data selection
-        tmpX = {
+        X = {
             #Voltages meas homogenious
             'Xh': self.samples['X'][:, :, 0],
             #Voltages meas inhomogenious
@@ -204,30 +206,38 @@ class MatlabSamples(RawSamples):
             #Voltages meas inhomogenious with noise  
             'Xihn': self.samples['X'][:, :, 3]
         }
-        tmpY = {
-            'Yh': self.samples['y'][:,:,0], # Image elem_data homogenious
-            'Yih': self.samples['y'][:,:,1] # Image elem_data inhomogenious
+        Y = {
+            # Image elem_data homogenious
+            'Yh': self.samples['y'][:,:,0],
+            # Image elem_data inhomogenious 
+            'Yih': self.samples['y'][:,:,1] 
         }
         # here we create the differences
-        tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
-        tmpY['Yih-Yh']= tmpY['Yih']-tmpY['Yh']
+        X['Xih-Xh']= X['Xih']-X['Xh']
+        X['Xhn-Xh']= X['Xhn']-X['Xh']
+        X['Xihn-Xh']= X['Xihn']-X['Xh']
+        X['Xihn-Xhn']= X['Xihn']-X['Xhn']
 
-        tmpX['Xihn-Xhn']= tmpX['Xihn']-tmpX['Xhn']
-        tmpX['Xihn-Xh']= tmpX['Xihn']-tmpX['Xh']
-        tmpX['Xihn-Xh']= tmpX['Xih']-tmpX['Xhn']
+        Y['Yih-Yh']= Y['Yih']-Y['Yh']
+
+        # here we create the differences normalized
+        X['Xih-Xh/Xh']= np.true_divide(X['Xih-Xh'],X['Xh'])
+        X['Xhn-Xh/Xh']=np.true_divide(X['Xhn-Xh'],X['Xh'])
+        X['Xihn-Xh/Xh']= np.true_divide(X['Xihn-Xh'],X['Xh'])
+        X['Xihn-Xhn/Xhn']=np.true_divide(X['Xihn-Xhn'],X['Xhn'])
+
+        Y['Yih-Yh/Yh']= np.true_divide(Y['Yih-Yh'],Y['Yh'])
 
         ## control input
-
-        if data_sel[0] not in tmpX.keys() or \
-        data_sel[1] not in tmpY.keys():
-            logger.warning(f'{data_sel=} are not availbles')
+        if data_sel[0] not in X.keys() or data_sel[1] not in Y.keys():
+            logger.warning(f'{data_sel=} - Not availables')
             data_sel= ['Xih','Yih']
     
         self.data_sel= data_sel        
-        logger.debug(f'Data {data_sel} used')
+        logger.debug(f'Data "{self.data_sel}" used')
 
-        self.X= tmpX[data_sel[0]].T
-        self.Y= tmpY[data_sel[1]].T
+        self.X= X[self.data_sel[0]]
+        self.Y= Y[self.data_sel[1]]
     
     def _set_nb_samples(self,nb_samples:int=0)->None:
         """Set nb of samples to load
