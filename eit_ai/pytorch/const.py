@@ -6,7 +6,7 @@ from eit_ai.train_utils.lists import ListLosses, ListOptimizers
 
 
 
-PYTORCH_MODEL_SAVE_FOLDERNAME='torch_model'
+PYTORCH_MODEL_SAVE_FOLDERNAME='pytorch_model'
 
 ################################################################################
 # Optimizers
