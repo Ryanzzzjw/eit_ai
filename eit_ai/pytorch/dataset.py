@@ -139,24 +139,11 @@ if __name__ == "__main__":
     
     X = np.random.randn(100, 4)
     Y = np.random.randn(100)
-
-    XY = np.concatenate((X, Y[:, np.newaxis]), axis=1)
-
+    Y = Y[:, np.newaxis]
     
-    rdn_dataset = StdPytorchDataset()
-    trainLoader = DataloaderGenerator(rdn_dataset.train)
-
-
-# train_size = int(len(rdn_dataset) * 0.6)
-# val_size = int(len(rdn_dataset) * 0.2)
-# test_size = int(len(rdn_dataset) * 0.2)
-
-# train_set, val_set, test_set = torch.utils.data.random_split(rdn_dataset, [train_size, val_size, test_size])
-
-# train_loader = DataLoader(train_set, batch_size=5, shuffle=True, num_workers=0)
-
-    # train_loader = _mk_Dataloader(XY_normal, 'train_set')
-
+    rdn_dataset = PytorchDataset(X, Y)
+    
+    datatset = StdPytorchDataset()
     # class Model(torch.nn.Module):
     #     def __init__(self):
     #         super().__init__()

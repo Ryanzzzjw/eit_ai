@@ -7,11 +7,11 @@ from contextlib import redirect_stdout
 import numpy as np
 import torch
 from eit_ai.pytorch.const import PYTORCH_LOSS, PYTORCH_OPTIMIZER, PytorchLosses, PytorchOptimizers
-from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset
+from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset, PytorchDataset
 from eit_ai.train_utils.dataset import Datasets
 from eit_ai.train_utils.lists import PytorchModels
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.models import (ListModels, ModelNotDefinedError,
+from eit_ai.train_utils.models import (ModelNotDefinedError,
                                        ModelNotPreparedError, Models,
                                        WrongLearnRateError, WrongLossError,
                                        WrongMetricsError, WrongOptimizerError)
@@ -251,7 +251,7 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
         return optimizer(net.parameters(), lr= metadata.learning_rate)
     # return optimizer(net.parameters(), lr=metadata.learning_rate)
 
-def get_pytorch_loss(metadata:MetaData):
+def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:
 
     if not metadata.loss:
         metadata.loss=list(PYTORCH_LOSS.keys())[0].value
@@ -319,4 +319,17 @@ if __name__ == "__main__":
     change_level_logging(logging.DEBUG)
     
 
+
+    X = np.random.randn(100, 4)
+    Y = np.random.randn(100)
+    Y = Y[:, np.newaxis]
     
+    rdn_dataset = PytorchDataset(X, Y)
+    
+    test = StdPytorchDataset()
+    
+    MetaData()
+    
+    new_model = StdPytorchModelManager()
+    # for epoch in range(50):
+    new_model.train(test, 50)
