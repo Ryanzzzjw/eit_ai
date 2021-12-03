@@ -256,7 +256,7 @@ def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
     if scale:
         scaler = MinMaxScaler()
         x= scaler.fit_transform(x.T).T if x is not None else None
-        logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
+        # logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
     return x
 ################################################################################
 # Preprocessing methods

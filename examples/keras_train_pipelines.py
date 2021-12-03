@@ -3,6 +3,7 @@
 
 import logging
 import matplotlib.pyplot as plt
+import numpy as np
 from eit_ai.keras.const import ListKerasOptimizers
 from eit_ai.keras.dataset import ListKerasDatasets
 from eit_ai.keras.models import ListKerasModels
@@ -47,6 +48,36 @@ def std_keras_train_pipeline(path:str= ''):
 
     build_train_save_model(gen, metadata)
 
+def eval_dataset_pipeline(path:str= ''):
+    logger.info('### Start standard keras training ###')
+
+    metadata=MetaData()
+    # gen = GeneratorKeras()# Create a model generator
+    # gen.select_model_dataset(
+    #     model_type=ListKerasModels.StdKerasModel,
+    #     dataset_type=ListKerasDatasets.StdDataset,
+    #     metadata=metadata)
+
+    metadata.set_ouput_dir(training_name='Std_keras_test', append_date_time= True)
+    metadata.set_4_raw_samples(data_sel= ['Xih-Xh/Xh','Yih-Yh'])
+    raw_samples=load_samples(MatlabSamples(), path, metadata)
+    x=raw_samples.X.flatten()
+    y=raw_samples.Y.flatten()
+    plt.boxplot(x)
+    plt.boxplot(y)
+    # metadata.set_4_dataset(batch_size=1000)
+    # gen.build_dataset(raw_samples, metadata)
+
+    # samples_x, samples_y = gen.extract_samples(dataset_part='train', idx_samples=None)
+    # plot_EIT_samples(gen.getattr_dataset('fwd_model'), samples_y, samples_x)
+        
+    # metadata.set_4_model(
+    #     epoch=100,
+    #     callbacks=[mk_callback_tensorboard(metadata)],
+    #     metrics=['mse'],
+    #     optimizer=ListKerasOptimizers.Adam)
+
+    # build_train_save_model(gen, metadata)
 def std_auto_pipeline(path=''):
     logger.info('### Start standard autokeras training ###')
 
@@ -100,5 +131,6 @@ if __name__ == "__main__":
 
     # std_keras_train_pipeline(path=path)
 
-    std_auto_pipeline(path=path)
+    # std_auto_pipeline(path=path)
+    eval_dataset_pipeline()
     plt.show()
