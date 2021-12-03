@@ -4,10 +4,7 @@ from enum import Enum
 from torch import nn, optim
 from eit_ai.train_utils.lists import ListLosses, ListOptimizers
 
-
-
-PYTORCH_MODEL_SAVE_FOLDERNAME='pytorch_model'
-
+PYTORCH_MODEL_SAVE_FOLDERNAME= 'pytorch_model.pth'
 ################################################################################
 # Optimizers
 ################################################################################

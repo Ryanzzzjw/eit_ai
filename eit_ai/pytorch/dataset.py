@@ -95,9 +95,9 @@ class PytorchDataset(Dataset):
     def __len__(self):
         return len(self.X)
 
-    def __getitem__(self, index:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
+    def __getitem__(self, idx:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
         
-        return torch.Tensor(self.X).float(), torch.Tensor(self.Y).float()
+        return torch.Tensor(self.X[idx]).float(), torch.Tensor(self.Y[idx]).float()
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         return self.X, self.Y
@@ -121,7 +121,7 @@ class DataloaderGenerator(object):
 
 
 PYTORCH_DATASETS={
-    PytorchDatasets.StdDataset: StdPytorchDataset
+    PytorchDatasets.StdPytorchDataset: StdPytorchDataset
 }
 
 

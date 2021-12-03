@@ -96,8 +96,8 @@ if __name__ == "__main__":
     main_log()
     change_level_logging(logging.DEBUG)
 
-
-    dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_ai\outputs\Std_keras_test_20211117_165710'
-    test_single_predict(get_POSIX_path(dir_path))
+    std_eval_pipeline()
+    # dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_ai\outputs\Std_keras_test_20211117_165710'
+    # test_single_predict(get_POSIX_path(dir_path))
     plt.show()
     

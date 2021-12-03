@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import os
 # import torch.nn.functional as f
 from enum import Enum
@@ -6,12 +7,13 @@ from typing import Any
 from contextlib import redirect_stdout
 import numpy as np
 import torch
-from eit_ai.pytorch.const import PYTORCH_LOSS, PYTORCH_OPTIMIZER, PytorchLosses, PytorchOptimizers
+from eit_ai.pytorch.const import PYTORCH_LOSS, PYTORCH_MODEL_SAVE_FOLDERNAME, PYTORCH_OPTIMIZER, PytorchLosses, PytorchOptimizers
 from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset, PytorchDataset
+
 from eit_ai.train_utils.dataset import Datasets
 from eit_ai.train_utils.lists import PytorchModels
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.models import (ModelNotDefinedError,
+from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME, ModelNotDefinedError,
                                        ModelNotPreparedError, Models,
                                        WrongLearnRateError, WrongLossError,
                                        WrongMetricsError, WrongOptimizerError)
@@ -22,50 +24,67 @@ from torch.utils.data import DataLoader
 
 logger = getLogger(__name__)
 
-MODEL_SUMMARY_FILENAME='model_summary'
-
-################################################################################
-# Std PyTorch ModelManager
-################################################################################
-class StdPytorchModel(nn.Module):
+class StdPytorch(ABC):
+    model:nn.Module=None
     def __init__(self, metadata: MetaData) -> None:
-        super(StdPytorchModel, self).__init__()
+        super().__init__()
+        self._set_layers(metadata)
+    
+    @abstractmethod
+    def _set_layers(self, metadata:MetaData)-> None:
+        """[summary]
+
+        Args:
+            metadata (MetaData): [description]
+        """ 
+    
+    def prepare(self, op:torch.optim.Optimizer, loss):
+        self.optimizer= op
+        self.loss= loss
+        
+    def forward(self, x:torch.Tensor)-> torch.Tensor:
+        logger.debug(f'foward, {x.shape=}')
+        return self.model(x)
+
+    def run_single_epoch(self, dataloader:DataLoader)->Any:
+        logger.debug(f'run_single_epoch')
+        for idx, data_i in enumerate(dataloader):
+            logger.debug(f'Batch #{idx}')
+            inputs, labels = data_i
+            y_pred = self.forward(inputs)
+            #loss
+            loss_value = self.loss(y_pred, labels)
+            
+            #backward propagation
+            self.optimizer.zero_grad()
+            loss_value.backward()
+            self.optimizer.step()  #update
+            logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
+        return loss_value.item() 
+
+    def get_net(self):
+        return self.model
+
+    def predict(self, x_pred: np.ndarray)->np.ndarray:
+        """[summary]
+        predict the new x
+        """
+        return self.forward(torch.Tensor(x_pred)).detach().numpy()
+
+class StdPytorchModel(StdPytorch):
+
+    def _set_layers(self, metadata:MetaData)-> None:
         in_size=metadata.input_size
         out_size=metadata.output_size
-        # self.linear1 = nn.Linear(in_size, 3)
-        # self.linear2 = nn.Linear(3, out_size)
-        # self.relu = nn.ReLU()
         self.model = torch.nn.Sequential()
         self.model.add_module('dense1', nn.Linear(in_size, 512))
         self.model.add_module('relu', nn.ReLU())
         self.model.add_module('dense2', nn.Linear(512, out_size))
         self.model.add_module('sigmoid', nn.Sigmoid())
-
-    def prepare(self, op:torch.optim.Optimizer, loss):
-        self.optimizer= op
-        self.loss= loss
-        
-    def forward(self, x):
-        
-        # inputs,  labels = dataloader
-        # x = self.relu(self.linear1(inputs))
-        return self.model(x)
-        
-        # self.loss = self.loss(out, labels)
-        # self.optimizer.zero_grad() 
-        # self.loss.backward()
-        # self.optimizer.step() 
     
-
-    def predict(self, x_pred: np.ndarray):
-        """[summary]
-        predict the new x
-        """
-        # self.model.eval()
-        
-        out = self.model(torch.Tensor(x_pred))        
-        return out
-    
+################################################################################
+# Std PyTorch ModelManager
+################################################################################
 class StdPytorchModelManager(Models):
 
     # model=None
@@ -103,8 +122,7 @@ class StdPytorchModelManager(Models):
             WrongMetrixError: raised if passed metadata.metrics is not a list #Could be better tested... TODO
             WrongLearnRateError: raised if passed metadata.learning_rate >= 1.0 
         """     
-        self.specific_var['optimizer'] = get_pytorch_optimizer(metadata)
-        # self.specific_var['lr'] = metadata.learning_rate
+        self.specific_var['optimizer'] = get_pytorch_optimizer(metadata, self.model.get_net())
         self.specific_var['loss'] = get_pytorch_loss(metadata)
         if not isinstance(metadata.metrics, list):
             raise WrongMetricsError(f'Wrong metrics type: {metadata.metrics}')
@@ -138,25 +156,10 @@ class StdPytorchModelManager(Models):
         """ 
         gen=DataloaderGenerator()
         train_dataloader=gen.make(dataset, 'train', metadata=metadata)
-
+        logger.info(f'Training - Started {metadata.epoch}')
         for epoch in range(metadata.epoch):
-            logger.info(f'Epoch {epoch}/{metadata.epoch}')
-            for idx, data_i in enumerate(train_dataloader):
-                logger.debug(f'Batch {idx}')
-                inputs, labels = data_i
-                y_pred = self.model(inputs)
-                loss_value = self.model.loss(y_pred, labels)
-                
-                #backward propagation
-                self.model.optimizer.zero_grad()
-                loss_value.backward()
-                self.model.optimizer.step()  #update
-                
-                print('Epoch[{}/{}], loss: {:.6f}'.format(epoch+1,
-                                                  metadata.epoch,
-                                                  loss_value.item()))
-                
-                
+            loss= self.model.run_single_epoch(train_dataloader)
+            logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')   
 
 
     def predict(
@@ -181,15 +184,16 @@ class StdPytorchModelManager(Models):
                         predicted samples values
         """
         # X_pred preprocess if needed
-        if X_pred.shape[0]==1:
-            return self.model.predict(X_pred).detach().numpy()
-        else:
-            res = np.array([])
-            for i in range(X_pred.shape[0]):
-                pred = self.model.predict(X_pred[i]).detach().numpy()
-                res = np.append(res, pred)
-            return res  
+        # if X_pred.shape[0]==1:
+        #     return self.model.predict(X_pred)
+        # else:
+        #     res = np.array([])
+        #     for i in range(X_pred.shape[0]):
+        #         pred = self.model.predict(X_pred[i])
+        #         res = np.append(res, pred)
+        #     return res  
 
+        return self.model.predict(X_pred)
 
     def save(self, metadata:MetaData)-> str:
         """Save the current model object
@@ -217,7 +221,6 @@ class StdPytorchModelManager(Models):
 ################################################################################
 # common methods
 ################################################################################
-PYTORCH_MODEL_SAVE_FOLDERNAME= 'model.pytorch'
 
 def assert_pytorch_model_defined(model:Any)-> nn.Module:
     """allow to react if model not  defined
@@ -249,18 +252,20 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
         if metadata.learning_rate >= 1.0:
             raise WrongLearnRateError(f'Wrong learning rate type (>= 1.0): {metadata.learning_rate}')
         return optimizer(net.parameters(), lr= metadata.learning_rate)
-    # return optimizer(net.parameters(), lr=metadata.learning_rate)
+    
+    logger.warning('Learningrate has been set to 0.001!!!')
+    return optimizer(net.parameters(), lr=0.001)
 
 def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:
 
     if not metadata.loss:
         metadata.loss=list(PYTORCH_LOSS.keys())[0].value
     try:
-        loss=PYTORCH_LOSS[PytorchLosses(metadata.loss)]()
+        loss=PYTORCH_LOSS[PytorchLosses(metadata.loss)]
     except ValueError:
         raise WrongLossError(f'Wrong loss type: {metadata.loss}')
 
-    return loss
+    return loss()
 
 def save_pytorch_model(model:nn.Module, dir_path:str='', save_summary:bool=False)-> str:
     """Save a pytorch model, additionnaly can be the summary of the model be saved"""
@@ -270,14 +275,22 @@ def save_pytorch_model(model:nn.Module, dir_path:str='', save_summary:bool=False
     
     torch.save(model, model_path)
 
-    logger.info(f'pytorch model saved in: {model_path}')
+    logger.info(f'PyTorch model saved in: {model_path}')
     
     if save_summary:
-        summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
-        with open(summary_path, 'w') as f:
-            with redirect_stdout(f):
-                model.summary()
-        logger.info(f'pytorch model summary saved in: {summary_path}')
+        logger.info('pytorch summary saving is not implemented')
+
+        # from torchvision import models
+        # from torchsummary import summary
+
+        # vgg = models.vgg16()
+        # summary(vgg, (3, 224, 224))
+
+        # summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
+        # with open(summary_path, 'w') as f:
+        #     with redirect_stdout(f):
+        #         model.summary()
+        # logger.info(f'pytorch model summary saved in: {summary_path}')
     
     return model_path
 
@@ -292,10 +305,10 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loading - failed, {PYTORCH_MODEL_SAVE_FOLDERNAME} do not exist in {dir_path}')
         return None
     try:
-        model:nn.Module.modules = torch.load(model_path)
+        model= torch.load(model_path)
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
-        model.summary()
+        # model.summary() NotImplemented yet
         return model
     except BaseException as e: 
         logger.error(f'Loading of model from dir: {model_path} - Failed'\
@@ -307,13 +320,13 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
 
 
 PYTORCH_MODELS={
-    PytorchModels.StdPytorchModel: StdPytorchModel,
+    PytorchModels.StdPytorchModel: StdPytorchModelManager,
 }
 
 
 if __name__ == "__main__":
     import logging
-
+    from eit_ai.raw_data.matlab import MatlabSamples
     from glob_utils.log.log import change_level_logging, main_log
     main_log()
     change_level_logging(logging.DEBUG)
@@ -323,13 +336,18 @@ if __name__ == "__main__":
     X = np.random.randn(100, 4)
     Y = np.random.randn(100)
     Y = Y[:, np.newaxis]
+
+    raw=MatlabSamples()
+    raw.X=X
+    raw.Y=Y
     
-    rdn_dataset = PytorchDataset(X, Y)
-    
-    test = StdPytorchDataset()
-    
-    MetaData()
-    
+    # rdn_dataset = PytorchDataset(X, Y)
+    md= MetaData()
+    md.set_4_dataset()
+    dataset = StdPytorchDataset()
+    dataset.build(raw_samples=raw, metadata= md)
+
     new_model = StdPytorchModelManager()
     # for epoch in range(50):
-    new_model.train(test, 50)
+    md.set_4_model()
+    new_model.train(dataset,md)

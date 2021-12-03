@@ -31,7 +31,7 @@ class KerasDatasets(ListDatasets):
     TfDataset='TfDataset'
 
 class PytorchDatasets(ListDatasets):
-    StdDataset='StdPytorchDataset'
+    StdPytorchDataset='StdPytorchDataset'
 
 
 class ListOptimizers(Enum):
