@@ -19,7 +19,7 @@ logger = getLogger(__name__)
 
 
 def std_pytorch_train_pipeline(path:str= ''):
-    logger.info('### Start standard keras training ###')
+    logger.info('### Start standard pytorch training ###')
 
     metadata=MetaData()
     gen = GeneratorPyTorch()# Create a model generator
@@ -30,7 +30,7 @@ def std_pytorch_train_pipeline(path:str= ''):
 
     metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
-    metadata._nb_samples = 10000
+    metadata._nb_samples = 20000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
     metadata.set_4_dataset(batch_size=1000)
     gen.build_dataset(raw_samples, metadata)
