@@ -11,6 +11,7 @@ from eit_ai.train_utils.dataset import AiDataset
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.lists import ListModels, ListDatasets
 from eit_ai.raw_data.raw_samples import RawSamples
+from glob_utils.args.kwargs import kwargs_extract
 
 logger = getLogger(__name__)
 
@@ -200,8 +201,7 @@ def meas_duration(func):
     def wrapper(*args, **kwargs)-> Union[tuple[Any, str], Any]:
         return_duration= None
         start_time = time.time()
-        if 'return_duration' in kwargs:
-            return_duration= kwargs.pop('return_duration')
+        return_duration=kwargs_extract(kwargs, 'return_duration')
         result=func(*args, **kwargs)
         duration = timedelta(seconds=time.time() - start_time)
         duration= str(duration)

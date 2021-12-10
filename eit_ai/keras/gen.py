@@ -11,6 +11,7 @@ from eit_ai.train_utils.gen import (Generators, WrongDatasetError,
 from eit_ai.train_utils.lists import (ListGenerators, ListKerasDatasets,
                                       ListKerasModels, get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
+from glob_utils.args.kwargs import kwargs_extract
 
 logger = getLogger(__name__)
 
@@ -55,10 +56,9 @@ class GeneratorKeras(Generators):
     @meas_duration
     def _run_training(self,metadata:MetaData=None,**kwargs)-> None:
         dataset_2_train=self.dataset
-        if 'dataset' in kwargs:
-            passed_dataset= kwargs.pop('dataset')
-            if passed_dataset and isinstance(passed_dataset, type(self.dataset)):
-                dataset_2_train=passed_dataset
+        passed_dataset=kwargs_extract(kwargs, 'dataset')
+        if passed_dataset and isinstance(passed_dataset, type(self.dataset)):
+            dataset_2_train=passed_dataset
         self.model_man.train(dataset=dataset_2_train, metadata=metadata)
 
     def get_prediction(
@@ -81,7 +81,7 @@ class GeneratorKeras(Generators):
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
-        preprocess=kwargs.pop('preprocess') if 'preprocess' in kwargs else False
+        preprocess=kwargs_extract(kwargs, 'preprocess')
         X_pred=self.dataset.get_X('test')
         # another dataset can be here predicted (only test part)
         if dataset is not None:
