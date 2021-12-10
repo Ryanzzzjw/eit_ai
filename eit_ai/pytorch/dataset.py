@@ -10,6 +10,7 @@ from eit_ai.train_utils.lists import ListPytorchDatasets
 from eit_ai.train_utils.metadata import MetaData
 from sklearn import model_selection
 import torch
+from torch.utils.data import DataLoader
 
 
 logger = getLogger(__name__)
@@ -126,7 +127,7 @@ class DataloaderGenerator(object):
         self,
         dataset:StdPytorchDataset,
         part:str,
-        metadata:MetaData)->torch.utils.data.D:
+        metadata:MetaData)-> DataLoader:
         """@Jiawei Please document...
 
         Args:
@@ -137,7 +138,7 @@ class DataloaderGenerator(object):
         Returns:
             torch.utils.data.DataLoader: [description]
         """        
-        return torch.utils.data.DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0)
+        return DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0)
 
 
 PYTORCH_DATASETS={

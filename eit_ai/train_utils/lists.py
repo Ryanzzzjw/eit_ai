@@ -46,7 +46,7 @@ class ListKerasModels(ListModels):
     StdKerasModel='StdKerasModel'
     StdAutokerasModel='StdAutokerasModel'
 class ListPytorchModels(ListModels):
-    StdPytorchModelManager='StdPytorchModelManager',
+    StdPytorchModelManager='StdPytorchModelManager'
     
 
 ################################################################################

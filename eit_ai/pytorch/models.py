@@ -1,25 +1,21 @@
-from abc import ABC, abstractmethod
 import os
-# import torch.nn.functional as f
-from enum import Enum
+from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any
-from contextlib import redirect_stdout
+
 import numpy as np
 import torch
-from eit_ai.pytorch.const import PYTORCH_LOSS, PYTORCH_MODEL_SAVE_FOLDERNAME, PYTORCH_OPTIMIZER, PytorchLosses, PytorchOptimizers
-from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset, PytorchDataset
-
-from eit_ai.train_utils.dataset import Datasets
-from eit_ai.train_utils.lists import ListPyTorchLosses, ListPyTorchOptimizers, ListPytorchModels, PytorchModels, get_from_dict
+from eit_ai.pytorch.const import (PYTORCH_LOSS, PYTORCH_MODEL_SAVE_FOLDERNAME,
+                                  PYTORCH_OPTIMIZER)
+from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset
+from eit_ai.train_utils.dataset import AiDataset
+from eit_ai.train_utils.lists import (ListPyTorchLosses, ListPytorchModels,
+                                      ListPyTorchOptimizers, get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME, ModelNotDefinedError,
-                                       ModelNotPreparedError, Models,
-                                       WrongLearnRateError, WrongLossError,
-                                       WrongMetricsError, WrongOptimizerError)
+from eit_ai.train_utils.models import (ModelNotDefinedError, Models,
+                                       WrongLearnRateError, WrongMetricsError)
 from genericpath import isdir
 from torch import nn
-from torch.utils import data
 from torch.utils.data import DataLoader
 
 logger = getLogger(__name__)
@@ -142,12 +138,12 @@ class StdPytorchModelManager(Models):
             self.specific_var['loss']  )
 
 
-    def train(self, dataset:Datasets, metadata:MetaData)-> None:
+    def train(self, dataset:AiDataset, metadata:MetaData)-> None:
         """Train the model with "train" and "val"-part of the dataset, with the
         metadata. Before training the model is tested if it exist and ready
 
         Args:
-            dataset (Datasets): 
+            dataset (AiDataset): 
             metadata (MetaData):
 
         Raises:
@@ -246,15 +242,14 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
 
     op_cls=get_from_dict(
         metadata.optimizer, PYTORCH_OPTIMIZER, ListPyTorchOptimizers)
-    optimizer=op_cls()
 
     if metadata.learning_rate:
         if metadata.learning_rate >= 1.0:
             raise WrongLearnRateError(f'Wrong learning rate type (>= 1.0): {metadata.learning_rate}') 
-        return optimizer(net.parameters(), lr= metadata.learning_rate)
+        return op_cls(net.parameters(), lr= metadata.learning_rate)
     
     logger.warning('Learningrate has been set to 0.001!!!')
-    return optimizer(net.parameters(), lr=0.001)
+    return op_cls(net.parameters(), lr=0.001)
         
 
 def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:
@@ -324,6 +319,7 @@ PYTORCH_MODELS={
 
 if __name__ == "__main__":
     import logging
+
     from eit_ai.raw_data.matlab import MatlabSamples
     from glob_utils.log.log import change_level_logging, main_log
     main_log()
