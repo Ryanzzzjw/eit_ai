@@ -40,7 +40,7 @@ class MatlabSamples(RawSamples):
             Defaults to `['Xih','Yih']`.
             exit (bool, optional): exit flag. Defaults to `True`.
         """        
-        er=None
+        error_occured=False
         try:
             self._load(
                 file_path=file_path, 
@@ -51,13 +51,13 @@ class MatlabSamples(RawSamples):
             WrongFileExtError,
             NotFileError) as e:
             logger.critical(f'Loading aborted: {e}')
-            er=1
+            error_occured=True
         except BaseException as e:
-            er=1
+            error_occured=True
             traceback.print_exc()
             logger.critical(f'Loading Cancelled: {e}')
 
-        if exit and er:
+        if exit and error_occured:
             sys.exit()
 
     def _load(self, file_path:str, nb_samples:int, data_sel:list[str])->None:
@@ -101,7 +101,8 @@ class MatlabSamples(RawSamples):
         #loading dataset mat-file
         var_dict, file_path= load_mat_file(
             file_path=file_path,
-            title= 'Please select *infos2py.mat-files from a matlab dataset')
+            title= 'Please select *infos2py.mat-files from a matlab dataset',
+            file_types=[(f"*infos2py.mat-files",f"*infos2py.mat")])
         self.file_path= file_path
         self.dir_path = os.path.split(file_path)[0]
 
@@ -367,7 +368,7 @@ def load_mat_file(file_path:str=None,**kwargs)-> tuple[dict, str]:
 
     Returns:
         tuple[dict, str]: variables dict and file path
-    """    
+    """   
 
     if check_file(file_path,ext=FileExt.mat) is None:
         file_path= dialog_get_file_with_ext(
