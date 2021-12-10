@@ -2,28 +2,24 @@
 
 from enum import Enum
 from torch import nn, optim
-from eit_ai.train_utils.lists import ListLosses, ListOptimizers
+from eit_ai.train_utils.lists import ListPyTorchLosses, ListPyTorchOptimizers
 
 PYTORCH_MODEL_SAVE_FOLDERNAME= 'pytorch_model.pth'
 ################################################################################
 # Optimizers
 ################################################################################
 
-class PytorchOptimizers(Enum):
-    Adam='Adam'
 
 PYTORCH_OPTIMIZER={
-    PytorchOptimizers.Adam: optim.Adam
+    ListPyTorchOptimizers.Adam: optim.Adam
 }
 ################################################################################
 # Losses
 ################################################################################
 
-class PytorchLosses(Enum):
-    MSELoss='MSELoss'
 
 PYTORCH_LOSS={
-    PytorchLosses.MSELoss: nn.MSELoss
+    ListPyTorchLosses.MSELoss: nn.MSELoss
 }
 
 if __name__ == "__main__":

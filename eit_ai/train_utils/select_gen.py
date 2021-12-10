@@ -48,7 +48,7 @@ def select_gen_pytorch()-> Generators:
 
 GEN_LIST={
     ListGenerators.Keras : select_gen_keras,
-    ListGenerators.Pytorch: select_gen_pytorch
+    ListGenerators.PyTorch: select_gen_pytorch
 }
 
 

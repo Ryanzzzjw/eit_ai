@@ -1,16 +1,16 @@
 
 from logging import getLogger
-from eit_ai.pytorch.dataset import PYTORCH_DATASETS
-from eit_ai.raw_data.raw_samples import RawSamples
+
 import numpy as np
-from eit_ai.train_utils.dataset import Datasets
-from eit_ai.train_utils.gen import Generators, WrongDatasetError, WrongModelError, WrongSingleXError, meas_duration
+from eit_ai.pytorch.dataset import PYTORCH_DATASETS
 from eit_ai.pytorch.models import PYTORCH_MODELS, StdPytorchModelManager
-
-from eit_ai.train_utils.lists import ListGenerators, PytorchDatasets, PytorchModels
+from eit_ai.raw_data.raw_samples import RawSamples
+from eit_ai.train_utils.dataset import AiDataset
+from eit_ai.train_utils.gen import (Generators, WrongDatasetError,
+                                    WrongSingleXError, meas_duration)
+from eit_ai.train_utils.lists import (ListGenerators, ListPytorchDatasets,
+                                      ListPytorchModels, get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
-
-
 
 logger = getLogger(__name__)
 
@@ -20,28 +20,22 @@ logger = getLogger(__name__)
 
 class GeneratorPyTorch(Generators):
     """ Generator class for pytorch models """
-    def select_model_dataset(self, model_type: PytorchModels = None, dataset_type: PytorchDatasets = None,
+    def select_model_dataset(self, model_type: ListPytorchModels = None, dataset_type: ListPytorchDatasets = None,
                              metadata: MetaData = None):
 
+
         if model_type is None and dataset_type is None:
-            model_type, dataset_type = metadata.model_type, metadata.dataset_type # get the data from metadata
-        else:
-            if isinstance(model_type, PytorchModels) and isinstance(model_type, PytorchDatasets):
-                model_type, dataset_type = model_type.value, dataset_type.value# convert to string
+            model_type = metadata.model_type
+            dataset_type = metadata.dataset_type
 
-        try:
-            # self.model_manager = PYTORCH_MODELS[PytorchModels(model_type)]()
-            self.model_man = StdPytorchModelManager() #PYTORCH_MODELS[PytorchModels('StdPytorchModel')]()
-        except ValueError:
-            raise WrongModelError(f'Wrong model: {model_type}')
-
-        try:
-            self.dataset = PYTORCH_DATASETS[PytorchDatasets(dataset_type)]()
-        except ValueError:
-            raise WrongDatasetError(f'Wrong dataset: {dataset_type}')
-
-        metadata.set_model_dataset_type(ListGenerators.Pytorch, PytorchModels.StdPytorchModel, PytorchDatasets(dataset_type))
-
+        model_man,listmodobj = get_from_dict(
+            model_type, PYTORCH_MODELS, ListPytorchModels, True)
+        dataset,listdataobj= get_from_dict(
+            dataset_type,PYTORCH_DATASETS, ListPytorchDatasets, True)
+        self.model_man = model_man()
+        self.dataset = dataset()
+        metadata.set_model_dataset_type(
+            ListGenerators.PyTorch, listmodobj, listdataobj)
 
     def build_dataset(self, raw_samples: RawSamples, metadata: MetaData) -> None:
         """"""
@@ -66,7 +60,7 @@ class GeneratorPyTorch(Generators):
     def get_prediction(
         self,
         metadata:MetaData,
-        dataset:Datasets=None,
+        dataset:AiDataset=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
@@ -82,7 +76,7 @@ class GeneratorPyTorch(Generators):
     def _get_prediction(
         self,
         metadata:MetaData,
-        dataset:Datasets=None,
+        dataset:AiDataset=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
@@ -114,25 +108,26 @@ class GeneratorPyTorch(Generators):
         self.model_man.load(metadata=metadata)
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level_logging, main_log
     import logging
+
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
     change_level_logging(logging.DEBUG)
 
 
-    X = np.random.randn(100, 4)
-    Y = np.random.randn(100)
-    Y = Y[:, np.newaxis]
+    # X = np.random.randn(100, 4)
+    # Y = np.random.randn(100)
+    # Y = Y[:, np.newaxis]
     
-    rdn_dataset = PytorchDataset(X, Y)
+    # rdn_dataset = PytorchDataset(X, Y)
     
-    test = StdPytorchDataset()
+    # test = StdPytorchDataset()
     
-    MetaData()
+    # MetaData()
     
-    new_model = StdPytorchModelManager()
-    # for epoch in range(50):
-    new_model.train(test, 50)
+    # new_model = StdPytorchModelManager()
+    # # for epoch in range(50):
+    # new_model.train(test, 50)
 
     
 

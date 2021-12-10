@@ -34,7 +34,7 @@ class ExtendedEnum(Enum):
 
 class ListGenerators(ExtendedEnum):
     Keras='Keras'
-    Pytorch='Pytorch'
+    PyTorch='PyTorch'
 
 ################################################################################
 # Models
@@ -42,14 +42,12 @@ class ListGenerators(ExtendedEnum):
 
 class ListModels(ExtendedEnum):
     """"""
-
 class ListKerasModels(ListModels):
     StdKerasModel='StdKerasModel'
     StdAutokerasModel='StdAutokerasModel'
-
-# class PytorchModels(ListModels):
-#     StdKerasModel='StdKerasModel',
-#     StdAutokerasModel='StdAutokerasModel'
+class ListPytorchModels(ListModels):
+    StdPytorchModelManager='StdPytorchModelManager',
+    
 
 ################################################################################
 # Datasets
@@ -57,13 +55,11 @@ class ListKerasModels(ListModels):
 
 class ListDatasets(ExtendedEnum):
     """"""
-
 class ListKerasDatasets(ListDatasets):
     StdDataset='StdDataset'
     TfDataset='TfDataset'
-
-# class PytorchDatasets(ListDatasets):
-#     TorchDataset='TorchDataset'
+class ListPytorchDatasets(ListDatasets):
+    StdPytorchDataset='StdPytorchDataset'
 
 ################################################################################
 # Optimizers
@@ -72,6 +68,8 @@ class ListKerasDatasets(ListDatasets):
 class ListOptimizers(ExtendedEnum):
     """ """
 class ListKerasOptimizers(ListOptimizers):
+    Adam='Adam'
+class ListPyTorchOptimizers(ListOptimizers):
     Adam='Adam'
 
 ################################################################################
@@ -82,6 +80,9 @@ class ListLosses(ExtendedEnum):
     """ """
 class ListKerasLosses(ListLosses):
     CategoricalCrossentropy='CategoricalCrossentropy'
+
+class ListPyTorchLosses(ListLosses):
+    MSELoss='MSELoss'
 
 
 class ListNormalizations(ExtendedEnum):

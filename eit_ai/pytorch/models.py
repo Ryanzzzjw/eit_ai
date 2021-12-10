@@ -11,7 +11,7 @@ from eit_ai.pytorch.const import PYTORCH_LOSS, PYTORCH_MODEL_SAVE_FOLDERNAME, PY
 from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset, PytorchDataset
 
 from eit_ai.train_utils.dataset import Datasets
-from eit_ai.train_utils.lists import PytorchModels
+from eit_ai.train_utils.lists import ListPyTorchLosses, ListPyTorchOptimizers, ListPytorchModels, PytorchModels, get_from_dict
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME, ModelNotDefinedError,
                                        ModelNotPreparedError, Models,
@@ -243,29 +243,27 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
 
     if not metadata.optimizer:
         metadata.optimizer=list(PYTORCH_OPTIMIZER.keys())[0].value
-    try:
-        optimizer=PYTORCH_OPTIMIZER[PytorchOptimizers(metadata.optimizer)]
-    except ValueError:
-        raise WrongOptimizerError(f'Wrong optimizer type: {metadata.optimizer}')
+
+    op_cls=get_from_dict(
+        metadata.optimizer, PYTORCH_OPTIMIZER, ListPyTorchOptimizers)
+    optimizer=op_cls()
 
     if metadata.learning_rate:
         if metadata.learning_rate >= 1.0:
-            raise WrongLearnRateError(f'Wrong learning rate type (>= 1.0): {metadata.learning_rate}')
+            raise WrongLearnRateError(f'Wrong learning rate type (>= 1.0): {metadata.learning_rate}') 
         return optimizer(net.parameters(), lr= metadata.learning_rate)
     
     logger.warning('Learningrate has been set to 0.001!!!')
     return optimizer(net.parameters(), lr=0.001)
+        
 
 def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:
 
     if not metadata.loss:
         metadata.loss=list(PYTORCH_LOSS.keys())[0].value
-    try:
-        loss=PYTORCH_LOSS[PytorchLosses(metadata.loss)]
-    except ValueError:
-        raise WrongLossError(f'Wrong loss type: {metadata.loss}')
 
-    return loss()
+    loss_cls=get_from_dict(metadata.loss, PYTORCH_LOSS, ListPyTorchLosses)
+    return loss_cls()
 
 def save_pytorch_model(model:nn.Module, dir_path:str='', save_summary:bool=False)-> str:
     """Save a pytorch model, additionnaly can be the summary of the model be saved"""
@@ -320,7 +318,7 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
 
 
 PYTORCH_MODELS={
-    PytorchModels.StdPytorchModel: StdPytorchModelManager,
+    ListPytorchModels.StdPytorchModelManager: StdPytorchModelManager,
 }
 
 

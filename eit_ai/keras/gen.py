@@ -2,16 +2,14 @@
 from logging import getLogger
 
 import numpy as np
-from eit_ai.keras.models import KERAS_MODELS
 from eit_ai.keras.dataset import KERAS_DATASETS
+from eit_ai.keras.models import KERAS_MODELS
 from eit_ai.raw_data.raw_samples import RawSamples
 from eit_ai.train_utils.dataset import AiDataset
 from eit_ai.train_utils.gen import (Generators, WrongDatasetError,
-                                              WrongModelError,
-                                              WrongSingleXError, meas_duration)
-from eit_ai.train_utils.lists import (ListKerasDatasets, ListKerasModels,
-                                                ListDatasets, ListGenerators,
-                                                ListModels, get_from_dict)
+                                    WrongSingleXError, meas_duration)
+from eit_ai.train_utils.lists import (ListGenerators, ListKerasDatasets,
+                                      ListKerasModels, get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
 
 logger = getLogger(__name__)
