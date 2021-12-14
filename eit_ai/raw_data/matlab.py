@@ -212,9 +212,17 @@ class MatlabSamples(RawSamples):
         tmpX['Xih-Xh']= tmpX['Xih']-tmpX['Xh']
         tmpY['Yih-Yh']= tmpY['Yih']-tmpY['Yh']
 
-        tmpX['Xihn-Xhn']= tmpX['Xihn']-tmpX['Xhn']
+        tmpX['Xhn-Xh']= tmpX['Xhn']-tmpX['Xh']
         tmpX['Xihn-Xh']= tmpX['Xihn']-tmpX['Xh']
-        tmpX['Xihn-Xh']= tmpX['Xih']-tmpX['Xhn']
+        tmpX['Xihn-Xhn']= tmpX['Xihn']-tmpX['Xhn']
+        
+         # here we create the differences normalized
+        tmpX['Xih-Xh/Xh'] = np.true_divide(tmpX['Xih-Xh'], tmpX['Xh'])
+        tmpX['Xhn-Xh/Xh'] = np.true_divide(tmpX['Xhn-Xh'], tmpX['Xh'])
+        tmpX['Xihn-Xh/Xh'] = np.true_divide(tmpX['Xihn-Xh'], tmpX['Xh'])
+        tmpX['Xihn-Xhn/Xhn'] = np.true_divide(tmpX['Xihn-Xhn'],tmpX['Xhn'])
+
+        tmpY['Yih-Yh/Yh'] = np.true_divide(tmpY['Yih-Yh'], tmpY['Yh'])
 
         ## control input
 
