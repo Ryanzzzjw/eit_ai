@@ -6,17 +6,19 @@ from eit_ai.train_utils.lists import ListPyTorchLosses, ListPyTorchOptimizers
 
 PYTORCH_MODEL_SAVE_FOLDERNAME= 'pytorch_model.pth'
 ################################################################################
-# Optimizers
+# PyTorch Optimizers
 ################################################################################
-
+""" Dictionary listing all PyTorch optimizers available
+"""
 
 PYTORCH_OPTIMIZER={
     ListPyTorchOptimizers.Adam: optim.Adam
 }
 ################################################################################
-# Losses
+# PyTorch Losses
 ################################################################################
-
+""" Dictionary listing all PyTorch losses available
+"""
 
 PYTORCH_LOSS={
     ListPyTorchLosses.MSELoss: nn.MSELoss

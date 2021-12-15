@@ -19,15 +19,16 @@ logger = getLogger(__name__)
 class WrongSingleXError(Exception):
     """"""
 ################################################################################
-# Abstract Class for Dataset
+# Abstract Class for AiDatasetHandler
 ################################################################################
 
-class AiDataset(ABC):
+class AiDatasetHandler(ABC):
     def __init__(self) -> None:
         super().__init__()
-        self.train=None
-        self.val=None
-        self.test=None
+        self.dataset_cls=SimpleDataset
+        self.train:AiDataset=None
+        self.val:AiDataset=None
+        self.test:AiDataset=None
         self._nb_samples:int= 0
         self._batch_size:int=32
         self._test_ratio:float=0.20
@@ -38,10 +39,17 @@ class AiDataset(ABC):
         self._idx_train:list=[]
         self._idx_val:list=[]
         self._idx_test:list= []
-        self.fwd_model:dict={}
         self.src_file:str= ''
         self.input_size:int= 0
         self.ouput_size:int= 0
+        
+        self.fwd_model:dict={}
+        
+        self._post_init()
+
+    def set_dataset_type(self, metadata:MetaData):
+        """[summary]
+        """        
 
     def build(self,raw_samples:RawSamples, metadata:MetaData):
         """
@@ -124,6 +132,10 @@ class AiDataset(ABC):
         logger.debug(f'{prepro_X=}, {prepro_X.shape=}')
         return prepro_X
 
+    @abstractmethod    
+    def _post_init(self):
+        """allow different init conditions
+        """        
     @abstractmethod
     def get_X(self, part:str='train')->np.ndarray:
         """return X from a dataset part (train, val, test)"""
@@ -150,29 +162,50 @@ class AiDataset(ABC):
 
 
 ################################################################################
-# XY Set Class for Custom standard dataset
+# AiDataset Abstract class
 ################################################################################
 
-class XYSet(object):
-    x=np.array([])
-    y = np.array([])
-    def __init__(self,x:np.ndarray=np.array([]), y:np.ndarray=np.array([])) -> None:
-        super().__init__()
-        self.set_data(x, y)
- 
-    def set_data(self, x:np.ndarray, y:np.ndarray)-> None:
-        self.x=x
-        self.y=y
+class AiDataset(ABC):
+    """Dataset abstract class
 
+    should contain x and y of the dataset
+    also the creator should be AiDataset(x, y)
+    """    
+
+    @abstractmethod
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
-        return self.x, self.y
-    
+        """ Return the x and y of the dataset
+        Returns:
+            tuple[np.ndarray,np.ndarray]: (x,y)
+        """
+
 ################################################################################
 # Custom standard dataset
 ################################################################################
 
-class StdDataset(AiDataset):
-   
+class SimpleDataset(AiDataset):
+    """Simple Dataset containing a x and a y as ndarray
+    """    
+    _x:np.ndarray=np.array([])
+    _y:np.ndarray=np.array([])
+
+    def __init__(self,x:np.ndarray, y:np.ndarray) -> None:
+        super().__init__()
+        self._x=x
+        self._y=y
+
+    def get_set(self)->tuple[np.ndarray,np.ndarray]:
+        return self._x, self._y
+    
+################################################################################
+# Custom standard Datasethandler
+################################################################################
+
+class StdAiDatasetHandler(AiDatasetHandler):
+  
+    def _post_init(self):
+        self.dataset_cls= SimpleDataset 
+
     def get_X(self, part:str='train')->np.ndarray:
         return getattr(self, part).get_set()[0]
 
@@ -218,18 +251,18 @@ class StdDataset(AiDataset):
         self._idx_test= x_test[:,-1].tolist()
         metadata.set_idx_samples(self._idx_train, self._idx_val, self._idx_test)
 
-        self.train=XYSet(x=x_train[:,:-1], y=y_train)
-        self.val=XYSet(x=x_val[:,:-1], y=y_val)
-        self.test=XYSet(x=x_test[:,:-1], y=y_test)
+        self.train=self.dataset_cls(x_train[:,:-1], y_train)
+        self.val=self.dataset_cls(x_val[:,:-1], y_val)
+        self.test=self.dataset_cls(x_test[:,:-1], y_test)
 
     def _mk_dataset_from_indexes(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
         """rebuild the dataset with the indexes """
         self._idx_train= convert_vec_to_int(metadata.idx_samples['idx_train'])
         self._idx_val= convert_vec_to_int(metadata.idx_samples['idx_val'])
         self._idx_test= convert_vec_to_int(metadata.idx_samples['idx_test'])   
-        self.train=XYSet(x=X[self._idx_train,:], y=Y[self._idx_train,:])
-        self.val=XYSet(x=X[self._idx_val,:], y=Y[self._idx_val,:])
-        self.test=XYSet(x=X[self._idx_test,:], y=Y[self._idx_test,:])
+        self.train=self.dataset_cls(X[self._idx_train,:], Y[self._idx_train,:])
+        self.val=self.dataset_cls(X[self._idx_val,:], Y[self._idx_val,:])
+        self.test=self.dataset_cls(X[self._idx_test,:], Y[self._idx_test,:])
 
 ################################################################################
 # Methods

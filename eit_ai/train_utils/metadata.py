@@ -6,8 +6,8 @@ from logging import error, getLogger
 from typing import Union
 
 from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
-from eit_ai.train_utils.lists import (ListDatasets, ListGenerators, ListLosses,
-                                      ListModels, ListOptimizers,ListNormalizations)
+from eit_ai.train_utils.lists import (ListDatasetHandlers, ListModels, ListWorkspaces, ListLosses,
+                                      ListModelHandlers, ListOptimizers,ListNormalizations)
 from glob_utils.files.files import (FileExt, find_file, is_file, read_txt,
                                     save_as_mat, save_as_pickle, save_as_txt, )
 from glob_utils.log.msg_trans import highlight_msg
@@ -65,9 +65,10 @@ class MetaData(object):
     metrics:list[str]= None
 
     training_duration:str=None
-    gen_type:ListGenerators=None
+    workspace:ListWorkspaces=None
+    model_handler:ListModelHandlers=None
     model_type:ListModels=None
-    dataset_type:ListDatasets=None
+    dataset_handler:ListDatasetHandlers=None
 
     def __post_init__(self):
         set_ai_default_dir()
@@ -91,12 +92,18 @@ class MetaData(object):
         msg=f'Training results will be found in : {self.dir_path}'
         logger.info(highlight_msg(msg))
 
-    def set_model_dataset_type(self, gen_type:ListGenerators, model_type:ListModels, dataset_type:ListDatasets):
+    def set_model_dataset_type(
+        self, 
+        workspace:ListWorkspaces, 
+        model_handler:ListModelHandlers, 
+        dataset_handler:ListDatasetHandlers,
+        model_type: ListModels):
         """"""
 
-        self.gen_type= gen_type.value
-        self.model_type= model_type.value
-        self.dataset_type= dataset_type.value
+        self.workspace= workspace.value
+        self.model_handler= model_handler.value
+        self.dataset_handler= dataset_handler.value
+        self.model_type=model_type.value
 
     def set_4_dataset(  
             self, 

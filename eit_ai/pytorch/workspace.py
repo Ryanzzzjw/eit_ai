@@ -2,15 +2,18 @@
 from logging import getLogger
 
 import numpy as np
-from eit_ai.pytorch.dataset import PYTORCH_DATASETS
-from eit_ai.pytorch.models import PYTORCH_MODELS, StdPytorchModelManager
+from eit_ai.pytorch.dataset import PYTORCH_DATASET_HANDLERS
+from eit_ai.pytorch.models import (PYTORCH_MODEL_HANDLERS, PYTORCH_MODELS,
+                                   StdPytorchModelHandler)
 from eit_ai.raw_data.raw_samples import RawSamples
-from eit_ai.train_utils.dataset import AiDataset
-from eit_ai.train_utils.gen import (Generators, WrongDatasetError,
-                                    WrongSingleXError, meas_duration)
-from eit_ai.train_utils.lists import (ListGenerators, ListPytorchDatasets,
-                                      ListPytorchModels, get_from_dict)
+from eit_ai.train_utils.dataset import AiDatasetHandler
+from eit_ai.train_utils.lists import (ListPytorchDatasetHandlers,
+                                      ListPytorchModelHandlers,
+                                      ListPytorchModels, ListWorkspaces,
+                                      get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.workspace import (AiWorkspace, WrongDatasetError,
+                                          WrongSingleXError, meas_duration)
 
 logger = getLogger(__name__)
 
@@ -18,32 +21,40 @@ logger = getLogger(__name__)
 # Pytorch Models
 ################################################################################
 
-class GeneratorPyTorch(Generators):
+class PyTorchWorkspace(AiWorkspace):
     """ Generator class for pytorch models """
-    def select_model_dataset(self, model_type: ListPytorchModels = None, dataset_type: ListPytorchDatasets = None,
-                             metadata: MetaData = None):
+    def select_model_dataset(
+        self, 
+        model_handler: ListPytorchModelHandlers = None, 
+        dataset_handler: ListPytorchDatasetHandlers = None,
+        model_type:ListPytorchModels=None,
+        metadata:MetaData=None)-> None:
+        
+        if model_handler is None and dataset_handler is None and model_type is None:
+            model_handler = metadata.model_handler
+            dataset_handler = metadata.dataset_handler
+            model_type=metadata.model_type
 
-
-        if model_type is None and dataset_type is None:
-            model_type = metadata.model_type
-            dataset_type = metadata.dataset_type
-
-        model_man,listmodobj = get_from_dict(
+        model_h_cls,listmodobj = get_from_dict(
+            model_handler, PYTORCH_MODEL_HANDLERS, ListPytorchModelHandlers, True)
+        dataset_h_cls,listdataobj= get_from_dict(
+            dataset_handler,PYTORCH_DATASET_HANDLERS, ListPytorchDatasetHandlers, True)
+        
+        _, listmodgenobj=get_from_dict(
             model_type, PYTORCH_MODELS, ListPytorchModels, True)
-        dataset,listdataobj= get_from_dict(
-            dataset_type,PYTORCH_DATASETS, ListPytorchDatasets, True)
-        self.model_man = model_man()
-        self.dataset = dataset()
+
+        self.model_handler = model_h_cls()
+        self.dataset_handler = dataset_h_cls()
         metadata.set_model_dataset_type(
-            ListGenerators.PyTorch, listmodobj, listdataobj)
+            ListWorkspaces.PyTorch, listmodobj, listdataobj, listmodgenobj)
 
     def build_dataset(self, raw_samples: RawSamples, metadata: MetaData) -> None:
         """"""
-        self.dataset.build(raw_samples, metadata)
+        self.dataset_handler.build(raw_samples, metadata)
 
 
     def build_model(self, metadata: MetaData) -> None:
-        self.model_man.build(metadata=metadata)
+        self.model_handler.build(metadata=metadata)
 
 
     def run_training(self, metadata: MetaData = None) -> None:
@@ -54,13 +65,13 @@ class GeneratorPyTorch(Generators):
 
     @meas_duration
     def _run_training(self, metadata: MetaData = None, **kwargs) -> None:
-        self.model_man.train(dataset=self.dataset, metadata=metadata)
+        self.model_handler.train(dataset=self.dataset_handler, metadata=metadata)
 
 
     def get_prediction(
         self,
         metadata:MetaData,
-        dataset:AiDataset=None,
+        dataset:AiDatasetHandler=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
@@ -76,28 +87,28 @@ class GeneratorPyTorch(Generators):
     def _get_prediction(
         self,
         metadata:MetaData,
-        dataset:AiDataset=None,
+        dataset:AiDatasetHandler=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
-        X_pred=self.dataset.get_X('test')
+        X_pred=self.dataset_handler.get_X('test')
         # another dataset can be here predicted (only test part)
         if dataset is not None:
-            if not isinstance(dataset, type(self.dataset)): 
+            if not isinstance(dataset, type(self.dataset_handler)): 
                 raise WrongDatasetError(
-                    f'{dataset= } and {self.dataset} dont have same type...')
+                    f'{dataset= } and {self.dataset_handler} dont have same type...')
             X_pred=dataset.get_X('test')
         # Single passed X can be here predicted, after been formated
         if single_X is not None:
             if not isinstance(single_X, np.ndarray):
                 raise WrongSingleXError(f'{single_X= } is not an np.ndarray ')
-            X_pred= self.dataset.format_single_X(single_X, metadata)
+            X_pred= self.dataset_handler.format_single_X(single_X, metadata)
 
-        return self.model_man.predict(X_pred=X_pred, metadata=metadata, **kwargs)
+        return self.model_handler.predict(X_pred=X_pred, metadata=metadata, **kwargs)
 
 
     def save_model(self, metadata: MetaData) -> None:
-        model_saving_path = self.model_man.save(metadata=metadata)
+        model_saving_path = self.model_handler.save(metadata=metadata)
         metadata.set_model_saving_path(model_saving_path)
 
 
@@ -105,7 +116,7 @@ class GeneratorPyTorch(Generators):
         """select the model and dataset (need to be build after)"""
 
         self.select_model_dataset(metadata=metadata)
-        self.model_man.load(metadata=metadata)
+        self.model_handler.load(metadata=metadata)
 
 if __name__ == "__main__":
     import logging

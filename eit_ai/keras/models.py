@@ -1,5 +1,6 @@
 
 
+from abc import ABC, abstractmethod
 import os
 from contextlib import redirect_stdout
 from logging import error, getLogger
@@ -11,13 +12,13 @@ import tensorflow as tf
 import tensorflow.keras as keras
 from eit_ai.keras.const import (KERAS_LOSSES, KERAS_MODEL_SAVE_FOLDERNAME,
                                 KERAS_OPTIMIZERS)
-from eit_ai.train_utils.dataset import AiDataset
-from eit_ai.train_utils.lists import (ListKerasLosses, ListKerasModels,
+from eit_ai.train_utils.dataset import AiDatasetHandler
+from eit_ai.train_utils.lists import (ListKerasLosses, ListKerasModelHandlers, ListKerasModels,
                                       ListKerasOptimizers, get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME,
                                        ModelNotDefinedError,
-                                       ModelNotPreparedError, Models,
+                                       ModelNotPreparedError, AiModelHandler,
                                        WrongLearnRateError, WrongLossError,
                                        WrongMetricsError, WrongOptimizerError)
 from genericpath import isdir
@@ -25,13 +26,37 @@ from genericpath import isdir
 logger = getLogger(__name__)
 
 
-################################################################################
-# Std Keras Model
-################################################################################
-class StdKerasModel(Models):
 
-    def _define_model(self, metadata:MetaData)-> None:
-        self.name = "std_keras"
+class TypicalKerasModelGenerator(ABC):
+    model:keras.models.Model=None
+    name:str=None
+
+    def __init__(self,metadata:MetaData) -> None:
+        self._set_layers(metadata=metadata)
+
+    @abstractmethod
+    def _set_layers(self, metadata:MetaData)->None:
+        """define the layers of the model and the name
+
+        Args:
+            metadata (MetaData): [description]
+
+        """
+    def get_name(self)->str:
+        """Return the name of the model/network
+
+        Returns:
+            str: specific name of the model/network
+        """        
+        return self.name
+
+    def get_model(self)->keras.models.Model:
+        return self.model
+
+class StdKerasModel(TypicalKerasModelGenerator):
+
+    def _set_layers(self, metadata:MetaData)->None:
+        self.name = "std_keras 2 dense layers 512 +relu +sigmoid"
         in_size=metadata.input_size
         out_size=metadata.output_size
         self.model = keras.models.Sequential()
@@ -43,7 +68,20 @@ class StdKerasModel(Models):
         self.model.add(keras.layers.Activation(tf.nn.relu))
         self.model.add(keras.layers.Dense(out_size)) 
         self.model.add(keras.layers.Activation(tf.nn.sigmoid))
-    
+
+
+################################################################################
+# Std Keras Model Handler
+################################################################################
+class StdKerasModelHandler(AiModelHandler):
+
+    def _define_model(self, metadata:MetaData)-> None:
+        gen_cls=get_from_dict(
+            metadata.model_type, KERAS_MODELS, ListKerasModels)
+        gen=gen_cls(metadata)
+        self.model= gen.get_model()
+        self.name = gen.get_name()
+
     def _get_specific_var(self, metadata:MetaData)-> None:        
 
         self.specific_var['optimizer']= get_keras_optimizer(metadata)
@@ -59,7 +97,7 @@ class StdKerasModel(Models):
             loss=self.specific_var['loss'],
             metrics=self.specific_var['metrics'])
 
-    def train(self, dataset:AiDataset, metadata:MetaData)-> None:
+    def train(self, dataset:AiDatasetHandler, metadata:MetaData)-> None:
         assert_keras_model_compiled(self.model)
         self.model.fit(
             x=dataset.get_X('train'),
@@ -94,7 +132,7 @@ class StdKerasModel(Models):
 ################################################################################
 # Std Autokeras
 ################################################################################
-class StdAutokerasModel(Models):
+class StdAutokerasModelHandler(AiModelHandler):
     def _define_model(self, metadata:MetaData)-> None:
         self.name = "std_autokeras"
         self.model = ak.StructuredDataRegressor(
@@ -106,7 +144,7 @@ class StdAutokerasModel(Models):
     def _prepare_model(self)-> None:
         # assert_keras_model_defined(self.model)
         """ """
-    def train(self, dataset:AiDataset, metadata:MetaData)-> None: 
+    def train(self, dataset:AiDatasetHandler, metadata:MetaData)-> None: 
         # assert_keras_model_compiled(self.model)   
         self.model.fit(
             x=dataset.get_X('train'),
@@ -246,9 +284,13 @@ def get_path_keras_model(dir_path:str, default_filename:str=KERAS_MODEL_SAVE_FOL
 ################################################################################
 """ Dictionary listing all Keras models available
 """
+KERAS_MODEL_HANDLERS={
+    ListKerasModelHandlers.KerasModelHandler: StdKerasModelHandler,
+    ListKerasModelHandlers.AutokerasModelHandler: StdAutokerasModelHandler
+}
+
 KERAS_MODELS={
-    ListKerasModels.StdKerasModel: StdKerasModel,
-    ListKerasModels.StdAutokerasModel: StdAutokerasModel
+    ListKerasModels.StdKerasModel: StdKerasModel
 }
 
 if __name__ == "__main__":

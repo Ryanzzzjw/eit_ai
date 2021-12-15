@@ -6,12 +6,12 @@ import logging
 from logging import getLogger
 
 from eit_ai.draw_data import *
-from eit_ai.pytorch.gen import GeneratorPyTorch
+from eit_ai.pytorch.workspace import PyTorchWorkspace
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.raw_data.raw_samples import load_samples
-from eit_ai.train_utils.gen import Generators
-from eit_ai.train_utils.lists import ListPytorchDatasets, ListPytorchModels
+from eit_ai.train_utils.lists import ListPytorchDatasetHandlers, ListPytorchModelHandlers, ListPytorchModels
 from eit_ai.train_utils.metadata import MetaData
+
 
 logger = getLogger(__name__)
 
@@ -19,10 +19,11 @@ def std_pytorch_train_pipeline(path:str= ''):
     logger.info('### Start standard pytorch training ###')
 
     metadata=MetaData()
-    gen = GeneratorPyTorch()# Create a model generator
-    gen.select_model_dataset(
-        model_type=ListPytorchModels.StdPytorchModelManager,
-        dataset_type=ListPytorchDatasets.StdPytorchDataset,
+    ws = PyTorchWorkspace()# Create a model generator
+    ws.select_model_dataset(
+        model_handler=ListPytorchModelHandlers.PytorchModelHandler,
+        dataset_handler=ListPytorchDatasetHandlers.StdPytorchDatasetHandler,
+        model_type=ListPytorchModels.StdPytorchModel,
         metadata=metadata)
 
     metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
@@ -30,27 +31,20 @@ def std_pytorch_train_pipeline(path:str= ''):
     metadata._nb_samples = 20000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
     metadata.set_4_dataset(batch_size=1000)
-    gen.build_dataset(raw_samples, metadata)
+    ws.build_dataset(raw_samples, metadata)
 
-    samples_x, samples_y = gen.extract_samples(dataset_part='train', idx_samples=None)
-    plot_EIT_samples(gen.getattr_dataset('fwd_model'), samples_y, samples_x)
+    samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
+    plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
         
     metadata.set_4_model(epoch=10,metrics=['mse'])
 
-    build_train_save_model(gen, metadata)
-
-def build_train_save_model(gen:Generators, metadata:MetaData)-> tuple[Generators,MetaData]:
-    gen.build_model(metadata) 
+    ws.build_model(metadata) 
     metadata.save()# saving in case of bugs during training
 
-    gen.run_training(metadata)
-    gen.save_model(metadata) 
+    ws.run_training(metadata)
+    ws.save_model(metadata) 
     metadata.save() # final saving
-    return gen, metadata
 
-
-# def normalize_image(image, label):
-#     return np.resize(image, (-1,image.shape[0])), label
 
 if __name__ == "__main__":
     import logging
