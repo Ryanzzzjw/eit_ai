@@ -8,28 +8,28 @@ from eit_ai.raw_data.load_eidors import load_eidors_solution
 from eit_ai.raw_data.raw_samples import reload_samples
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.train_utils.metadata import reload_metadata
-from eit_ai.train_utils.select_gen import select_gen
+from eit_ai.train_utils.select_workspace import select_workspace
 
 from logging import getLogger
 
 logger = getLogger(__name__)
 
-def std_eval_pipeline(dir_path:str=''):
+def eval_pipeline(dir_path:str=''):
     logger.info('### Start standard evaluation ###')
     
     metadata = reload_metadata(dir_path=dir_path)
     raw_samples= reload_samples(MatlabSamples(),metadata)
-    gen= select_gen(metadata)
-    gen.load_model(metadata)
-    gen.build_dataset(raw_samples, metadata)
+    ws= select_workspace(metadata)
+    ws.load_model(metadata)
+    ws.build_dataset(raw_samples, metadata)
 
     img_data=[]
-    fwd_model=gen.getattr_dataset('fwd_model')
-    _, true_img_data=gen.extract_samples(dataset_part='test', idx_samples='all')
+    fwd_model=ws.getattr_dataset('fwd_model')
+    _, true_img_data=ws.extract_samples(dataset_part='test', idx_samples='all')
     img_data.append(ImageDataset(true_img_data, 'True image',fwd_model))
     logger.info(f'Real perm shape: {true_img_data.shape}')
 
-    nn_img_data = gen.get_prediction(metadata)
+    nn_img_data = ws.get_prediction(metadata)
     logger.info(f'Predicted perm shape: {nn_img_data.shape}')
     img_data.append(ImageDataset(nn_img_data, 'NN Predicted image',fwd_model))
 
@@ -53,13 +53,13 @@ def test_single_predict(dir_path:str=''):
 
     metadata = reload_metadata(dir_path=dir_path)
     raw_samples= reload_samples(MatlabSamples(),metadata)
-    gen= select_gen(metadata)
-    gen.load_model(metadata)
-    gen.build_dataset(raw_samples, metadata)
+    ws= select_workspace(metadata)
+    ws.load_model(metadata)
+    ws.build_dataset(raw_samples, metadata)
 
     img_data=[]
-    fwd_model=gen.getattr_dataset('fwd_model')
-    single_X, true_img_data=gen.extract_samples(dataset_part='test', idx_samples='all')
+    fwd_model=ws.getattr_dataset('fwd_model')
+    single_X, true_img_data=ws.extract_samples(dataset_part='test', idx_samples='all')
     img_data.append(ImageDataset(true_img_data, 'True image',fwd_model))
     logger.info(f'Real perm shape: {true_img_data.shape}')
     logger.info(f'single_X shape: {single_X.shape=}')
@@ -70,19 +70,19 @@ def test_single_predict(dir_path:str=''):
     single= single_X[0,:]
     # plt.plot(single)
     logger.info(f'Real perm shape: {single_X.shape}')
-    nn_img_data = gen.get_prediction(metadata,single_X=single)
+    nn_img_data = ws.get_prediction(metadata,single_X=single)
     logger.info(f'Predicted perm shape: {nn_img_data.shape}')
     img_data.append(ImageDataset(nn_img_data, 'NN Predicted image #1',fwd_model))
     single= single_X[1,:]
     # plt.plot(single)
     logger.info(f'Real perm shape: {single_X.shape}')
-    nn_img_data = gen.get_prediction(metadata,single_X=single, preprocess=True)
+    nn_img_data = ws.get_prediction(metadata,single_X=single, preprocess=True)
     logger.info(f'Predicted perm shape: {nn_img_data.shape}')
     img_data.append(ImageDataset(nn_img_data, 'NN Predicted image #2',fwd_model))
     single= single_X[2,:]
     # plt.plot(single)
     logger.info(f'Real perm shape: {single.shape}')
-    nn_img_data = gen.get_prediction(metadata,single_X=single)
+    nn_img_data = ws.get_prediction(metadata,single_X=single)
     logger.info(f'Predicted perm shape: {nn_img_data.shape}')
     img_data.append(ImageDataset(nn_img_data, 'NN Predicted image #3',fwd_model))
 
@@ -108,9 +108,8 @@ if __name__ == "__main__":
     main_log()
     change_level_logging(logging.DEBUG)
 
-    std_eval_pipeline('')
+    eval_pipeline('')
     # dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_ai\outputs\Std_keras_test_20211117_165710'
     # test_single_predict('')
-    change_level_logging(logging.INFO)
     plt.show()
     

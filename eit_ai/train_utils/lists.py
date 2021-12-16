@@ -26,40 +26,60 @@ class ExtendedEnum(Enum):
         return cls._member_map_
 
 
-
-
 ################################################################################
 # Generators
 ################################################################################
-
-class ListGenerators(ExtendedEnum):
+class ListWorkspaces(ExtendedEnum):
     Keras='Keras'
     PyTorch='PyTorch'
 
 ################################################################################
-# Models
+# Model Handlers
 ################################################################################
 
+class ListModelHandlers(ExtendedEnum):
+    """"""
+class ListKerasModelHandlers(ListModelHandlers):
+    KerasModelHandler='KerasModelHandler'
+    AutokerasModelHandler='AutokerasModelHandler'
+class ListPytorchModelHandlers(ListModelHandlers):
+    PytorchModelHandler='PytorchModelHandler'
+
+################################################################################
+# Models
+################################################################################
 class ListModels(ExtendedEnum):
     """"""
 class ListKerasModels(ListModels):
     StdKerasModel='StdKerasModel'
+class ListAutokerasModels(ListModels):
     StdAutokerasModel='StdAutokerasModel'
 class ListPytorchModels(ListModels):
-    StdPytorchModelManager='StdPytorchModelManager'
-    
+    StdPytorchModel='StdPytorchModel'
+
+# ################################################################################
+# # Dataset 
+# ################################################################################
+
+# class ListDatasets(ExtendedEnum):
+#     """"""
+# class ListKerasDatasets(ListDatasets):
+#     StdDataset='StdDataset'
+#     TfDataset='TfDataset'
+# class ListPytorchDatasets(ListDatasets):
+#     StdPytorchDataset='StdPytorchDataset'
 
 ################################################################################
 # Datasets
 ################################################################################
 
-class ListDatasets(ExtendedEnum):
+class ListDatasetHandlers(ExtendedEnum):
     """"""
-class ListKerasDatasets(ListDatasets):
-    StdDataset='StdDataset'
-    TfDataset='TfDataset'
-class ListPytorchDatasets(ListDatasets):
-    StdPytorchDataset='StdPytorchDataset'
+class ListKerasDatasetHandlers(ListDatasetHandlers):
+    KerasDatasetHandler='StdDatasetHandler'
+    TfDatasetHandler='TfDatasetHandler'
+class ListPytorchDatasetHandlers(ListDatasetHandlers):
+    StdPytorchDatasetHandler='StdPytorchDatasetHandler'
 
 ################################################################################
 # Optimizers
@@ -145,7 +165,7 @@ if __name__ == "__main__":
         TestEnum.name2:'test2'
     }
     print_obj_type_dict(TEST.keys())
-    print(isinstance(ListGenerators.Keras, TestEnum))
+    print(isinstance(ListWorkspaces.Keras, TestEnum))
 
 
     

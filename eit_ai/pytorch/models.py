@@ -7,28 +7,35 @@ import numpy as np
 import torch
 from eit_ai.pytorch.const import (PYTORCH_LOSS, PYTORCH_MODEL_SAVE_FOLDERNAME,
                                   PYTORCH_OPTIMIZER)
-from eit_ai.pytorch.dataset import DataloaderGenerator, StdPytorchDataset
-from eit_ai.train_utils.dataset import AiDataset
-from eit_ai.train_utils.lists import (ListPyTorchLosses, ListPytorchModels,
-                                      ListPyTorchOptimizers, get_from_dict)
+from eit_ai.pytorch.dataset import (DataloaderGenerator,
+                                    StdPytorchDatasetHandler)
+from eit_ai.train_utils.dataset import AiDatasetHandler
+from eit_ai.train_utils.lists import (ListPyTorchLosses,
+                                      ListPytorchModelHandlers,
+                                      ListPytorchModels, ListPyTorchOptimizers,
+                                      get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.models import (ModelNotDefinedError, Models,
+from eit_ai.train_utils.models import (AiModelHandler, ModelNotDefinedError,
                                        WrongLearnRateError, WrongMetricsError)
-from genericpath import isdir
+from genericpath import isdir, isfile
 from torch import nn
 from torch.utils.data import DataLoader
 
 logger = getLogger(__name__)
 
-class StdPytorch(ABC):
-    model:nn.Module=None
+class TypicalPytorchModel(ABC):
+    """Define a standard pytorch Model
+    """    
+    
+    net:nn.Module=None
+    name:str=None
     def __init__(self, metadata: MetaData) -> None:
         super().__init__()
         self._set_layers(metadata)
     
     @abstractmethod
     def _set_layers(self, metadata:MetaData)-> None:
-        """[summary]
+        """define the layers of the model and the name
 
         Args:
             metadata (MetaData): [description]
@@ -40,7 +47,7 @@ class StdPytorch(ABC):
         
     def forward(self, x:torch.Tensor)-> torch.Tensor:
         logger.debug(f'foward, {x.shape=}')
-        return self.model(x)
+        return self.net(x)
 
     def run_single_epoch(self, dataloader:DataLoader)->Any:
         logger.debug(f'run_single_epoch')
@@ -58,8 +65,16 @@ class StdPytorch(ABC):
             logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
         return loss_value.item() 
 
+    def get_name(self)->str:
+        """Return the name of the model/network
+
+        Returns:
+            str: specific name of the model/network
+        """        
+        return self.name
+
     def get_net(self):
-        return self.model
+        return self.net
 
     def predict(self, x_pred: np.ndarray)->np.ndarray:
         """[summary]
@@ -67,89 +82,42 @@ class StdPytorch(ABC):
         """
         return self.forward(torch.Tensor(x_pred)).detach().numpy()
 
-class StdPytorchModel(StdPytorch):
+class StdPytorchModel(TypicalPytorchModel):
 
     def _set_layers(self, metadata:MetaData)-> None:
         in_size=metadata.input_size
         out_size=metadata.output_size
-        self.model = torch.nn.Sequential()
-        self.model.add_module('dense1', nn.Linear(in_size, 512))
-        self.model.add_module('relu', nn.ReLU())
-        self.model.add_module('dense2', nn.Linear(512, out_size))
-        self.model.add_module('sigmoid', nn.Sigmoid())
+        self.name= "StdPytorchModel 2 dense layers (512) with relu"
+        self.net = torch.nn.Sequential()
+        self.net.add_module('dense1', nn.Linear(in_size, 512))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('dense2', nn.Linear(512, out_size))
+        self.net.add_module('sigmoid', nn.Sigmoid())
     
 ################################################################################
 # Std PyTorch ModelManager
 ################################################################################
-class StdPytorchModelManager(Models):
-
-    # model=None
-    # name:str=''
-    # specific_var:dict={}
+class StdPytorchModelHandler(AiModelHandler):
 
     def _define_model(self, metadata:MetaData)-> None:
-        """1. method called during building:
-        here have should be the model layer structure defined and
-        stored in set "self.model"
+        model_cls=get_from_dict(
+            metadata.model_type, PYTORCH_MODELS, ListPytorchModels)
+        self.model=model_cls(metadata)
+        self.name= self.model.get_name()
 
-        Args:
-            metadata (MetaData):
-        """
-        self.model= StdPytorchModel(metadata=metadata)
-        self.name= 'StdPytorch'
-
- 
-    def _get_specific_var(self, metadata:MetaData)-> None:
-        """2. method called during building:
-        Responsible of gathering, preparing, and setting the specific
-        variables needed to prepare the model (eg. optimizer, )
-        those variables are stored in the dict "specific_var", which can be set
-        depending the needs of the model, eg. :
-            specific_var['optimizer']
-            specific_var['loss']
-            specific_var['metrix']
-
-        Args:
-            metadata (MetaData): 
-
-        Raises:
-            WrongLossError: raised if passed metadata.loss is not in torch_LOSS list
-            WrongOptimizerError: raised if passed metadata.optimizer is not in torch_OPTIMIZER list
-            WrongMetrixError: raised if passed metadata.metrics is not a list #Could be better tested... TODO
-            WrongLearnRateError: raised if passed metadata.learning_rate >= 1.0 
-        """     
+    def _get_specific_var(self, metadata:MetaData)-> None:   
         self.specific_var['optimizer'] = get_pytorch_optimizer(metadata, self.model.get_net())
         self.specific_var['loss'] = get_pytorch_loss(metadata)
         if not isinstance(metadata.metrics, list):
             raise WrongMetricsError(f'Wrong metrics type: {metadata.metrics}')
         self.specific_var['metrics'] = metadata.metrics   
 
-
     def _prepare_model(self)-> None:
-        """3. method called during building:
-        set the model ready to train (in pytorch this step is compiling)
-        using "specific_var"
-
-        Raises:
-            ModelNotDefinedError: if "self.model" is not a Model type
-        """   
         self.model.prepare( 
             self.specific_var['optimizer'],
             self.specific_var['loss']  )
 
-
-    def train(self, dataset:AiDataset, metadata:MetaData)-> None:
-        """Train the model with "train" and "val"-part of the dataset, with the
-        metadata. Before training the model is tested if it exist and ready
-
-        Args:
-            dataset (AiDataset): 
-            metadata (MetaData):
-
-        Raises:
-            ModelNotDefinedError: if "self.model" is not a Model type
-            ModelNotPreparedError: if "self.model" is not compiled or similar
-        """ 
+    def train(self, dataset:AiDatasetHandler, metadata:MetaData)-> None:
         gen=DataloaderGenerator()
         train_dataloader=gen.make(dataset, 'train', metadata=metadata)
         logger.info(f'Training - Started {metadata.epoch}')
@@ -157,28 +125,12 @@ class StdPytorchModelManager(Models):
             loss= self.model.run_single_epoch(train_dataloader)
             logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')   
 
-
     def predict(
         self,
         X_pred:np.ndarray,
         metadata:MetaData,
         **kwargs)->np.ndarray:
-        """return prediction for features X_pred with the metadata
-        Before prediction the model is tested if it exist and ready
 
-        Args:
-            X_pred (np.ndarray): array-like of shape (n_samples, :)
-                                input values
-            metadata (MetaData)
-
-        Raises:
-            ModelNotDefinedError: if "self.model" is not a Model type
-            ModelNotPreparedError: if "self.model" is not compiled or similar
-
-        Returns:
-            np.ndarray: array-like of shape (n_samples, :)
-                        predicted samples values
-        """
         # X_pred preprocess if needed
         # if X_pred.shape[0]==1:
         #     return self.model.predict(X_pred)
@@ -188,31 +140,13 @@ class StdPytorchModelManager(Models):
         #         pred = self.model.predict(X_pred[i])
         #         res = np.append(res, pred)
         #     return res  
-
         return self.model.predict(X_pred)
 
-    def save(self, metadata:MetaData)-> str:
-        """Save the current model object
-
-        Args:
-            metadata (MetaData)
-
-        Returns:
-            str: the saving path which is automatically set using
-            metadata.dirpath
-        """     
+    def save(self, metadata:MetaData)-> str: 
         return save_pytorch_model(self.model, dir_path=metadata.dir_path, save_summary=metadata.save_summary)
 
-
-
     def load(self, metadata:MetaData)-> None:
-        """Load a model from the directory metadata.model_saving_path 
-
-        Args:
-            metadata (MetaData)
-        """  
         self.model= load_pytorch_model(dir_path=metadata.dir_path)
-
 
 ################################################################################
 # common methods
@@ -294,7 +228,7 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loading - failed, wrong dir {dir_path}')
         return
     model_path=os.path.join(dir_path, PYTORCH_MODEL_SAVE_FOLDERNAME)
-    if not isdir(model_path):
+    if not isfile(model_path):
         logger.info(f'pytorch model loading - failed, {PYTORCH_MODEL_SAVE_FOLDERNAME} do not exist in {dir_path}')
         return None
     try:
@@ -307,13 +241,18 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.error(f'Loading of model from dir: {model_path} - Failed'\
                      f'\n({e})')
         return None
+
 ################################################################################
 # pytorch Models
 ################################################################################
 
 
+PYTORCH_MODEL_HANDLERS={
+    ListPytorchModelHandlers.PytorchModelHandler: StdPytorchModelHandler,
+}
+
 PYTORCH_MODELS={
-    ListPytorchModels.StdPytorchModelManager: StdPytorchModelManager,
+    ListPytorchModels.StdPytorchModel: StdPytorchModel,
 }
 
 
@@ -338,10 +277,10 @@ if __name__ == "__main__":
     # rdn_dataset = PytorchDataset(X, Y)
     md= MetaData()
     md.set_4_dataset()
-    dataset = StdPytorchDataset()
+    dataset = StdPytorchDatasetHandler()
     dataset.build(raw_samples=raw, metadata= md)
 
-    new_model = StdPytorchModelManager()
+    new_model = StdPytorchModelHandler()
     # for epoch in range(50):
     md.set_4_model()
     new_model.train(dataset,md)

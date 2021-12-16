@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.dataset import AiDataset
+from eit_ai.train_utils.dataset import AiDatasetHandler
 from enum import Enum
 
 from logging import getLogger
@@ -31,7 +31,7 @@ class ModelNotPreparedError(Exception):
 # Abstract Class for Models
 ################################################################################
 
-class Models(ABC):
+class AiModelHandler(ABC):
 
     model=None
     name:str=''
@@ -61,7 +61,6 @@ class Models(ABC):
         Args:
             metadata (MetaData):
         """        
-        """ """
         self._define_model(metadata=metadata)
         self._get_specific_var(metadata=metadata)
         self._prepare_model()
@@ -109,7 +108,7 @@ class Models(ABC):
 
 
     @abstractmethod
-    def train(self, dataset:AiDataset, metadata:MetaData)-> None:
+    def train(self, dataset:AiDatasetHandler, metadata:MetaData)-> None:
         """Train the model with "train" and "val"-part of the dataset, with the
         metadata. Before training the model is tested if it exist and ready
 

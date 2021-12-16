@@ -6,10 +6,10 @@ import time
 from typing import Any, Union
 import numpy as np
 
-from eit_ai.train_utils.models import Models
-from eit_ai.train_utils.dataset import AiDataset
+from eit_ai.train_utils.models import AiModelHandler
+from eit_ai.train_utils.dataset import AiDatasetHandler
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.lists import ListModels, ListDatasets
+from eit_ai.train_utils.lists import ListModelHandlers, ListDatasetHandlers, ListModels
 from eit_ai.raw_data.raw_samples import RawSamples
 from glob_utils.args.kwargs import kwargs_extract
 
@@ -24,15 +24,16 @@ class WrongSingleXError(Exception):
     """"""
 
 ################################################################################
-# Abstract Class for ModelGenerator
+# Abstract Class for AiWorkspaces
 ################################################################################
 
-class Generators(ABC):
-    """Generator abstract class use to manage model and dataset  
+class AiWorkspace(ABC):
+    """Ai Workspaces abstract class in which a model- and dataset-handler
+    co-exist 
     
     """
-    model_man:Models = None
-    dataset:AiDataset= None
+    model_handler:AiModelHandler = None
+    dataset_handler:AiDatasetHandler= None
 
     def __init__(self) -> None:
         super().__init__()
@@ -40,20 +41,22 @@ class Generators(ABC):
     @abstractmethod
     def select_model_dataset(
         self,
-        model_type:ListModels=None,
-        dataset_type:ListDatasets=None,
+        model_handler:ListModelHandlers=None,
+        dataset_handler:ListDatasetHandlers=None,
+        model:ListModels=None,
         metadata:MetaData=None)-> None:
-        """Set the model_manager and the dataset, from Lists defined for each
-        generators type (keras, pythorch, ...)
+        """Set the model_handler, the model and the dataset_handler,
+        from Lists defined for each workspaces type (keras, pythorch, ...)
         (test if they are compatible otherwise raise Error)
-        if model_type and dataset_type are None,
+        if model_handler and dataset_handler and model are None,
         >> the values contained in metadata will be used
 
-        used types are saved in metadata if all could be selected correctly
+        used types are saved in metadata, if all could be selected correctly
         
         Args:
-            model_type (KerasModels, optional): Defaults to None.
-            dataset_type (KerasDatasets, optional): Defaults to None.
+            model_handler (ListModelHandlers, optional): Defaults to None.
+            dataset_handler (ListDatasetHandlers, optional): Defaults to None.
+            model (ListModels, optional): Default to None
             metadata (MetaData, optional): Defaults to None.
 
         Raises:
@@ -63,7 +66,7 @@ class Generators(ABC):
 
     @abstractmethod
     def build_dataset(self, raw_samples:RawSamples, metadata:MetaData)-> None:
-        """Call the build method of the dataset object
+        """Call the "build"-method of the dataset_handler object
 
         Args:
             raw_samples (RawSamples): 
@@ -95,7 +98,7 @@ class Generators(ABC):
         Returns:
             tuple[np.ndarray,np.ndarray]: samples_x, samples_y
         """        
-        samples_x, samples_y= self.dataset.get_samples(part=dataset_part)
+        samples_x, samples_y= self.dataset_handler.get_samples(part=dataset_part)
         if idx_samples is None:
             idx_samples= np.random.randint(len(samples_x))
         if isinstance(idx_samples, str):
@@ -117,7 +120,7 @@ class Generators(ABC):
         Returns:
             Any: attribute value
         """        
-        return getattr(self.dataset, attr)
+        return getattr(self.dataset_handler, attr)
 
     @abstractmethod
     def build_model(self, metadata:MetaData)-> None:
@@ -128,7 +131,7 @@ class Generators(ABC):
         """        
 
     @abstractmethod
-    def run_training(self,metadata:MetaData, dataset:AiDataset=None)-> None:
+    def run_training(self,metadata:MetaData, dataset:AiDatasetHandler=None)-> None:
         """Start training with the 'train' and 'val' part of the intern dataset
         or with the passed one.
 
@@ -141,7 +144,7 @@ class Generators(ABC):
     def get_prediction(
         self,
         metadata:MetaData,
-        dataset:AiDataset=None,
+        dataset:AiDatasetHandler=None,
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
         """Return prediction from:

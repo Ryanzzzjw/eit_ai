@@ -1,14 +1,14 @@
 
 
 
-from eit_ai.train_utils.gen import Generators
-from eit_ai.train_utils.lists import ListGenerators
+from eit_ai.train_utils.workspace import AiWorkspace
+from eit_ai.train_utils.lists import ListWorkspaces
 from eit_ai.train_utils.metadata import MetaData
 
 class WrongGeneratorError(Exception):
     """"""
 
-def select_gen(metadata:MetaData) -> Generators:
+def select_workspace(metadata:MetaData) -> AiWorkspace:
     """Return a generator corresponding to the saved metadata.gen_type
 
     Args:
@@ -22,33 +22,33 @@ def select_gen(metadata:MetaData) -> Generators:
 
     """    
     try:
-        return GEN_LIST[ListGenerators(metadata.gen_type)]()
+        return WORKSPACES[ListWorkspaces(metadata.workspace)]()
     except ValueError:
-        raise WrongGeneratorError(f'Wrong generator type: {metadata.gen_type}')
+        raise WrongGeneratorError(f'Wrong generator type: {metadata.workspace}')
 
-def select_gen_keras()-> Generators:
+def select_gen_keras()-> AiWorkspace:
     """Return Keras generator
 
     Returns:
         [Generators]: Keras generator
     """
 
-    from eit_ai.keras.gen import GeneratorKeras
-    return GeneratorKeras()
+    from eit_ai.keras.workspace import KerasWorkspace
+    return KerasWorkspace()
 
-def select_gen_pytorch()-> Generators:
+def select_gen_pytorch()-> AiWorkspace:
     """Return Pytorch generator
 
     Returns:
         [Generators]: Pytorch generator
     """
-    from eit_ai.pytorch.gen import GeneratorPyTorch
-    return GeneratorPyTorch()
+    from eit_ai.pytorch.workspace import PyTorchWorkspace
+    return PyTorchWorkspace()
 
 
-GEN_LIST={
-    ListGenerators.Keras : select_gen_keras,
-    ListGenerators.PyTorch: select_gen_pytorch
+WORKSPACES={
+    ListWorkspaces.Keras : select_gen_keras,
+    ListWorkspaces.PyTorch: select_gen_pytorch
 }
 
 
@@ -57,8 +57,8 @@ if __name__ == "__main__":
     import logging
     main_log()
     change_level_logging(logging.DEBUG)
-    print(ListGenerators.Keras.value)
-    print(ListGenerators())
+    print(ListWorkspaces.Keras.value)
+    print(ListWorkspaces())
 
 
 
