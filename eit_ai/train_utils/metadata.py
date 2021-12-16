@@ -63,7 +63,7 @@ class MetaData(object):
     learning_rate:float= None
     loss:str= None
     metrics:list[str]= None
-    specific_data:dict={} # use to pass specific data depending on the training
+    specific_data:dict=None # use to pass specific data depending on the training
 
     training_duration:str=None
     workspace:ListWorkspaces=None
@@ -74,7 +74,7 @@ class MetaData(object):
     def __post_init__(self):
         set_ai_default_dir()
         self.set_idx_samples(save=False)
-    
+        self.specific_data={}
     def set_ouput_dir(self, training_name:str='', append_date_time:bool= True) -> None:
         """Create the ouput directory for training results
 
