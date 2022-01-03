@@ -27,7 +27,7 @@ def std_pytorch_train_pipeline(path:str= ''):
         metadata=metadata)
 
     metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
-    metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
+    metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
     # metadata._nb_samples = 10000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
     metadata.set_4_dataset(batch_size=1000)
