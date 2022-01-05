@@ -1,5 +1,7 @@
 from numpy.core.fromnumeric import ndim
 from numpy.core.shape_base import block
+from pyvista.plotting import scalar_bars
+from pyvista.plotting.plotting import Plotter
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.raw_data.raw_samples import load_samples
 from eit_ai.train_utils.metadata import MetaData
@@ -63,9 +65,50 @@ def plot_3d(fwd_model, perm, U):
     else:
         key= 'elems_data'
     
-    # fig, ax = plt.subplots(1,2)
-    im = pv.PolyData(pts)
-    im.plot(cpos='xy', show_edges=True)
+    # Faces must contain padding indicating the number of points in the face
+    padding = np.empty(tri.shape[0], int)
+    padding[:] = 4
+    elements = np.vstack((padding, tri.T)).T
+    
+    
+    mesh = pv.PolyData(pts, elements)
+    
+    colors = np.real(data[key])
+    
+    mesh.plot(scalars=colors,
+          opacity = 0.5,
+          cmap='jet',
+          show_scalar_bar=True,
+          background='black')
+    
+    slicing = mesh.slice_along_axis(n=10, axis='z')
+    slicing.plot(
+          opacity = 0.5,
+          cmap='jet',
+          show_scalar_bar=True,
+          background='black')
+    
+    # p = Plotter(shape=(1, 2), border=False)
+    
+    # pv.set_plot_theme("dark")
+    # p.subplot(0, 0)
+    # p.add_mesh(mesh,
+    #       opacity = 0.3,
+    #       cmap='coolwarm',
+    #       show_scalar_bar= True,
+    #       )
+    # p.subplot(0, 1)
+    # slicing = mesh.slice_orthogonal()
+    # p.add_mesh(slicing,
+    #       opacity = 0.3,
+    #       cmap='coolwarm',
+    #       show_scalar_bar= True,
+    #       )
+    # _ = p.add_scalar_bar(np.real(data[key]),vertical=False,
+    #                        title_font_size=35,
+    #                        label_font_size=30,
+    #                        outline=True,)
+    # p.show()
 
 
 if __name__ == "__main__":
