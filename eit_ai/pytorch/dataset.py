@@ -21,12 +21,10 @@ class StdPytorchDatasetHandler(StdAiDatasetHandler):
         self.dataset_cls=PytorchDataset
 
 class PytorchDataset(torch.utils.data.Dataset, AiDataset):
-    """@Jiawei Please document...
-
-    """    
+    """ create the customized Pytorch dataset """    
 
     def __init__(self, x:np.ndarray, y:np.ndarray)-> None:
-        """@Jiawei Please document...
+        """ load the original X and Y.
 
         Args:
             x (np.ndarray): [description]
@@ -44,7 +42,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
         self.Y = y
 
     def __len__(self):
-        """@Jiawei Please document...
+        """ return the number of samples.
         Returns:
             [type]: [description]
         """        
@@ -53,7 +51,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
     def __getitem__(
         self,
         idx:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
-        """@Jiawei Please document...
+        """convert array to tensor. And allow to return a sample with the given index.
 
         Args:
             idx (Union[int, list[int]], optional): [description]. Defaults to None.
@@ -64,7 +62,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
         return torch.Tensor(self.X[idx]).float(), torch.Tensor(self.Y[idx]).float()
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
-        """@Jiawei Please document...
+        """ return X and Y separately.
 
         Returns:
             tuple[np.ndarray,np.ndarray]: [description]
@@ -77,10 +75,11 @@ class DataloaderGenerator(object):
         dataset:StdPytorchDatasetHandler,
         part:str,
         metadata:MetaData)-> DataLoader:
-        """@Jiawei Please document...
+        """ generate the dataloader for differnet datasets, which is used 
+        for training or evaluating.
 
         Args:
-            dataset (StdPytorchDataset): [description]
+            dataset (PytorchDataset): [description]
             part (str): [description]
             metadata (MetaData): [description]
 
