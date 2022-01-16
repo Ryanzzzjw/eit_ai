@@ -234,14 +234,13 @@ def save_pytorch_model(net:nn.Module, dir_path:str='', save_summary:bool=False)-
     torch.save(net, model_path)
 
     logger.info(f'PyTorch model saved in: {model_path}')
-    
-    metadata = MetaData()
+
     if save_summary:
     
         summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
         with open(summary_path, 'w') as f:
             with redirect_stdout(f):
-                summary(net, input_size=(metadata.batch_size, metadata.input_size))
+                summary(net, input_size=(6400, 256), device='cpu')
         logger.info(f'pytorch model summary saved in: {summary_path}')
     
     return model_path
@@ -249,7 +248,6 @@ def save_pytorch_model(net:nn.Module, dir_path:str='', save_summary:bool=False)-
 def load_pytorch_model(dir_path:str='') -> nn.Module:
     """Load pytorch Model and return it if succesful if not """
     
-    metadata = MetaData()
     if not isdir(dir_path):
         logger.info(f'pytorch model loading - failed, wrong dir {dir_path}')
         return
@@ -262,8 +260,7 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         net = torch.load(model_path)
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
-        # summary(model, input_size=(metadata.batch_size, metadata.input_size))
-    
+        summary(net, input_size=(6400, 256), device='cpu')
         return net
 
     except BaseException as e: 
