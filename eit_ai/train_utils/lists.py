@@ -56,6 +56,7 @@ class ListAutokerasModels(ListModels):
     StdAutokerasModel='StdAutokerasModel'
 class ListPytorchModels(ListModels):
     StdPytorchModel='StdPytorchModel'
+    Conv1dNet='Conv1dNet'
 
 # ################################################################################
 # # Dataset 
