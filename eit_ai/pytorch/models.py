@@ -1,3 +1,4 @@
+from importlib.metadata import metadata
 import os
 from abc import ABC, abstractmethod
 from logging import getLogger
@@ -5,7 +6,7 @@ from typing import Any
 from contextlib import redirect_stdout
 from torchinfo import summary
 
-from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 
 import numpy as np
 import torch
@@ -100,22 +101,28 @@ class StdPytorchModel(TypicalPytorchModel):
         self.net.add_module('dense2', nn.Linear(512, out_size))
         self.net.add_module('sigmoid', nn.Sigmoid())
 
-class Reshape(nn.Module):
-    def forward(self,x):
-        return x.unsquezze(0)
-    
 class Conv1dNet(TypicalPytorchModel):
     
     def _set_layers(self, metadata: MetaData) -> None:
 
-        Reshape()
-        
+        out_size=metadata.output_size
         self.name = "1d CNN"
         self.net = torch.nn.Sequential()
         self.net.add_module('conv1', nn.Conv1d(in_channels= 1, out_channels= 8, kernel_size=8, stride=1, padding='same'))
+        self.net.add_module('ReLU', nn.ReLU())
+        self.net.add_module('pool1', nn.MaxPool1d(kernel_size=2, stride=2))
+        self.net.add_module('conv2', nn.Conv1d(8, 8, kernel_size=8, padding='same', stride=1))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('pool2', nn.MaxPool1d(kernel_size=2, stride=2))
+        self.net.add_module('conv3', nn.Conv1d(8, 16, kernel_size=16, padding='same', stride=1))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('pool3', nn.MaxPool1d(kernel_size=2, stride=2))
+        self.net.add_module('flatten', nn.Flatten())
+        self.net.add_module('dense1', nn.Linear(512, 1024))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('dense2', nn.Linear(1024, out_size))
         self.net.add_module('sigmoid', nn.Sigmoid())
-        self.net.add_module('pool1', nn.AvgPool1d(kernel_size=2))
-        self.net.add_module('conv2', nn.Conv1d(8, 16, kernel_size=8))
+        
     
 ################################################################################
 # Std PyTorch ModelManager
