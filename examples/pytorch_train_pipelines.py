@@ -24,13 +24,13 @@ def std_pytorch_train_pipeline(path:str= ''):
     ws = PyTorchWorkspace()# Create a model generator
     ws.select_model_dataset(
         model_handler=ListPytorchModelHandlers.PytorchModelHandler,
-        dataset_handler=ListPytorchDatasetHandlers.StdPytorchDatasetHandler,
-        model=ListPytorchModels.StdPytorchModel,
+        dataset_handler=ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler,
+        model=ListPytorchModels.Conv1dNet,
         metadata=metadata)
 
     metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
-    # metadata._nb_samples = 10000
+    metadata._nb_samples = 10000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
     metadata.set_4_dataset(batch_size=1000)
     ws.build_dataset(raw_samples, metadata)
