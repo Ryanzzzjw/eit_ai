@@ -81,6 +81,7 @@ class ListKerasDatasetHandlers(ListDatasetHandlers):
     TfDatasetHandler='TfDatasetHandler'
 class ListPytorchDatasetHandlers(ListDatasetHandlers):
     StdPytorchDatasetHandler='StdPytorchDatasetHandler'
+    PytorchConv1dDatasetHandler='PytorchConv1dDatasetHandler'
 
 ################################################################################
 # Optimizers
