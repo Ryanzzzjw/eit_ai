@@ -19,6 +19,11 @@ class StdPytorchDatasetHandler(StdAiDatasetHandler):
 
     def _post_init(self):
         self.dataset_cls=PytorchDataset
+        
+class PytorchConv1dDatasetHandler(StdAiDatasetHandler):
+
+    def _post_init(self):
+        self.dataset_cls=PytorchConv1dDataset
 
 class PytorchDataset(torch.utils.data.Dataset, AiDataset):
     """ create the customized Pytorch dataset """    
@@ -68,6 +73,56 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             tuple[np.ndarray,np.ndarray]: [description]
         """        
         return self.X, self.Y
+    
+
+class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
+    """ create the customized Pytorch dataset """    
+
+    def __init__(self, x:np.ndarray, y:np.ndarray)-> None:
+        """ load the original X and Y.
+
+        Args:
+            x (np.ndarray): [description]
+            y (np.ndarray): [description]
+
+        Raises:
+            TypeError: [description]
+        """        
+        
+        if x.shape[0]!=y.shape[0]:
+            raise TypeError(
+                f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
+            
+        self.X = x.reshape([-1, 1, 256])
+        self.Y = y
+
+    def __len__(self):
+        """ return the number of samples.
+        Returns:
+            [type]: [description]
+        """        
+        return len(self.X)
+
+    def __getitem__(
+        self,
+        idx:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
+        """convert array to tensor. And allow to return a sample with the given index.
+
+        Args:
+            idx (Union[int, list[int]], optional): [description]. Defaults to None.
+
+        Returns:
+            tuple[torch.Tensor,torch.Tensor]: [description]
+        """        
+        return torch.Tensor(self.X[idx]).float(), torch.Tensor(self.Y[idx]).float()
+        
+    def get_set(self)->tuple[np.ndarray,np.ndarray]:
+        """ return X and Y separately.
+
+        Returns:
+            tuple[np.ndarray,np.ndarray]: [description]
+        """        
+        return self.X, self.Y
 
 class DataloaderGenerator(object):
     def make(
@@ -87,10 +142,13 @@ class DataloaderGenerator(object):
             torch.utils.data.DataLoader: [description]
         """        
         return DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0)
+    
+    
 
 
 PYTORCH_DATASET_HANDLERS={
-    ListPytorchDatasetHandlers.StdPytorchDatasetHandler: StdPytorchDatasetHandler
+    ListPytorchDatasetHandlers.StdPytorchDatasetHandler: StdPytorchDatasetHandler,
+    ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler: PytorchConv1dDatasetHandler,
 }
 
 
