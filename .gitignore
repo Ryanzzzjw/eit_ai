@@ -135,3 +135,4 @@ datasets
 outputs
 *default_dirs.txt
 runs
+.vscode/
