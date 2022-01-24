@@ -93,7 +93,8 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
             raise TypeError(
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
-        self.X = x.reshape([-1, 1, 256])
+        self.X = x
+        self.X_conv= reshape_4_1Dconv(x) # special reshape for conv Ai
         self.Y = y
 
     def __len__(self):
@@ -114,7 +115,7 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
         Returns:
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
-        return torch.Tensor(self.X[idx]).float(), torch.Tensor(self.Y[idx]).float()
+        return torch.Tensor(self.X_conv[idx]).float(), torch.Tensor(self.Y[idx]).float()
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ return X and Y separately.
@@ -151,6 +152,18 @@ PYTORCH_DATASET_HANDLERS={
     ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler: PytorchConv1dDatasetHandler,
 }
 
+def reshape_4_1Dconv(x:np.ndarray, channel:int=1)-> np.ndarray:
+    """[summary]
+
+    Args:
+        x (np.ndarray): [description]
+        channel (int, optional): [description]. Defaults to 1.
+
+    Returns:
+        np.ndarray: [description]
+    """
+    
+    return x.reshape([-1, channel, x.shape[1]])
 
 
 if __name__ == "__main__":
