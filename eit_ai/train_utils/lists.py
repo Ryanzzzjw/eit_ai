@@ -56,6 +56,7 @@ class ListAutokerasModels(ListModels):
     StdAutokerasModel='StdAutokerasModel'
 class ListPytorchModels(ListModels):
     StdPytorchModel='StdPytorchModel'
+    Conv1dNet='Conv1dNet'
 
 # ################################################################################
 # # Dataset 
@@ -80,6 +81,7 @@ class ListKerasDatasetHandlers(ListDatasetHandlers):
     TfDatasetHandler='TfDatasetHandler'
 class ListPytorchDatasetHandlers(ListDatasetHandlers):
     StdPytorchDatasetHandler='StdPytorchDatasetHandler'
+    PytorchConv1dDatasetHandler='PytorchConv1dDatasetHandler'
 
 ################################################################################
 # Optimizers

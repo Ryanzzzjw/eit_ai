@@ -1,7 +1,12 @@
+from importlib.metadata import metadata
 import os
 from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any
+from contextlib import redirect_stdout
+from torchinfo import summary
+
+from tensorboardX import SummaryWriter
 
 import numpy as np
 import torch
@@ -15,13 +20,15 @@ from eit_ai.train_utils.lists import (ListPyTorchLosses,
                                       ListPytorchModels, ListPyTorchOptimizers,
                                       get_from_dict)
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.models import (AiModelHandler, ModelNotDefinedError,
+from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME,
+                                       AiModelHandler, ModelNotDefinedError,
                                        WrongLearnRateError, WrongMetricsError)
 from genericpath import isdir, isfile
 from torch import nn
 from torch.utils.data import DataLoader
 
 logger = getLogger(__name__)
+writer = SummaryWriter()
 
 class TypicalPytorchModel(ABC):
     """Define a standard pytorch Model
@@ -93,6 +100,29 @@ class StdPytorchModel(TypicalPytorchModel):
         self.net.add_module('relu', nn.ReLU())
         self.net.add_module('dense2', nn.Linear(512, out_size))
         self.net.add_module('sigmoid', nn.Sigmoid())
+
+class Conv1dNet(TypicalPytorchModel):
+    
+    def _set_layers(self, metadata: MetaData) -> None:
+
+        out_size=metadata.output_size
+        self.name = "1d CNN"
+        self.net = torch.nn.Sequential()
+        self.net.add_module('conv1', nn.Conv1d(in_channels= 1, out_channels= 8, kernel_size=8, stride=1, padding='same'))
+        self.net.add_module('ReLU', nn.ReLU())
+        self.net.add_module('pool1', nn.MaxPool1d(kernel_size=2, stride=2))
+        self.net.add_module('conv2', nn.Conv1d(8, 8, kernel_size=8, padding='same', stride=1))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('pool2', nn.MaxPool1d(kernel_size=2, stride=2))
+        self.net.add_module('conv3', nn.Conv1d(8, 16, kernel_size=16, padding='same', stride=1))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('pool3', nn.MaxPool1d(kernel_size=2, stride=2))
+        self.net.add_module('flatten', nn.Flatten())
+        self.net.add_module('dense1', nn.Linear(512, 1024))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('dense2', nn.Linear(1024, out_size))
+        self.net.add_module('sigmoid', nn.Sigmoid())
+        
     
 ################################################################################
 # Std PyTorch ModelManager
@@ -123,7 +153,8 @@ class StdPytorchModelHandler(AiModelHandler):
         logger.info(f'Training - Started {metadata.epoch}')
         for epoch in range(metadata.epoch):
             loss= self.model.run_single_epoch(train_dataloader)
-            logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')   
+            logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')
+            writer.add_scalar("training_loss", loss, epoch+1)   
 
     def predict(
         self,
@@ -143,10 +174,17 @@ class StdPytorchModelHandler(AiModelHandler):
         return self.model.predict(X_pred)
 
     def save(self, metadata:MetaData)-> str: 
-        return save_pytorch_model(self.model, dir_path=metadata.dir_path, save_summary=metadata.save_summary)
+        
+        return save_pytorch_model(self.model.net, dir_path=metadata.dir_path, save_summary=metadata.save_summary)
 
     def load(self, metadata:MetaData)-> None:
-        self.model= load_pytorch_model(dir_path=metadata.dir_path)
+        model_cls=get_from_dict(
+        metadata.model_type, PYTORCH_MODELS, ListPytorchModels)
+        
+        self.model = model_cls(metadata)
+        
+        self.model.net= load_pytorch_model(dir_path=metadata.dir_path)
+        
 
 ################################################################################
 # common methods
@@ -194,36 +232,29 @@ def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:
     loss_cls=get_from_dict(metadata.loss, PYTORCH_LOSS, ListPyTorchLosses)
     return loss_cls()
 
-def save_pytorch_model(model:nn.Module, dir_path:str='', save_summary:bool=False)-> str:
+def save_pytorch_model(net:nn.Module, dir_path:str='', save_summary:bool=False)-> str:
     """Save a pytorch model, additionnaly can be the summary of the model be saved"""
     if not isdir(dir_path):
         dir_path=os.getcwd()
     model_path=os.path.join(dir_path, PYTORCH_MODEL_SAVE_FOLDERNAME)
     
-    torch.save(model, model_path)
+    torch.save(net, model_path)
 
     logger.info(f'PyTorch model saved in: {model_path}')
-    
+
     if save_summary:
-        logger.info('pytorch summary saving is not implemented')
-
-        # from torchvision import models
-        # from torchsummary import summary
-
-        # vgg = models.vgg16()
-        # summary(vgg, (3, 224, 224))
-
-        # summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
-        # with open(summary_path, 'w') as f:
-        #     with redirect_stdout(f):
-        #         model.summary()
-        # logger.info(f'pytorch model summary saved in: {summary_path}')
+    
+        summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
+        with open(summary_path, 'w') as f:
+            with redirect_stdout(f):
+                summary(net, input_size=(6400, 256), device='cpu')
+        logger.info(f'pytorch model summary saved in: {summary_path}')
     
     return model_path
 
 def load_pytorch_model(dir_path:str='') -> nn.Module:
     """Load pytorch Model and return it if succesful if not """
-
+    
     if not isdir(dir_path):
         logger.info(f'pytorch model loading - failed, wrong dir {dir_path}')
         return
@@ -232,11 +263,13 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loading - failed, {PYTORCH_MODEL_SAVE_FOLDERNAME} do not exist in {dir_path}')
         return None
     try:
-        model= torch.load(model_path)
+        
+        net = torch.load(model_path)
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
-        # model.summary() NotImplemented yet
-        return model
+        summary(net, input_size=(6400, 256), device='cpu')
+        return net
+
     except BaseException as e: 
         logger.error(f'Loading of model from dir: {model_path} - Failed'\
                      f'\n({e})')
@@ -248,11 +281,12 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
 
 
 PYTORCH_MODEL_HANDLERS={
-    ListPytorchModelHandlers.PytorchModelHandler: StdPytorchModelHandler,
+    ListPytorchModelHandlers.PytorchModelHandler: StdPytorchModelHandler, 
 }
 
 PYTORCH_MODELS={
-    ListPytorchModels.StdPytorchModel: StdPytorchModel,
+    ListPytorchModels.StdPytorchModel: StdPytorchModel, 
+    ListPytorchModels.Conv1dNet: Conv1dNet,
 }
 
 
