@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any
 from contextlib import redirect_stdout
+from setuptools_scm import meta
 from torchinfo import summary
 
 from tensorboardX import SummaryWriter
@@ -19,7 +20,7 @@ from eit_ai.train_utils.lists import (ListPyTorchLosses,
                                       ListPytorchModelHandlers,
                                       ListPytorchModels, ListPyTorchOptimizers,
                                       get_from_dict)
-from eit_ai.train_utils.metadata import MetaData
+from eit_ai.train_utils.metadata import MetaData, reload_metadata
 from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME,
                                        AiModelHandler, ModelNotDefinedError,
                                        WrongLearnRateError, WrongMetricsError)
@@ -255,6 +256,7 @@ def save_pytorch_model(net:nn.Module, dir_path:str='', save_summary:bool=False)-
 def load_pytorch_model(dir_path:str='') -> nn.Module:
     """Load pytorch Model and return it if succesful if not """
     
+    metadata = reload_metadata(dir_path=dir_path)
     if not isdir(dir_path):
         logger.info(f'pytorch model loading - failed, wrong dir {dir_path}')
         return
@@ -263,11 +265,13 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loading - failed, {PYTORCH_MODEL_SAVE_FOLDERNAME} do not exist in {dir_path}')
         return None
     try:
-        
         net = torch.load(model_path)
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
-        summary(net, input_size=(6400, 256), device='cpu')
+        if metadata.model_type == 'Conv1dNet':
+            summary(net, input_size=(6400, 1, 256), device='cpu')
+        else:
+            summary(net, input_size=(6400, 256), device='cpu')
         return net
 
     except BaseException as e: 
