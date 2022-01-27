@@ -4,10 +4,10 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any
 from contextlib import redirect_stdout
-from setuptools_scm import meta
-from torchinfo import summary
+# from setuptools_scm import meta
+# from torchinfo import summary
 
-from tensorboardX import SummaryWriter
+# from tensorboardX import SummaryWriter
 
 import numpy as np
 import torch
@@ -29,7 +29,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 logger = getLogger(__name__)
-writer = SummaryWriter()
+# writer = SummaryWriter()
 
 class TypicalPytorchModel(ABC):
     """Define a standard pytorch Model
@@ -155,7 +155,7 @@ class StdPytorchModelHandler(AiModelHandler):
         for epoch in range(metadata.epoch):
             loss= self.model.run_single_epoch(train_dataloader)
             logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')
-            writer.add_scalar("training_loss", loss, epoch+1)   
+            # writer.add_scalar("training_loss", loss, epoch+1)   
 
     def predict(
         self,
@@ -243,13 +243,13 @@ def save_pytorch_model(net:nn.Module, dir_path:str='', save_summary:bool=False)-
 
     logger.info(f'PyTorch model saved in: {model_path}')
 
-    if save_summary:
+    # if save_summary:
     
-        summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
-        with open(summary_path, 'w') as f:
-            with redirect_stdout(f):
-                summary(net, input_size=(6400, 256), device='cpu')
-        logger.info(f'pytorch model summary saved in: {summary_path}')
+        # summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
+        # with open(summary_path, 'w') as f:
+        #     with redirect_stdout(f):
+        #         summary(net, input_size=(6400, 256), device='cpu')
+        # logger.info(f'pytorch model summary saved in: {summary_path}')
     
     return model_path
 
@@ -268,10 +268,10 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         net = torch.load(model_path)
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
-        if metadata.model_type == 'Conv1dNet':
-            summary(net, input_size=(6400, 1, 256), device='cpu')
-        else:
-            summary(net, input_size=(6400, 256), device='cpu')
+        # if metadata.model_type == 'Conv1dNet':
+        #     summary(net, input_size=(6400, 1, 256), device='cpu')
+        # else:
+        #     summary(net, input_size=(6400, 256), device='cpu')
         return net
 
     except BaseException as e: 

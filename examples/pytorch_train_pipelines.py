@@ -66,7 +66,7 @@ def Conv1d_pytorch_train_pipeline(path:str= ''):
     metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
     metadata._nb_samples = 10000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=50)
+    metadata.set_4_dataset(batch_size=1000)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
