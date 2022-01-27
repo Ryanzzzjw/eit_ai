@@ -2,7 +2,7 @@
 from logging import getLogger
 import os
 from tensorboard import program
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 from eit_ai.train_utils.metadata import MetaData
 from glob_utils.log.msg_trans  import highlight_msg

@@ -24,15 +24,15 @@ def std_pytorch_train_pipeline(path:str= ''):
     ws = PyTorchWorkspace()# Create a model generator
     ws.select_model_dataset(
         model_handler=ListPytorchModelHandlers.PytorchModelHandler,
-        dataset_handler=ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler,
-        model=ListPytorchModels.Conv1dNet,
+        dataset_handler=ListPytorchDatasetHandlers.StdPytorchDatasetHandler,
+        model=ListPytorchModels.StdPytorchModel,
         metadata=metadata)
 
     metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
     metadata._nb_samples = 10000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1000)
+    metadata.set_4_dataset(batch_size=100)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
@@ -51,6 +51,33 @@ def std_pytorch_train_pipeline(path:str= ''):
     # ws.run_training(metadata)
     # ws.save_model(metadata) 
     # metadata.save() # final saving
+def Conv1d_pytorch_train_pipeline(path:str= ''):
+    logger.info('### Start standard pytorch training ###')
+
+    metadata=MetaData()
+    ws = PyTorchWorkspace()# Create a model generator
+    ws.select_model_dataset(
+        model_handler=ListPytorchModelHandlers.PytorchModelHandler,
+        dataset_handler=ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler,
+        model=ListPytorchModels.Conv1dNet,
+        metadata=metadata)
+
+    metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
+    metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
+    metadata._nb_samples = 10000
+    raw_samples=load_samples(MatlabSamples(), path, metadata)
+    metadata.set_4_dataset(batch_size=50)
+    ws.build_dataset(raw_samples, metadata)
+
+    samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
+    plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
+        
+    metadata.set_4_model(epoch=10,
+                         metrics=['mse'], 
+                         optimizer=ListPyTorchOptimizers.Adam,
+                         callbacks=[run_tensorboard]
+                         )
+    build_train_save_model(ws, metadata)
     
 def build_train_save_model(ws:AiWorkspace, metadata:MetaData)-> tuple[AiWorkspace,MetaData]:
     ws.build_model(metadata) 
@@ -78,5 +105,6 @@ if __name__ == "__main__":
     else:
         path= ''
 
-    std_pytorch_train_pipeline(path=path)
+    # std_pytorch_train_pipeline(path=path)
+    Conv1d_pytorch_train_pipeline(path=path)
     plt.show()
