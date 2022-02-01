@@ -54,13 +54,14 @@ class TypicalPytorchModel(ABC):
         self.loss= loss
         
     def forward(self, x:torch.Tensor)-> torch.Tensor:
-        logger.debug(f'foward, {x.shape=}')
+        # logger.debug(f'foward, {x.shape=}')
         return self.net(x)
 
     def run_single_epoch(self, dataloader:DataLoader)->Any:
         logger.debug(f'run_single_epoch')
         for idx, data_i in enumerate(dataloader):
-            logger.debug(f'Batch #{idx}')
+            # logger.debug(f'Batch #{idx}')
+            size = len(dataloader.dataset)
             inputs, labels = data_i
             y_pred = self.forward(inputs)
             #loss
@@ -70,7 +71,10 @@ class TypicalPytorchModel(ABC):
             self.optimizer.zero_grad()
             loss_value.backward()
             self.optimizer.step()  #update
-            logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
+            
+            logger.info(f'Batch #{idx}: loss={loss_value.item():.6f}')
+
+            # logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
         return loss_value.item() 
 
     def get_name(self)->str:
@@ -95,12 +99,14 @@ class StdPytorchModel(TypicalPytorchModel):
     def _set_layers(self, metadata:MetaData)-> None:
         in_size=metadata.input_size
         out_size=metadata.output_size
-        self.name= "StdPytorchModel 2 dense layers (512) with relu"
+        self.name= "MLP with 3 layers"
         self.net = torch.nn.Sequential()
-        self.net.add_module('dense1', nn.Linear(in_size, 512))
+        self.net.add_module('dense1', nn.Linear(in_size, 1024))
         self.net.add_module('relu', nn.ReLU())
-        self.net.add_module('dense2', nn.Linear(512, out_size))
-        self.net.add_module('sigmoid', nn.Sigmoid())
+        self.net.add_module('dense2', nn.Linear(1024, 2048))
+        self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('dense4', nn.Linear(2048, out_size))
+        self.net.add_module('relu', nn.ReLU())
 
 class Conv1dNet(TypicalPytorchModel):
     
@@ -122,7 +128,7 @@ class Conv1dNet(TypicalPytorchModel):
         self.net.add_module('dense1', nn.Linear(512, 1024))
         self.net.add_module('relu', nn.ReLU())
         self.net.add_module('dense2', nn.Linear(1024, out_size))
-        self.net.add_module('sigmoid', nn.Sigmoid())
+        self.net.add_module('sigmoid', nn.ReLU())
         
     
 ################################################################################
@@ -154,7 +160,8 @@ class StdPytorchModelHandler(AiModelHandler):
         logger.info(f'Training - Started {metadata.epoch}')
         for epoch in range(metadata.epoch):
             loss= self.model.run_single_epoch(train_dataloader)
-            logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')
+            # logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')
+            logger.info(f'Epoch #{epoch+1}/{metadata.epoch}\n--------------------------')
             writer.add_scalar("training_loss", loss, epoch+1)   
 
     def predict(
@@ -248,7 +255,7 @@ def save_pytorch_model(net:nn.Module, dir_path:str='', save_summary:bool=False)-
         summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
         with open(summary_path, 'w') as f:
             with redirect_stdout(f):
-                summary(net, input_size=(6400, 256), device='cpu')
+                summary(net, input_size=(32000, 256), device='cpu')
         logger.info(f'pytorch model summary saved in: {summary_path}')
     
     return model_path
@@ -269,9 +276,9 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
         if metadata.model_type == 'Conv1dNet':
-            summary(net, input_size=(6400, 1, 256), device='cpu')
+            summary(net, input_size=(32000, 1, 256), device='cpu')
         else:
-            summary(net, input_size=(6400, 256), device='cpu')
+            summary(net, input_size=(32000, 256), device='cpu')
         return net
 
     except BaseException as e: 

@@ -28,17 +28,17 @@ def std_pytorch_train_pipeline(path:str= ''):
         model=ListPytorchModels.StdPytorchModel,
         metadata=metadata)
 
-    metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
-    metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
-    metadata._nb_samples = 10000
+    metadata.set_ouput_dir(training_name='MLP_PyTorch_test', append_date_time= True)
+    metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
+    metadata._nb_samples = 50000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=100)
+    metadata.set_4_dataset(batch_size=500)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
     plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
         
-    metadata.set_4_model(epoch=10,
+    metadata.set_4_model(epoch=100,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
                          callbacks=[run_tensorboard]
@@ -62,17 +62,17 @@ def Conv1d_pytorch_train_pipeline(path:str= ''):
         model=ListPytorchModels.Conv1dNet,
         metadata=metadata)
 
-    metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
-    metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
-    metadata._nb_samples = 10000
+    metadata.set_ouput_dir(training_name='Conv1d_PyTorch_test', append_date_time= True)
+    metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
+    metadata._nb_samples = 50000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=50)
+    metadata.set_4_dataset(batch_size=500)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
     plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
         
-    metadata.set_4_model(epoch=10,
+    metadata.set_4_model(epoch=100,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
                          callbacks=[run_tensorboard]
@@ -105,6 +105,6 @@ if __name__ == "__main__":
     else:
         path= ''
 
-    # std_pytorch_train_pipeline(path=path)
-    Conv1d_pytorch_train_pipeline(path=path)
+    std_pytorch_train_pipeline(path=path)
+    # Conv1d_pytorch_train_pipeline(path=path)
     plt.show()
