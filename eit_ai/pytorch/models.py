@@ -5,7 +5,7 @@ from logging import getLogger
 from typing import Any
 from contextlib import redirect_stdout
 # from setuptools_scm import meta
-# from torchinfo import summary
+from torchinfo import summary
 
 # from tensorboardX import SummaryWriter
 
@@ -162,7 +162,7 @@ class StdPytorchModelHandler(AiModelHandler):
             loss= self.model.run_single_epoch(train_dataloader)
             # logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')
             logger.info(f'Epoch #{epoch+1}/{metadata.epoch}\n--------------------------')
-            writer.add_scalar("training_loss", loss, epoch+1)   
+            #writer.add_scalar("training_loss", loss, epoch+1)   
 
     def predict(
         self,
@@ -250,7 +250,7 @@ def save_pytorch_model(net:nn.Module, dir_path:str='', save_summary:bool=False)-
 
     logger.info(f'PyTorch model saved in: {model_path}')
 
-    # if save_summary:
+    if save_summary:
     
         summary_path= os.path.join(dir_path, MODEL_SUMMARY_FILENAME)
         with open(summary_path, 'w') as f:
