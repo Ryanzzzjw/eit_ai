@@ -72,7 +72,7 @@ class TypicalPytorchModel(ABC):
             loss_value.backward()
             self.optimizer.step()  #update
             
-            logger.info(f'Batch #{idx}: loss={loss_value.item():.6f}')
+            logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
 
             # logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
         return loss_value.item() 
@@ -107,6 +107,7 @@ class StdPytorchModel(TypicalPytorchModel):
         self.net.add_module('relu', nn.ReLU())
         self.net.add_module('dense4', nn.Linear(2048, out_size))
         self.net.add_module('relu', nn.ReLU())
+        self.net.to(device=0)
 
 class Conv1dNet(TypicalPytorchModel):
     
@@ -137,6 +138,10 @@ class Conv1dNet(TypicalPytorchModel):
 class StdPytorchModelHandler(AiModelHandler):
 
     def _define_model(self, metadata:MetaData)-> None:
+
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        logger.info(f"Device Cuda: {device}")
+
         model_cls=get_from_dict(
             metadata.model_type, PYTORCH_MODELS, ListPytorchModels)
         self.model=model_cls(metadata)

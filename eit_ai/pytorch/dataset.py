@@ -64,7 +64,8 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
         Returns:
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
-        return torch.Tensor(self.X[idx]).float(), torch.Tensor(self.Y[idx]).float()
+        x,y= torch.Tensor(self.X[idx]).float(), torch.Tensor(self.Y[idx]).float()
+        return x.to(device=0),y.to(device=0)
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ return X and Y separately.
@@ -115,7 +116,8 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
         Returns:
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
-        return torch.Tensor(self.X_conv[idx]).float(), torch.Tensor(self.Y[idx]).float()
+        x,y= torch.Tensor(self.X_conv[idx]).float(), torch.Tensor(self.Y[idx]).float()
+        return x.to(device=0),y.to(device=0)
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ return X and Y separately.
