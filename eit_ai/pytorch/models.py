@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any
 from contextlib import redirect_stdout
-# from setuptools_scm import meta
 from torchinfo import summary
 
 # from tensorboardX import SummaryWriter
@@ -101,12 +100,14 @@ class StdPytorchModel(TypicalPytorchModel):
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
         self.net = torch.nn.Sequential()
-        self.net.add_module('dense1', nn.Linear(in_size, 1024))
+        self.net.add_module('dense1', nn.Linear(in_size, 512))
         self.net.add_module('relu', nn.ReLU())
-        self.net.add_module('dense2', nn.Linear(1024, 2048))
+        self.net.add_module('dense2', nn.Linear(512, 512))
         self.net.add_module('relu', nn.ReLU())
-        self.net.add_module('dense4', nn.Linear(2048, out_size))
+        self.net.add_module('dense2', nn.Linear(512, 1024))
         self.net.add_module('relu', nn.ReLU())
+        self.net.add_module('dense4', nn.Linear(1024, out_size))
+        self.net.add_module('relu', nn.Sigmoid())
         self.net.to(device=0)
 
 class Conv1dNet(TypicalPytorchModel):
@@ -126,10 +127,12 @@ class Conv1dNet(TypicalPytorchModel):
         self.net.add_module('relu', nn.ReLU())
         self.net.add_module('pool3', nn.MaxPool1d(kernel_size=2, stride=2))
         self.net.add_module('flatten', nn.Flatten())
-        self.net.add_module('dense1', nn.Linear(512, 1024))
+        self.net.add_module('dense1', nn.Linear(512, 512))
         self.net.add_module('relu', nn.ReLU())
-        self.net.add_module('dense2', nn.Linear(1024, out_size))
-        self.net.add_module('sigmoid', nn.ReLU())
+        self.net.add_module('dense2', nn.Linear(512, out_size))
+        self.net.add_module('sigmoid', nn.Sigmoid())
+        self.net.to(device=0)
+        
         
     
 ################################################################################
@@ -281,9 +284,9 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
         if metadata.model_type == 'Conv1dNet':
-            summary(net, input_size=(32000, 1, 256), device='cpu')
+            summary(net, input_size=(metadata.batch_size, 1, 256), device='cpu')
         else:
-            summary(net, input_size=(32000, 256), device='cpu')
+            summary(net, input_size=(metadata.batch_size, 256), device='cpu')
         return net
 
     except BaseException as e: 
