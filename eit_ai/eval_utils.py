@@ -1,3 +1,4 @@
+from random import random
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from logging import getLogger
@@ -36,30 +37,15 @@ def EIT_mse(y_true, y_pred):
 
 def EIT_rie(y_true, y_pred):
     return np.linalg.norm(y_true-y_pred,axis=0)/np.linalg.norm(y_true,axis=0)
-
-# def metrix_rie(y_true, y_pred):    
-#     return K.sqrt(K.sum(K.pow(K.abs(y_true-y_pred),2))/K.sum(K.pow(K.abs(y_pred),2)))
-
-# def metrix_re(y_true, y_pred):
-#     """Relative error
-
-#     Args:
-#         y_true ([type]): [description]
-#         y_pred ([type]): [description]
-
-#     Returns:
-#         [type]: [description]
-#     """
     
-#     return K.sqrt(K.sum(K.square(y_true-y_pred))/K.sum(K.square(y_pred)))
-    
-
 def EIT_icc(y_true, y_pred):
+    # y_pred=np.random.rand(100,3054).T
+    # logger.debug(f'ICC_matrix = {y_true.shape} {y_pred.shape}')
     icc_matrix = np.corrcoef(y_true, y_pred,rowvar=False) #(Image) Correlation Coefficient (ICC)
     logger.debug(f'ICC_matrix = {icc_matrix}, {icc_matrix.shape}')
     nb_samples=y_true.shape[1]
-    I=np.eye(nb_samples)
-    return np.diag(icc_matrix[:nb_samples,nb_samples:]*I)
+    # I=np.eye(nb_samples)
+    return np.diag(icc_matrix[:nb_samples,nb_samples:])
 
 def normalized(y_true, y_pred):
 
@@ -136,11 +122,11 @@ def trunc_img_data_nb_samples(image_data:list[ImageDataset], max_nb:int=None)-> 
 
 
 if __name__ == "__main__":
-    from eit_ai.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
 
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
 
     a= None
     print(1 if isinstance(a, int) and a>12 else None)

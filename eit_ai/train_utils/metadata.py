@@ -1,16 +1,27 @@
-
+from enum import Enum
+import os
+import sys
 from dataclasses import dataclass
 from logging import error, getLogger
-import sys
-from typing import List
+from typing import Union
 
-import eit_ai.constants as const
-from eit_ai.train_utils.lists import ListDatasets, ListGenerators, ListLosses, ListModels, ListOptimizers
-from eit_ai.utils.path_utils import *
-from eit_ai.utils.log import log_msg_highlight
-from scipy.io.matlab.mio import savemat
+from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
+from eit_ai.train_utils.lists import (ListDatasetHandlers, ListModels, ListWorkspaces, ListLosses,
+                                      ListModelHandlers, ListOptimizers,ListNormalizations)
+from glob_utils.files.files import (FileExt, find_file, is_file, read_txt,
+                                    save_as_mat, save_as_pickle, save_as_txt, )
+from glob_utils.log.msg_trans import highlight_msg
+from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
+                                       get_datetime_s, get_dir, get_POSIX_path,
+                                       mk_new_dir)
+
+# from glob_utils.pth.inout_dir import DEFAULT_DIRS
+
 
 logger = getLogger(__name__)
+
+METADATA_FILENAME= f'metadata{FileExt.txt}'
+IDX_FILENAME= 'idx_samples'
 
 ################################################################################
 # Class MetaData
@@ -21,7 +32,7 @@ class MetaData(object):
     for the training and eval"""
     time:str=None
     training_name:str=None
-    ouput_dir:str=None
+    dir_path:str=None
 
     raw_src_file:list[str]=None
     # dataset_src_file_pkl:List[str]=None
@@ -52,15 +63,18 @@ class MetaData(object):
     learning_rate:float= None
     loss:str= None
     metrics:list[str]= None
+    specific_data:dict=None # use to pass specific data depending on the training
 
     training_duration:str=None
-    gen_type:ListGenerators=None
+    workspace:ListWorkspaces=None
+    model_handler:ListModelHandlers=None
     model_type:ListModels=None
-    dataset_type:ListDatasets=None
+    dataset_handler:ListDatasetHandlers=None
 
     def __post_init__(self):
+        set_ai_default_dir()
         self.set_idx_samples(save=False)
-    
+        self.specific_data={}
     def set_ouput_dir(self, training_name:str='', append_date_time:bool= True) -> None:
         """Create the ouput directory for training results
 
@@ -69,31 +83,62 @@ class MetaData(object):
             append_date_time (bool, optional): Defaults to True.
         """
 
-        self.time = get_date_time()
+        self.time = get_datetime_s()
         if not training_name:
             training_name='training_default_name'
         self.training_name= f'{training_name}_{self.time}' if append_date_time else training_name
-        self.ouput_dir= mk_ouput_dir(
+        self.dir_path= mk_new_dir(
             self.training_name,
-            default_out_dir=const.DEFAULT_OUTPUTS_DIR)
-        msg=f'Training results will be found in : {self.ouput_dir}'
-        logger.info(log_msg_highlight(msg))
+            parent_dir=AI_DIRS.get(AiDirs.ai_models.value))
+        msg=f'Training results will be found in : {self.dir_path}'
+        logger.info(highlight_msg(msg))
 
-    def set_model_dataset_type(self, gen_type:ListGenerators, model_type:ListModels, dataset_type:ListDatasets):
+    def set_specific_data(self, data:dict=None):
+        if not isinstance(data, dict):
+            logger.error(f'{data=} should be a dictionnary')
+        
+        self.specific_data = {**self.specific_data, **data}
+
+    def set_model_dataset_type(
+        self, 
+        workspace:ListWorkspaces, 
+        model_handler:ListModelHandlers, 
+        dataset_handler:ListDatasetHandlers,
+        model_type: ListModels):
         """"""
-        self.gen_type= gen_type.value
-        self.model_type= model_type.value
-        self.dataset_type= dataset_type.value
+
+        self.workspace= workspace.value
+        self.model_handler= model_handler.value
+        self.dataset_handler= dataset_handler.value
+        self.model_type=model_type.value
 
     def set_4_dataset(  
             self, 
-            batch_size:int=32, test_ratio:float=0.2, val_ratio:float=0.2, 
+            batch_size:int=32,
+            test_ratio:float=0.2,
+            val_ratio:float=0.2, 
             # use_tf_dataset:bool=False, 
-            normalize= [True, True]):
+            #normalize:list[Union[str, Enum]]= ['', '']
+            normalize:list[bool]= [True, True])->None:
         """ """             
         self.batch_size = batch_size
         self.val_ratio, self.test_ratio =check_ratios(val_ratio, test_ratio)
-        self.normalize=normalize 
+        
+        self.set_normalize(normalize)
+
+    def set_normalize(self, normalize:list[Union[str, Enum]]= ['', '']) -> None:
+        
+        if not isinstance(normalize, list) or len(normalize) != 2:
+            raise ValueError(f'{normalize=} is not a list with 2 elements')
+        self.normalize=[ListNormalizations.Identity.name for _ in range(2)]
+        for i, norm in enumerate(normalize):
+            if isinstance(norm, str) and norm in ListNormalizations.list_keys_name():
+                self.normalize[i]=norm
+            elif isinstance(norm, ListNormalizations):
+                self.normalize[i]=norm.name
+            elif isinstance(norm, bool): # back compatibility
+                self.normalize[i]=norm
+        logger.info(f'Normalize has been set to {self.normalize}')
 
     def set_4_model(   
             self,
@@ -123,9 +168,10 @@ class MetaData(object):
         self._test_steps=compute_steps(self.batch_size, self._test_len)
 
     def set_raw_src_file(self, src_file):
-        self.raw_src_file=make_PoSIX_abs_rel(src_file, self.ouput_dir)
+        self.raw_src_file=make_PoSIX_abs_rel(src_file, self.dir_path)
+        
     def set_model_saving_path(self, model_saving_path):
-        self.model_saving_path=make_PoSIX_abs_rel(model_saving_path, self.ouput_dir)
+        self.model_saving_path=make_PoSIX_abs_rel(model_saving_path, self.dir_path)
 
     def set_idx_samples(self, idx_train:list=[], idx_val:list=[], idx_test:list=[], save:bool=True):
         self.idx_samples={
@@ -134,7 +180,7 @@ class MetaData(object):
             'idx_test': idx_test
         }
         if save:
-            self.save_idx_samples_2matfile()
+            self.save_idx_samples()
 
     def get_idx_samples(self):
         return [
@@ -144,16 +190,16 @@ class MetaData(object):
         ] 
 
     def set_idx_samples_file(self, path):
-        self.idx_samples_file=make_PoSIX_abs_rel(path, self.ouput_dir)
+        self.idx_samples_file=make_PoSIX_abs_rel(path, self.dir_path)
 
-    def save_idx_samples_2matfile(self):
+    def save_idx_samples(self):
         """ save the indexes of the samples used to build 
         the dataset train, val and test """
 
         indexes = self.idx_samples
-        time = self.time or get_date_time()
-        path =  os.path.join(self.ouput_dir, f'{time}_{const.EXT_IDX_FILE}')
-        savemat(path, indexes)
+        time = self.time or get_datetime_s()
+        path =  os.path.join(self.dir_path, f'{IDX_FILENAME}_{time}')
+        save_as_mat(path, indexes)
         save_as_pickle(path, indexes)
         save_as_txt(path,indexes)
         self.set_idx_samples_file(path)
@@ -166,10 +212,10 @@ class MetaData(object):
 
     def save(self, dir_path= None):
 
-        if not self.ouput_dir:
+        if not self.dir_path:
             return
-        dir_path = dir_path or self.ouput_dir
-        filename=os.path.join(dir_path,const.METADATA_FILENAME)
+        dir_path = dir_path or self.dir_path
+        filename=os.path.join(dir_path,METADATA_FILENAME)
         copy=MetaData()
         for key, val in self.__dict__.items():
             if hasattr(val, '__dict__'):
@@ -185,7 +231,7 @@ class MetaData(object):
             else:
                 setattr(copy, key, val)
         save_as_txt(filename, copy)
-        logger.info(log_msg_highlight(f'Metadata saved in: {filename}'))
+        logger.info(highlight_msg(f'Metadata saved in: {filename}'))
         
         
     def read(self, path):
@@ -195,21 +241,44 @@ class MetaData(object):
             if key in self.__dict__.keys():
                 setattr(self,key, load_dict[key])
 
-        logger.info(log_msg_highlight(f'Metadata loaded from: {path}, '))
+        logger.info(highlight_msg(f'Metadata loaded from: {path}, '))
         logger.info(f'Metadata loaded :\n{self.__dict__.keys()}')
         logger.debug(f'Metadata loaded (details):\n{self.__dict__}')
+        self.dir_path=os.path.split(path)[0]
+        self.check_raw_src_file()
+        
+
+    def check_raw_src_file(self)->None:
+
+        if is_file(self.raw_src_file[0]) or is_file(self.raw_src_file[1]):
+            return
+
+        file_name = os.path.split(self.raw_src_file[0])[1]
+        try:
+            files_paths= find_file(file_name,AI_DIRS.get(AiDirs.matlab_datasets.value))
+            self.raw_src_file=make_PoSIX_abs_rel(files_paths[0], self.dir_path)
+            logger.info(f'Raw src file has been set to "{files_paths[0]}"')
+        except FileNotFoundError as e:
+            logger.info(f'raw src file not found it have to selected by user({e})')
 
     def reload(self, dir_path:str=''):
 
         if not os.path.isdir(dir_path):
             title= 'Select directory of model to evaluate'
             try: 
-                dir_path=get_dir(title=title)
-            except DialogCancelledException as e:
+                dir_path=get_dir(
+                    title=title,
+                    initialdir=AI_DIRS.get(AiDirs.ai_models.value)
+                )
+            except OpenDialogDirCancelledException as e:
                 logger.critical('User cancelled the loading')
                 sys.exit()
-            
-        self.read(os.path.join(dir_path,const.METADATA_FILENAME))
+        try:   
+            self.read(os.path.join(dir_path,METADATA_FILENAME))
+        except FileNotFoundError as e:
+            logger.critical(f'File "{METADATA_FILENAME}" not found in folder:\n{dir_path}\n({e})')
+            sys.exit()
+
 
 ################################################################################
 # Methods
@@ -251,12 +320,18 @@ def reload_metadata(dir_path:str='')-> MetaData:
 
 
 if __name__ == "__main__":
-    from eit_ai.utils.log import change_level, main_log
     import logging
+
+    from glob_utils.log.log import change_level_logging, main_log
     main_log()
-    change_level(logging.DEBUG)
-    a= MetaData()
-    a.reload()
+    change_level_logging(logging.DEBUG)
+    # a= MetaData()
+    # a.reload()
+
+    x = {}
+    y = {'b': 10, 'c': 11}
+    print({**x, **y})
+
     
 
 

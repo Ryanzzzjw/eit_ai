@@ -4,18 +4,18 @@ import os
 from tensorboard import program
 from tensorflow.keras.callbacks import TensorBoard
 
-import eit_ai.constants as const
 from eit_ai.train_utils.metadata import MetaData
+from glob_utils.log.msg_trans  import highlight_msg
 
 logger = getLogger(__name__)
 
+TENSORBOARD_LOG_FOLDER ='log'
 
 def mk_callback_tensorboard(metadata:MetaData):
 
-    log_path= os.path.join(metadata.ouput_dir,const.TENSORBOARD_LOG_FOLDER)
+    log_path= os.path.join(metadata.dir_path,TENSORBOARD_LOG_FOLDER)
     tensorboard = TensorBoard(log_dir= log_path)
     log_tensorboard(log_path)
-
     return tensorboard
 
 def log_tensorboard(log_path:str):
@@ -24,14 +24,14 @@ def log_tensorboard(log_path:str):
     tb = program.TensorBoard()
     tb.configure(argv=[None, '--logdir', tracking_address])
     url = tb.launch()
-    print(f"\n######################################\nTensorflow listening on {url}\n######################################\n")
+    logger.info(highlight_msg(f'Tensorflow listening on {url}'))
 
 
 
 
 if __name__ == "__main__":
-    from eit_ai.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
 

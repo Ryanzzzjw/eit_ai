@@ -47,6 +47,8 @@ def format_inputs(fwd_model, data):
         pts = np.array(fwd_model['nodes'])
         if data.shape[1]==pts.shape[0] or data.shape[1]==tri.shape[0]:
             data= data.T
+    # if data.ndim==3:
+    #     data = np.reshape(data,(1, 256))
     return data
 
 def plot_EIT_samples(fwd_model, perm, U):
@@ -143,14 +145,20 @@ def plot_compare_samples(
         return
     
     idx_list= generate_nb_samples2plot(image_data, nb_samples, rand)
+    logger.debug(f'{idx_list=}, {idx_list.__len__()=}')
     img2plot= [ImageDataset(id.data[idx_list,:], id.label, id.fwd_model) for id in image_data]
 
     n_img= len(img2plot)
     n_samples= len(idx_list)
 
-    n_row, n_col= orient_swap(orient, n_samples, n_img)
 
-    fig, ax = plt.subplots(n_row,n_col)
+    n_row, n_col= orient_swap(orient, n_samples, n_img)
+    if n_row==1:
+        fig, ax = plt.subplots(n_row+1,n_col)
+    elif n_col==1:
+        fig, ax = plt.subplots(n_row,n_col+1)
+    else:
+        fig, ax = plt.subplots(n_row,n_col)
 
     for row in range(n_row):
         for col in range(n_col):
@@ -218,8 +226,8 @@ def plot_EIT_mesh(fig:figure.Figure, ax:axes.Axes, image:ImageEIT, show:list[boo
         fig.colorbar(im,ax=ax)
     return fig, ax, im
     
-    
 
+   
 def generate_nb_samples2plot(
         image_data:list[ImageDataset],
         nb_samples:Union[int,list[int]]=3,
@@ -240,9 +248,13 @@ def generate_nb_samples2plot(
         if nb_samples==0:
             nb_samples=1
         if nb_samples>nb_samples_total:
-            return None
+            logger.error(f'List of indexes : {nb_samples=}>{nb_samples_total=}')
+            nb_samples=1
+
         if rand:
             return random.sample(range(nb_samples_total), nb_samples)
+        else:
+            nb_samples_total=nb_samples
         return range(nb_samples_total)
 
 
@@ -269,10 +281,10 @@ def plot_eval_results(results:list[EvalResults], axis='linear', plot_type=None):
     plt.show(block=False)
     
 if __name__ == "__main__":
-    from eit_ai.utils.log import change_level, main_log
+    from glob_utils.log.log  import change_level_logging, main_log
     import logging
     main_log()
-    change_level(logging.DEBUG)
+    change_level_logging(logging.DEBUG)
 
     print()
     print([True for _ in range(4)])
