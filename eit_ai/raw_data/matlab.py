@@ -12,6 +12,8 @@ from glob_utils.files.files import (FileExt, OpenDialogFileCancelledException,
                                     WrongFileExtError, NotFileError, check_file,
                                     dialog_get_file_with_ext, load_mat)
 
+import glob_utils.args.kwargs
+
 logger = getLogger(__name__)
 
 ################################################################################
@@ -99,10 +101,12 @@ class MatlabSamples(RawSamples):
             file_path (str): mat-file ending with *info2py.mat
         """
         #loading dataset mat-file
+        ## todo: test if file exist if not look in the in matlab AI_DIRS.get(AiDirs.matlab_datasets)
         var_dict, file_path= load_mat_file(
             file_path=file_path,
             title= 'Please select *infos2py.mat-files from a matlab dataset',
-            file_types=[(f"*infos2py.mat-files",f"*infos2py.mat")])
+            file_types=[(f"*infos2py.mat-files",f"*infos2py.mat")],
+            initialdir= AI_DIRS.get(AiDirs.matlab_datasets))
         self.file_path= file_path
         self.dir_path = os.path.split(file_path)[0]
 
@@ -370,10 +374,13 @@ def load_mat_file(file_path:str=None,**kwargs)-> tuple[dict, str]:
         tuple[dict, str]: variables dict and file path
     """   
 
+    initialdir= glob_utils.args.kwargs.kwargs_extract(
+        kwargs, key= 'initialdir', default_value=None)    
+
     if check_file(file_path,ext=FileExt.mat) is None:
         file_path= dialog_get_file_with_ext(
             ext=FileExt.mat,
-            initialdir=AI_DIRS.get(AiDirs.matlab_datasets.value),
+            initialdir=initialdir,
             **kwargs)
     var_dict= load_mat(file_path)
     return var_dict, file_path

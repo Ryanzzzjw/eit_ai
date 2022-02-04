@@ -49,6 +49,39 @@ def load_eidors_solution(
 
     return pred_eidors
 
+
+
+
+def load_mat_var(
+    initialdir:str=None, 
+    var_name:str= 'elem_data')->list[list[ndarray,str]]:
+
+    """Load EIDORS solutions, which are stored in mat-files under the 
+    variable key "elem-data",
+
+    up to 5 solution can be loaded
+    TODO add vaname as a list....
+    Args:
+        metadata (MetaData): metadata from AI workspace
+        initialdir (str, optional): directory for Open Dilaog Box. 
+        Defaults to `None` (will be set to cwd).
+        var_name (str, optional): variable key. Defaults to 'elem_data'.
+
+    Returns:
+        list[list[ndarray,str]]: List of (loaded eidors solution, file_name),
+        loaded eidors solution is an array like (nb_samples, feature)
+    """    
+    pred_eidors=[]
+    try: 
+        title= f'Select {FileExt.mat}-file '
+        pred, file_path=load_mat_file(initialdir=initialdir, title=title)
+        file_name= os.path.splitext(os.path.split(file_path)[1])[0]   
+        pred_eidors.append([pred[var_name], file_name])
+    except OpenDialogFileCancelledException as e :
+        logger.info(f'Loading eidors cancelled : ({e})')
+
+    return pred_eidors
+
                                                                                 
 if __name__ == "__main__":
     from glob_utils.log.log  import change_level_logging, main_log
