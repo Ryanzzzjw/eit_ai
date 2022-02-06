@@ -15,7 +15,6 @@ from glob_utils.files.files import (FileExt, find_file, is_file, read_txt,
 from logging import getLogger
 
 logger = getLogger(__name__)
-METRICS_FILENAME= f'metrics{FileExt.txt}'
 
 def eval_pipeline(dir_path:str=''):
     logger.info('### Start standard evaluation ###')
@@ -47,7 +46,7 @@ def eval_pipeline(dir_path:str=''):
     img_data = trunc_img_data_nb_samples(img_data, max_nb=100) 
     results = compute_eval(img_data)
     
-    save_metric(results[0].indicators, dir_path=dir_path)
+    results[0].save(file_path='C:/Users/ryanzzzjw/Desktop/eit_ai/metrics_result')
     # print(results[0].indicators['mse'])
     
     plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Portrait)
@@ -55,10 +54,6 @@ def eval_pipeline(dir_path:str=''):
     # plot_real_NN_EIDORS(gen.getattr_dataset('fwd_model'), true_img_data[randnlist,:].T, nn_img_data[randnlist,:].T)
     plot_eval_results(results, axis='linear')
 
-def save_metric(res: dict, dir_path:str=''):
-    metrics = list(res.items())  
-    path = os.path.join(dir_path, f'{METRICS_FILENAME}')
-    save_as_txt(path, metrics)
 
 def test_single_predict(dir_path:str=''):
     logger.info('### Start standard evaluation ###')

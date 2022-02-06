@@ -131,6 +131,7 @@ dmypy.json
 
 # eit_ai specific
 _test_scripts
+metrics_result
 datasets
 outputs
 *default_dirs.txt
