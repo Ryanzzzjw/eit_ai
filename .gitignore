@@ -133,6 +133,7 @@ dmypy.json
 _test_scripts
 datasets
 outputs
+metrics_result
 *default_dirs.txt
 runs
 .vscode/
