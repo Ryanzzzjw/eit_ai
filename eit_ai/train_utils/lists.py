@@ -105,7 +105,7 @@ class ListKerasLosses(ListLosses):
     CategoricalCrossentropy='CategoricalCrossentropy'
 
 class ListPyTorchLosses(ListLosses):
-    # MSELoss='MSELoss'
+    MSELoss='MSELoss'
     CrossEntropyLoss='CrossEntropyLoss'
 
 

@@ -22,7 +22,7 @@ PYTORCH_OPTIMIZER={
 """
 
 PYTORCH_LOSS={
-    # ListPyTorchLosses.MSELoss: nn.MSELoss,
+    ListPyTorchLosses.MSELoss: nn.MSELoss,
     ListPyTorchLosses.CrossEntropyLoss: nn.CrossEntropyLoss,
 }
 

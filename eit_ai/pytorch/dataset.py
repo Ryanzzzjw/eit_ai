@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 import sklearn.model_selection
 from eit_ai.train_utils.dataset import (AiDataset, StdAiDatasetHandler, convert_vec_to_int,
-                                        scale_prepocess)
+                                        scale_preprocess)
 from eit_ai.train_utils.lists import ListPytorchDatasetHandlers
 from eit_ai.train_utils.metadata import MetaData
 from sklearn import model_selection
@@ -146,7 +146,7 @@ class DataloaderGenerator(object):
         Returns:
             torch.utils.data.DataLoader: [description]
         """        
-        return DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0)
+        return DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0,drop_last=True)
     
     
 

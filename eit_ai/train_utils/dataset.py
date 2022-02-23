@@ -287,15 +287,15 @@ def scale_preprocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
             Transformed array.
     """    
     if scale:
-        # scaler = MinMaxScaler()
-        scaler = MaxAbsScaler()
+        scaler = MinMaxScaler()
+        # scaler = MaxAbsScaler()
         x= scaler.fit_transform(x.T).T if x is not None else None
         # logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
     return x
 ################################################################################
 # Preprocessing methods
 ################################################################################
-def _prepocess_identity(x:np.ndarray)->np.ndarray:
+def _preprocess_identity(x:np.ndarray)->np.ndarray:
     """Preprocessing returning indentity of x  
     
     Args:
@@ -382,7 +382,7 @@ def preprocess_guard(x:np.ndarray)->np.ndarray:
     return x
 
 NORMALIZATIONS={
-    ListNormalizations.Identity:_prepocess_identity,
+    ListNormalizations.Identity:_preprocess_identity,
     ListNormalizations.MinMax_01:_preprocess_minmax_01,
     ListNormalizations.MinMax_11:_preprocess_minmax_11,
     ListNormalizations.Norm:_preprocess_zscore

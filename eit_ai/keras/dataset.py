@@ -6,7 +6,7 @@ from logging import getLogger
 import numpy as np
 import tensorflow as tf
 from eit_ai.train_utils.dataset import (AiDatasetHandler, StdAiDatasetHandler,
-                                          scale_prepocess)
+                                          scale_preprocess)
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.lists import ListKerasDatasetHandlers
 from sklearn.preprocessing import MinMaxScaler

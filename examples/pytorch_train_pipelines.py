@@ -40,7 +40,8 @@ def std_pytorch_train_pipeline(path:str= ''):
     metadata.set_4_model(epoch=100,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
-                         callbacks=[run_tensorboard]
+                         loss=ListPyTorchLosses.CrossEntropyLoss,
+                        #  callbacks=[run_tensorboard]
                          )
     build_train_save_model(ws, metadata)
 
@@ -94,7 +95,7 @@ if __name__ == "__main__":
 
     from glob_utils.log.log import change_level_logging, main_log
     main_log()
-    change_level_logging(logging.INFO)
+    change_level_logging(logging.DEBUG)
 
     debug=True
 

@@ -5,7 +5,7 @@ from typing import Any
 from contextlib import redirect_stdout
 from torchinfo import summary
 
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 import torch
@@ -27,7 +27,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 logger = getLogger(__name__)
-writer = SummaryWriter()
+# writer = SummaryWriter()
 
 class TypicalPytorchModel(ABC):
     """Define a standard pytorch Model
@@ -56,14 +56,15 @@ class TypicalPytorchModel(ABC):
         return self.net(x)
 
     def run_single_epoch(self, dataloader:DataLoader)->Any:
-        logger.debug(f'run_single_epoch')
+        self.net.train()
+        # logger.debug(f'run_single_epoch')
         for idx, data_i in enumerate(dataloader):
             # logger.debug(f'Batch #{idx}')
             # size = len(dataloader.dataset)
             inputs, labels = data_i
             inputs = inputs.to(device=0)
             labels = labels.to(device=0)
-            y_pred = self.forward(inputs)
+            y_pred = self.net(inputs)
             #loss
             loss_value = self.loss(y_pred, labels)
             
@@ -72,9 +73,9 @@ class TypicalPytorchModel(ABC):
             loss_value.backward()
             self.optimizer.step()  #update
             
-            logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
-
             # logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
+
+        logger.info(f'loss={loss_value.item():.6f}\n--------------------------')
         return loss_value.item() 
 
     def get_name(self)->str:
@@ -92,7 +93,7 @@ class TypicalPytorchModel(ABC):
         """[summary]
         predict the new x
         """
-        return self.forward(torch.Tensor(x_pred)).detach().numpy()
+        return self.net(torch.Tensor(x_pred)).detach().numpy()
 
 class StdPytorchModel(TypicalPytorchModel):
 
@@ -100,13 +101,13 @@ class StdPytorchModel(TypicalPytorchModel):
         in_size=metadata.input_size
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
-        self.net = nn.Sequential(nn.Linear(in_size, 400),
+        self.net = nn.Sequential(nn.Linear(in_size,512),
                                 nn.ReLU(),
-                                nn.Linear(400, 400),
+                                nn.Dropout(0.2),
+                                nn.Linear(512, 512),
                                 nn.ReLU(),
-                                nn.Linear(400, 400),
-                                nn.ReLU(),
-                                nn.Linear(400, out_size),
+                                nn.Dropout(0.5),
+                                nn.Linear(512, out_size),
                                 nn.Sigmoid()
                                 )
         # self.net.add_module('dense1', nn.Linear(in_size, 512))
@@ -178,9 +179,9 @@ class StdPytorchModelHandler(AiModelHandler):
         for epoch in range(metadata.epoch):
             loss= self.model.run_single_epoch(train_dataloader)
             # logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')
-            logger.info(f'Epoch #{epoch+1}/{metadata.epoch}\n--------------------------')
-            writer.add_scalar("training_loss", loss, epoch+1)
-            writer.close()   
+            logger.info(f'Epoch #{epoch+1}/{metadata.epoch}')
+            # writer.add_scalar("training_loss", loss, epoch+1)
+            # writer.close()   
 
     def predict(
         self,
@@ -247,7 +248,7 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
         return op_cls(net.parameters(), lr= metadata.learning_rate)
     
     logger.warning('Learningrate has been set to 0.001!!!')
-    return op_cls(net.parameters(), lr=0.001)
+    return op_cls(net.parameters(), lr=0.0001)
         
 
 def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:
@@ -297,7 +298,7 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
             summary(net, input_size=(metadata.batch_size, 1, 256), device='cpu')
         else:
             summary(net, input_size=(metadata.batch_size, 256), device='cpu')
-        return net
+        return net.eval()
 
     except BaseException as e: 
         logger.error(f'Loading of model from dir: {model_path} - Failed'\

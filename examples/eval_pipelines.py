@@ -46,11 +46,11 @@ def eval_pipeline(dir_path:str=''):
     img_data = trunc_img_data_nb_samples(img_data, max_nb=100) 
     results = compute_eval(img_data)
     
-    results[0].save(file_path='C:/Users/ryanzzzjw/Desktop/eit_ai/metrics_result')
+    # results[0].save(file_path='C:/Users/ryanzzzjw/Desktop/eit_ai/metrics_result')
     # print(results[0].indicators['mse'])
     
-    plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Portrait)
-    # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
+    # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Portrait)
+    plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
     # plot_real_NN_EIDORS(gen.getattr_dataset('fwd_model'), true_img_data[randnlist,:].T, nn_img_data[randnlist,:].T)
     plot_eval_results(results, axis='linear')
 
