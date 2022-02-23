@@ -43,7 +43,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             raise TypeError(
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
-        self.X = x
+        self.X = -x
         self.Y = y
 
     def __len__(self):
@@ -65,7 +65,8 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
         x,y= torch.Tensor(self.X[idx]).float(), torch.Tensor(self.Y[idx]).float()
-        return x.to(device=0),y.to(device=0)
+        # return x.to(device=0),y.to(device=0)
+        return x, y
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ return X and Y separately.
@@ -95,7 +96,7 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
         self.X = x
-        self.X_conv= reshape_4_1Dconv(x) # special reshape for conv Ai
+        self.X_conv= reshape_4_1Dconv(-x) # special reshape for conv Ai
         self.Y = y
 
     def __len__(self):
@@ -117,7 +118,8 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
         x,y= torch.Tensor(self.X_conv[idx]).float(), torch.Tensor(self.Y[idx]).float()
-        return x.to(device=0),y.to(device=0)
+        return x, y
+        # return x.to(device=0),y.to(device=0)
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ return X and Y separately.

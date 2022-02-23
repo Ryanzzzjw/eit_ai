@@ -10,7 +10,7 @@ from eit_ai.raw_data.raw_samples import RawSamples
 from eit_ai.train_utils.lists import ListNormalizations, get_from_dict
 from eit_ai.train_utils.metadata import MetaData
 from scipy.stats import zscore
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MaxAbsScaler, MinMaxScaler
 
 logger = getLogger(__name__)
 ################################################################################
@@ -223,8 +223,8 @@ class StdAiDatasetHandler(AiDatasetHandler):
         )->tuple[Union[np.ndarray,None],Union[np.ndarray,None]]:
         """return X, Y preprocessed"""
         if isinstance(metadata.normalize[0], bool):
-            X=scale_prepocess(X, metadata.normalize[0])
-            Y=scale_prepocess(Y, metadata.normalize[1])
+            X=scale_preprocess(X, metadata.normalize[0])
+            Y=scale_preprocess(Y, metadata.normalize[1])
         else:
             X= get_from_dict(
                 metadata.normalize[0],NORMALIZATIONS,ListNormalizations)(X)
@@ -273,7 +273,7 @@ def convert_to_int(x:Any)->int:
 
 convert_vec_to_int = np.vectorize(convert_to_int)
 
-def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
+def scale_preprocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
     """Normalize input x using minMaxScaler 
     Attention: if x.shape is (1,n) it wont work
 
@@ -287,7 +287,8 @@ def scale_prepocess(x:np.ndarray, scale:bool=True)->Union[np.ndarray,None]:
             Transformed array.
     """    
     if scale:
-        scaler = MinMaxScaler()
+        # scaler = MinMaxScaler()
+        scaler = MaxAbsScaler()
         x= scaler.fit_transform(x.T).T if x is not None else None
         # logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
     return x
@@ -308,7 +309,7 @@ def _prepocess_identity(x:np.ndarray)->np.ndarray:
     x= preprocess_guard(x)
     return x if x.size > 0 else x
 
-def _prepocess_zscore(x:np.ndarray)->np.ndarray:
+def _preprocess_zscore(x:np.ndarray)->np.ndarray:
     """Preprocessing returning zscore of x  
 
     Args:
@@ -322,7 +323,7 @@ def _prepocess_zscore(x:np.ndarray)->np.ndarray:
     x= preprocess_guard(x)    
     return zscore(x, axis=1) if x.size > 0 else x
 
-def _prepocess_minmax_01(x:np.ndarray)->Union[np.ndarray,None]:
+def _preprocess_minmax_01(x:np.ndarray)->Union[np.ndarray,None]:
     """Preprocessing returning MinMax of x with scaling range [0,1]
 
     Args:
@@ -341,8 +342,8 @@ def _prepocess_minmax_01(x:np.ndarray)->Union[np.ndarray,None]:
     logger.debug(f'{scaler.scale_=}, {scaler.scale_.shape=}')
     return x
 
-def _prepocess_minmax_11(x:np.ndarray)->np.ndarray:
-    """Preprocessing returning MinMax of x wth scaling range [-1,1]
+def _preprocess_minmax_11(x:np.ndarray)->np.ndarray:
+    """Preprocessing returning MinMax of x with scaling range [-1,1]
 
     Args:
         x (np.ndarray): array-like of shape (n_samples, n_features)
@@ -382,9 +383,9 @@ def preprocess_guard(x:np.ndarray)->np.ndarray:
 
 NORMALIZATIONS={
     ListNormalizations.Identity:_prepocess_identity,
-    ListNormalizations.MinMax_01:_prepocess_minmax_01,
-    ListNormalizations.MinMax_11:_prepocess_minmax_11,
-    ListNormalizations.Norm:_prepocess_zscore
+    ListNormalizations.MinMax_01:_preprocess_minmax_01,
+    ListNormalizations.MinMax_11:_preprocess_minmax_11,
+    ListNormalizations.Norm:_preprocess_zscore
 }
 
 
@@ -418,9 +419,9 @@ if __name__ == "__main__":
         plt.figure()
         plt.plot(x[idx], label='x')
         # plt.plot(_prepocess_identity(x)[idx],label='ident(x)')
-        plt.plot(_prepocess_minmax_11(x)[idx],label='mm-11(x)')
-        plt.plot(_prepocess_minmax_01(x)[idx],label='mm01(x)')
-        plt.plot(_prepocess_zscore(x)[idx],label='zscore(x)')
+        plt.plot(_preprocess_minmax_11(x)[idx],label='mm-11(x)')
+        plt.plot(_preprocess_minmax_01(x)[idx],label='mm01(x)')
+        plt.plot(_preprocess_zscore(x)[idx],label='zscore(x)')
 
 
 
@@ -428,9 +429,9 @@ if __name__ == "__main__":
         plt.figure()
         plt.boxplot([
             x[idx],
-            _prepocess_minmax_11(x)[idx],
-            _prepocess_minmax_01(x)[idx],
-            _prepocess_zscore(x)[idx]],labels=['x','mm-11(x)','mm01(x)','zscore(x)'])
+            _preprocess_minmax_11(x)[idx],
+            _preprocess_minmax_01(x)[idx],
+            _preprocess_zscore(x)[idx]],labels=['x','mm-11(x)','mm01(x)','zscore(x)'])
         plt.legend()
         # plt.show(block=False)
     change_level_logging(logging.INFO)

@@ -12,7 +12,8 @@ PYTORCH_MODEL_SAVE_FOLDERNAME= 'pytorch_model.pth'
 """
 
 PYTORCH_OPTIMIZER={
-    ListPyTorchOptimizers.Adam: optim.Adam
+    ListPyTorchOptimizers.Adam: optim.Adam,
+    ListPyTorchOptimizers.SGD: optim.SGD
 }
 ################################################################################
 # PyTorch Losses
@@ -21,7 +22,8 @@ PYTORCH_OPTIMIZER={
 """
 
 PYTORCH_LOSS={
-    ListPyTorchLosses.MSELoss: nn.MSELoss
+    # ListPyTorchLosses.MSELoss: nn.MSELoss,
+    ListPyTorchLosses.CrossEntropyLoss: nn.CrossEntropyLoss,
 }
 
 if __name__ == "__main__":

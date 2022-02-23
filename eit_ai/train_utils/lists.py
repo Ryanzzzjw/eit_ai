@@ -88,23 +88,25 @@ class ListPytorchDatasetHandlers(ListDatasetHandlers):
 ################################################################################
 
 class ListOptimizers(ExtendedEnum):
-    """ """
+    """"""
 class ListKerasOptimizers(ListOptimizers):
     Adam='Adam'
 class ListPyTorchOptimizers(ListOptimizers):
     Adam='Adam'
+    SGD='SGD'
 
 ################################################################################
 # Losses
 ################################################################################
 
 class ListLosses(ExtendedEnum):
-    """ """
+    """"""
 class ListKerasLosses(ListLosses):
     CategoricalCrossentropy='CategoricalCrossentropy'
 
 class ListPyTorchLosses(ListLosses):
-    MSELoss='MSELoss'
+    # MSELoss='MSELoss'
+    CrossEntropyLoss='CrossEntropyLoss'
 
 
 class ListNormalizations(ExtendedEnum):
@@ -168,6 +170,7 @@ if __name__ == "__main__":
     }
     print_obj_type_dict(TEST.keys())
     print(isinstance(ListWorkspaces.Keras, TestEnum))
+    print(list(ListPyTorchOptimizers))
 
 
     

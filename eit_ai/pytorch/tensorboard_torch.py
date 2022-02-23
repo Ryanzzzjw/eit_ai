@@ -9,14 +9,14 @@ from glob_utils.log.msg_trans  import highlight_msg
 
 logger = getLogger(__name__)
 
-TENSORBOARD_LOG_FOLDER ='C:/Users/ryanzzzjw/Desktop/eit_ai/runs'
+TENSORBOARD_LOG_FOLDER = 'runs'
 
 def run_tensorboard(logdir_absolute):
 
    import os, threading
    tb_thread = threading.Thread(
           target=lambda: os.system('/users/ryanzzzjw/anaconda3/envs/'
-                                   'torch/bin/tensorboard '
+                                   'torch/bin/tensorboard'
                                    '--logdir=' + TENSORBOARD_LOG_FOLDER),
           daemon=True)
    tb_thread.start()
