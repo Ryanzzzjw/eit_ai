@@ -1,7 +1,7 @@
 Dictionary form:
-{"Matlab datasets": "E:/Software_dev/Matlab_datasets", "AI Models": "E:/Software_dev/AI_Models"}
+{"Matlab datasets": "C:/Users/Ryan/Desktop/eit_ai/datasets", "AI Models": "C:/Users/Ryan/Desktop/eit_ai/outputs"}
 
 
 Single attributes:
-Matlab datasets = E:/Software_dev/Matlab_datasets,
-AI Models = E:/Software_dev/AI_Models,
+Matlab datasets = C:/Users/Ryan/Desktop/eit_ai/datasets,
+AI Models = C:/Users/Ryan/Desktop/eit_ai/outputs,
