@@ -107,23 +107,38 @@ class MatlabSamples(RawSamples):
         self.dir_path = os.path.split(file_path)[0]
 
         # Sorting of the variables in dataset, user_entry, fwd_model dicts 
+        # for key in var_dict:
+        #     if ("userentry") in key:
+        #         keynew= key.replace("userentry_", "")
+        #         if ("fmdl") in key:
+        #             keynew= keynew.replace("fmdl_", "")   
+        #             self.fwd_model[keynew]= var_dict[key]
+        #         else:
+        #             self.user_entry[keynew]= var_dict[key]
+        #     else:
+        #         self.dataset[key]= var_dict[key]
+        
         for key in var_dict:
-            if ("userentry") in key:
-                keynew= key.replace("userentry_", "")
-                if ("fmdl") in key:
-                    keynew= keynew.replace("fmdl_", "")   
-                    self.fwd_model[keynew]= var_dict[key]
-                else:
-                    self.user_entry[keynew]= var_dict[key]
+            if("sim") in key:
+                keynew= key.replace("sim__", "")
+                if("fwd_model") in key:
+                    keynew = key.replace("fwd_model__", "")
+                self.fwd_model[keynew]= var_dict[key]
+            elif("user_entry") in key:
+                keynew= key.replace("userentry__", "")
+                self.user_entry[keynew]= var_dict[key]
+            elif("setup") in key:
+                keynew= key.replace("setup__", "")
+                self.setup[keynew]= var_dict[key]
             else:
                 self.dataset[key]= var_dict[key]
-
+                
         # Samples folder /filenames extract
-        self.dataset["samplesfolder"]= str_cellarray2str_list(
-            self.dataset["samplesfolder"])
-        self.dataset["samplesfilenames"]= str_cellarray2str_list(
-            self.dataset["samplesfilenames"])
-        self.dataset["samplesindx"]= self.dataset["samplesindx"]
+        self.dataset["samples_folder"]= str_cellarray2str_list(
+            self.dataset["samples_folder"])
+        self.dataset["samples_filenames"]= str_cellarray2str_list(
+            self.dataset["samples_filenames"])
+        self.dataset["samples_indx"]= self.dataset["samples_indx"]
         
         # Matlab used a one indexing system
         self.fwd_model['elems']= self.fwd_model['elems']-int(1) 
@@ -131,6 +146,15 @@ class MatlabSamples(RawSamples):
         logger.debug(f'Keys of dataset: {list(self.dataset.keys())}')
         logger.debug(f'Keys of fwd_model:{list(self.fwd_model.keys())}')
         logger.debug(f'Keys of user_entry:{list(self.user_entry.keys())}')
+        logger.debug(f'Keys of setup:{list(self.user_entry.keys())}')
+
+        # Samples folder /filenames extract
+        self.dataset["samples_folder"]= str_cellarray2str_list(
+            self.dataset["samples_folder"])
+        self.dataset["samples_filenames"]= str_cellarray2str_list(
+            self.dataset["samples_filenames"])
+        self.dataset["samples_indx"]= self.dataset["samples_indx"]
+        
 
     def _load_samples(
         self, 
@@ -148,8 +172,8 @@ class MatlabSamples(RawSamples):
 
         """    
         # get the folder and filename of all batch samples mat-files 
-        folder=os.path.join(self.dir_path, self.dataset["samplesfolder"][0])
-        samples_batch_files= self.dataset["samplesfilenames"]
+        folder=os.path.join(self.dir_path, self.dataset["samples_folder"][0])
+        samples_batch_files= self.dataset["samples_filenames"]
         samples_batch_paths= [
             os.path.join(folder,file) for file in samples_batch_files]
         # 
