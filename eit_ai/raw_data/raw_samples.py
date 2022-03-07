@@ -20,6 +20,7 @@ class RawSamples(ABC):
         self.dataset = {}
         self.fwd_model= {}
         self.user_entry = {}
+        self.setup = {}
         self.samples = {}
         self.X= []
         self.Y=[]

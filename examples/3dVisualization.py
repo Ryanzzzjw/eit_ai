@@ -47,7 +47,7 @@ def format_inputs(fwd_model, data):
     if data.ndim == 2:
         tri = np.array(fwd_model['elems'])
         pts = np.array(fwd_model['nodes'])
-        if data.shape[1]==pts.shape[0] or data.shape[1]==tri.shape[0]:
+        if data.shape[1] in [pts.shape[0], tri.shape[0]]:
             data= data.T
     return data
     
