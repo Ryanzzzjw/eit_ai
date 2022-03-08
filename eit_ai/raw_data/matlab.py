@@ -5,13 +5,14 @@ import sys
 import traceback
 from logging import getLogger
 
+import glob_utils.files.matlabfile
 import numpy as np
 from eit_ai.default.set_default_dir import AI_DIRS, AiDirs
 from eit_ai.raw_data.raw_samples import RawSamples
-from glob_utils.files.files import (FileExt, OpenDialogFileCancelledException,
-                                    WrongFileExtError, NotFileError, check_file,
+from glob_utils.files.files import (FileExt, NotFileError,
+                                    OpenDialogFileCancelledException,
+                                    WrongFileExtError, check_file,
                                     dialog_get_file_with_ext, load_mat)
-
 
 logger = getLogger(__name__)
 
@@ -96,6 +97,7 @@ class MatlabSamples(RawSamples):
         Args:
             file_path (str): mat-file ending with *info2py.mat
         """
+
         #loading dataset mat-file
         var_dict, file_path = load_mat_file(
             file_path=file_path,
@@ -106,38 +108,22 @@ class MatlabSamples(RawSamples):
         self.file_path= file_path
         self.dir_path = os.path.split(file_path)[0]
 
-        # Sorting of the variables in dataset, user_entry, fwd_model dicts 
-        for key in var_dict:
-            if ("sim__") in key:
-                """"""
-            elif ("fwd_model__") in key:
-                keynew= key.replace("fwd_model__", "")   
-                self.fwd_model[keynew]= var_dict[key]
-            elif ("user_entry__") in key:
-                keynew= key.replace("user_entry__", "")
-                self.user_entry[keynew]= var_dict[key]
-            elif ("setup__") in key:
-                keynew= key.replace("setup__", "")
-                self.setup[keynew]= var_dict[key]
-            else:
-                self.dataset[key]= var_dict[key]
-
-        # Samples folder /filenames extract
-        self.dataset["samples_folder"]= str_cellarray2str_list(
-            self.dataset["samples_folder"])
-        self.dataset["samples_filenames"]= str_cellarray2str_list(
-            self.dataset["samples_filenames"])
-        self.dataset["samples_indx"]= self.dataset["samples_indx"]
-
+        m= glob_utils.files.matlabfile.MatFileStruct()
+        struct= m._extract_matfile(var_dict, file_path)
+        self.dataset= struct['eit_dataset']
+        self.fwd_model= struct['fwd_model']
+        self.user_entry= struct['user_entry']
+        self.setup= struct['setup']
+        
         # Matlab used a one indexing system
         self.fwd_model['elems']= self.fwd_model['elems']-int(1) 
+
 
         logger.debug(f'Keys of dataset: {list(self.dataset.keys())}')
         logger.debug(f'Keys of fwd_model:{list(self.fwd_model.keys())}')
         logger.debug(f'Keys of user_entry:{list(self.user_entry.keys())}')
         logger.debug(f'Keys of setup:{list(self.setup.keys())}')
-        logger.debug(f'electrode:{self.fwd_model["electrode"]}')
-
+        # logger.debug(f'electrode:{self.fwd_model["electrode_001"]}')
 
     def _load_samples(self, nb_samples:int=0, var_keys=MATLAB_DATASET_VAR_KEYS)->None:
         """Load the samples from each batch samples mat-files
@@ -332,29 +318,6 @@ class MatlabSamples(RawSamples):
 
 
 ################################################################################
-# Conversion methods from matlab to python
-################################################################################
-
-
-def str_cellarray2str_list(str_cellarray):
-    """ After using loadmat, the str cell array have a strange shape
-        >>> here the loaded "strange" array is converted to an str list
-
-    Args:
-        str_cellarray ( ndarray): correponing to str cell array in matlab
-
-    Returns:
-        str list: 
-    """
-    if str_cellarray.ndim ==2: 
-        tmp= str_cellarray[0,:]
-        str_array= [ t[0] for t in tmp] 
-    elif str_cellarray.ndim ==1:
-        tmp= str_cellarray[0]
-        str_array= [tmp] 
-    return str_array 
-
-################################################################################
 # Loading of mat files
 ################################################################################
       
@@ -380,15 +343,24 @@ def load_mat_file(file_path:str=None,**kwargs)-> tuple[dict, str]:
             **kwargs)
     var_dict= load_mat(file_path)
     return var_dict, file_path
-                                                                                
+
+
+
 if __name__ == "__main__":
     import logging
+
     from eit_ai.train_utils.metadata import MetaData
     from glob_utils.log.log import change_level_logging, main_log
     main_log()
     change_level_logging(logging.DEBUG)
-    # load_mat_file()
-    # file_path='E:/EIT_Project/05_Engineering/04_Software/Python/eit_app/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset/2D_16e_adad_cell3_SNR20dB_50k_infos2py.mat'
+
+    # # load_mat_file()
+    file_path='E:/Software_dev/Matlab_datasets/20220307_093210_Dataset_name/Dataset_name_infos2py.mat'
     MetaData()
     r= MatlabSamples()
-    r.load()
+    r.load(file_path)
+ 
+
+
+
+
