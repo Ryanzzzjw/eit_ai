@@ -1,3 +1,4 @@
+from math import nan
 from numpy.core.fromnumeric import ndim
 from numpy.core.shape_base import block
 from pyvista.plotting import scalar_bars
@@ -74,29 +75,25 @@ def plot_3d(fwd_model, perm, U):
     mesh = pv.PolyData(pts, elements)
     
     colors = np.real(data[key])
+    colors[colors == 1] = nan
     
-    mesh.plot(scalars=colors,
-          opacity = 0.5,
-          cmap='jet',
-          show_scalar_bar=True,
-          background='black')
+    # mesh.plot(scalars=colors,
+    #       opacity = 0.5,
+    #       cmap='jet',
+    #       show_scalar_bar=True,
+    #       background='black')
     
-    slicing = mesh.slice_along_axis(n=10, axis='z')
-    slicing.plot(
-          opacity = 0.5,
-          cmap='jet',
-          show_scalar_bar=True,
-          background='black')
+    # slicing = mesh.slice_along_axis(n=10, axis='z')
+    # slicing.plot(opacity = 0.5,cmap='jet',show_scalar_bar=True,background='black')
     
-    # p = Plotter(shape=(1, 2), border=False)
+    p = Plotter()
     
-    # pv.set_plot_theme("dark")
+    # pv.set_plot_theme("white")
     # p.subplot(0, 0)
-    # p.add_mesh(mesh,
-    #       opacity = 0.3,
-    #       cmap='coolwarm',
-    #       show_scalar_bar= True,
-    #       )
+    p.add_mesh(mesh, scalars=colors,
+               nan_color= 'white',
+               nan_opacity=0.1
+          )
     # p.subplot(0, 1)
     # slicing = mesh.slice_orthogonal()
     # p.add_mesh(slicing,
@@ -108,8 +105,7 @@ def plot_3d(fwd_model, perm, U):
     #                        title_font_size=35,
     #                        label_font_size=30,
     #                        outline=True,)
-    # p.show()
-
+    p.show()
 
 if __name__ == "__main__":
     from glob_utils.log.log import change_level_logging, main_log

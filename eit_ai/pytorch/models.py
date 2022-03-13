@@ -58,11 +58,14 @@ class TypicalPytorchModel(ABC):
 
     def run_single_epoch(self, dataloader:DataLoader)->Any:
         logger.debug(f'run_single_epoch')
+        self.net.train()
         for idx, data_i in enumerate(dataloader):
             # logger.debug(f'Batch #{idx}')
-            size = len(dataloader.dataset)
+            # size = len(dataloader.dataset)
             inputs, labels = data_i
-            y_pred = self.forward(inputs)
+            inputs = inputs.to(device=0)
+            labels = labels.to(device=0)
+            y_pred = self.net(inputs)
             #loss
             loss_value = self.loss(y_pred, labels)
             
@@ -200,6 +203,7 @@ class StdPytorchModelHandler(AiModelHandler):
         self.model = model_cls(metadata)
         
         self.model.net= load_pytorch_model(dir_path=metadata.dir_path)
+        self.model.net.eval()
         
 
 ################################################################################
