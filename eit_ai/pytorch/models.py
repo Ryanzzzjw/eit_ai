@@ -211,6 +211,7 @@ class StdPytorchModelHandler(AiModelHandler):
         self.model = model_cls(metadata)
         
         self.model.net= load_pytorch_model(dir_path=metadata.dir_path)
+        self.model.net.eval()
         
 
 ################################################################################
