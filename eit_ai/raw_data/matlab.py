@@ -93,6 +93,7 @@ class MatlabSamples(RawSamples):
         dataset generation in matlab
         - self.fwd_model: metadata about the eit fwd_model used for the 
         dataset generation in matlab (FEM, Stimulations, etc)
+        - self.steup: metadata about the eit environment setup(chamber, injection, etc..)
 
         Args:
             file_path (str): mat-file ending with *info2py.mat
@@ -114,7 +115,6 @@ class MatlabSamples(RawSamples):
         self.fwd_model= struct['fwd_model']
         self.user_entry= struct['user_entry']
         self.setup= struct['setup']
-        
         # Matlab used a one indexing system
         self.fwd_model['elems']= self.fwd_model['elems']-int(1) 
 
@@ -138,7 +138,7 @@ class MatlabSamples(RawSamples):
 
         """    
         # get the folder and filename of all batch samples mat-files 
-        folder=os.path.join(self.dir_path, self.dataset["samples_folder"][0])
+        folder=os.path.join(self.dir_path, 'samples')
         samples_batch_files= self.dataset["samples_filenames"]
         samples_batch_paths= [
             os.path.join(folder,file) for file in samples_batch_files]
@@ -297,7 +297,6 @@ class MatlabSamples(RawSamples):
             batch_file_paths (list[str]): batch samples files paths
             keys (list[str]): variables keys to load
         """ 
-
         batch_file=load_mat(batch_file_paths[0],logging=False)
         keys_batch_file= list(batch_file.keys())
         # check if each keys is in the keys_batch_file available
@@ -355,7 +354,7 @@ if __name__ == "__main__":
     change_level_logging(logging.DEBUG)
 
     # # load_mat_file()
-    file_path='E:/Software_dev/Matlab_datasets/20220307_093210_Dataset_name/Dataset_name_infos2py.mat'
+    file_path = r'C:\Users\ryanzzzjw\Desktop\eit_ai\datasets\20220313_182045_TestDataSet\TestDataSet_infos2py.mat'
     MetaData()
     r= MatlabSamples()
     r.load(file_path)
