@@ -55,18 +55,19 @@ class TypicalPytorchModel(ABC):
         # logger.debug(f'foward, {x.shape=}')
         return self.net(x)
 
-    def run_single_epoch(self, dataloader:DataLoader)->Any:
+    def train_single_epoch(self, dataloader:DataLoader)->Any:
         self.net.train()
         # logger.debug(f'run_single_epoch')
         for idx, data_i in enumerate(dataloader):
             # logger.debug(f'Batch #{idx}')
-            # size = len(dataloader.dataset)
+            train_loss = 0
             inputs, labels = data_i
             inputs = inputs.to(device=0)
             labels = labels.to(device=0)
             y_pred = self.net(inputs)
             #loss
             loss_value = self.loss(y_pred, labels)
+            train_loss += loss_value.item()
             
             #backward propagation
             self.optimizer.zero_grad()
@@ -75,8 +76,23 @@ class TypicalPytorchModel(ABC):
             
             # logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
 
-        logger.info(f'loss={loss_value.item():.6f}\n--------------------------')
-        return loss_value.item() 
+        # logger.info(f'loss={train_loss:.6f}\n--------------------------')
+        return train_loss / len(dataloader)
+    
+    def val_single_epoch(self, dataloader: DataLoader)->Any:
+        # logger.debug(f'run_single_validation_epoch')
+        val_loss = 0
+        with torch.no_grad():
+            for idx, data_i in enumerate(dataloader):
+                
+                inputs, labels = data_i
+                inputs = inputs.to(device=0)
+                labels = labels.to(device=0)
+                y_pred = self.net(inputs)
+                
+                loss_value = self.loss(y_pred, labels)
+                val_loss += loss_value.item()
+        return val_loss / len(dataloader) 
 
     def get_name(self)->str:
         """Return the name of the model/network
@@ -207,11 +223,15 @@ class StdPytorchModelHandler(AiModelHandler):
     def train(self, dataset:AiDatasetHandler, metadata:MetaData)-> None:
         gen=DataloaderGenerator()
         train_dataloader=gen.make(dataset, 'train', metadata=metadata)
+        val_dataloader=gen.make(dataset, 'val', metadata=metadata)
         logger.info(f'Training - Started {metadata.epoch}')
         for epoch in range(metadata.epoch):
-            loss= self.model.run_single_epoch(train_dataloader)
+            train_loss = self.model.train_single_epoch(train_dataloader)
+            val_loss = self.model.val_single_epoch(val_dataloader)
             # logger.info(f'Epoch #{epoch+1}/{metadata.epoch} : {loss=}')
             logger.info(f'Epoch #{epoch+1}/{metadata.epoch}')
+            logger.info(f'train_loss = {train_loss}, val_loss = {val_loss}')
+            
             # writer.add_scalar("training_loss", loss, epoch+1)
             # writer.close()   
 
