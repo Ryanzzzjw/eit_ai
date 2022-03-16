@@ -126,25 +126,57 @@ class Conv1dNet(TypicalPytorchModel):
 
         out_size=metadata.output_size
         self.name = "1d CNN"
+        self.net = torch.nn.Sequential(nn.Conv1d(in_channels= 1, out_channels= 8, kernel_size=8, stride=1, padding=0),
+                                       nn.ReLU(True),
+                                       nn.MaxPool1d(kernel_size=2, stride=2),
+                                       nn.Conv1d(8, 8, kernel_size=8, stride=1, padding=0),
+                                       nn.ReLU(True),
+                                       nn.MaxPool1d(kernel_size=2, stride=2),
+                                       nn.Conv1d(8, 16, kernel_size=16, stride=1, padding=0),
+                                       nn.ReLU(True),
+                                       nn.MaxPool1d(kernel_size=2, stride=2),
+                                       nn.Flatten(),
+                                       nn.Linear(512, 512),
+                                       nn.ReLU(True),
+                                       nn.Linear(512, out_size),
+                                       nn.Sigmoid()
+                                    )
+        self.net.to(device=0)    
+
+class AutoEncoder(TypicalPytorchModel):  
+      
+    def _set_layers(self, metadata: MetaData) -> None:
+
+        in_size = metadata.input_size
+        out_size=metadata.output_size
+        self.name = "AutoEncoder"
         self.net = torch.nn.Sequential()
-        self.net.add_module('conv1', nn.Conv1d(in_channels= 1, out_channels= 8, kernel_size=8, stride=1, padding='same'))
-        self.net.add_module('ReLU', nn.ReLU())
-        self.net.add_module('pool1', nn.MaxPool1d(kernel_size=2, stride=2))
-        self.net.add_module('conv2', nn.Conv1d(8, 8, kernel_size=8, padding='same', stride=1))
-        self.net.add_module('relu', nn.ReLU())
-        self.net.add_module('pool2', nn.MaxPool1d(kernel_size=2, stride=2))
-        self.net.add_module('conv3', nn.Conv1d(8, 16, kernel_size=16, padding='same', stride=1))
-        self.net.add_module('relu', nn.ReLU())
-        self.net.add_module('pool3', nn.MaxPool1d(kernel_size=2, stride=2))
-        self.net.add_module('flatten', nn.Flatten())
-        self.net.add_module('dense1', nn.Linear(512, 512))
-        self.net.add_module('relu', nn.ReLU())
-        self.net.add_module('dense2', nn.Linear(512, out_size))
-        self.net.add_module('sigmoid', nn.Sigmoid())
+        
+        encoder = nn.Sequential(
+            nn.Linear(in_size, 128),
+            nn.ReLU(True),
+            nn.Linear(128, 64),
+            nn.ReLU(True),
+            nn.Linear(64, 16),  
+            )
+        
+        decoder = nn.Sequential(
+            nn.Linear(16, 128),
+            nn.ReLU(True),
+            nn.Linear(128, 512),
+            nn.ReLU(True),
+            nn.Linear(512, 2048),
+            nn.ReLU(True),
+            nn.Linear(2048, out_size),
+            nn.Sigmoid(),
+            )
+        
+        
+        self.net.add_module('encoder', encoder)
+        self.net.add_module('decoder', decoder)
+        
         self.net.to(device=0)
         
-        
-    
 ################################################################################
 # Std PyTorch ModelManager
 ################################################################################
@@ -318,6 +350,7 @@ PYTORCH_MODEL_HANDLERS={
 PYTORCH_MODELS={
     ListPytorchModels.StdPytorchModel: StdPytorchModel, 
     ListPytorchModels.Conv1dNet: Conv1dNet,
+    ListPytorchModels.AutoEncoder: AutoEncoder,
 }
 
 
