@@ -7,7 +7,7 @@
 from enum import Enum
 from typing import Any, Union
 
-from eit_ai.pytorch.models import AutoEncoder
+
 
 """Those Enumerations lists are used save and select classes
 
