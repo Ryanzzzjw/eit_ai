@@ -109,7 +109,7 @@ class MatlabSamples(RawSamples):
         self.dir_path = os.path.split(file_path)[0]
 
         m= glob_utils.files.matlabfile.MatFileStruct()
-        struct= m._extract_matfile(var_dict, file_path)
+        struct= m._extract_matfile(var_dict, True)
         self.dataset= struct['eit_dataset']
         self.fwd_model= struct['fwd_model']
         self.user_entry= struct['user_entry']
