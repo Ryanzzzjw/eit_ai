@@ -7,6 +7,8 @@
 from enum import Enum
 from typing import Any, Union
 
+from eit_ai.pytorch.models import AutoEncoder
+
 """Those Enumerations lists are used save and select classes
 
 """
@@ -57,6 +59,7 @@ class ListAutokerasModels(ListModels):
 class ListPytorchModels(ListModels):
     StdPytorchModel='StdPytorchModel'
     Conv1dNet='Conv1dNet'
+    AutoEncoder='AutoEncoder'
 
 # ################################################################################
 # # Dataset 
