@@ -48,7 +48,7 @@ def format_inputs(fwd_model, data):
     if data.ndim == 2:
         tri = np.array(fwd_model['elems'])
         pts = np.array(fwd_model['nodes'])
-        if data.shape[1]==pts.shape[0] or data.shape[1]==tri.shape[0]:
+        if data.shape[1] in [pts.shape[0], tri.shape[0]]:
             data= data.T
     return data
     
@@ -116,8 +116,7 @@ if __name__ == "__main__":
     debug = True
 
     if debug:
-        path = r'C:\Users\ryanzzzjw\Downloads/eit_ai/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset' \
-               '/2D_16e_adad_cell3_SNR20dB_50k_infos2py.mat '
+        path = r'C:\Users\ryanzzzjw\Desktop\eit_ai\datasets\20220313_182045_TestDataSet\TestDataSet_infos2py.mat'
     else:
         path = ''
     
@@ -131,9 +130,9 @@ if __name__ == "__main__":
 
     metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
-    # metadata._nb_samples = 10000
+    metadata._nb_samples = 10
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1000)
+    metadata.set_4_dataset(batch_size=10)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)

@@ -11,12 +11,21 @@ from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
 import os
 from logging import getLogger
 from dataclasses import dataclass
+import sys
+from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
+from glob_utils.files.files import (FileExt, dialog_get_file_with_ext, find_file, is_file, read_txt,
+                                    save_as_mat, save_as_pickle, save_as_txt, save_as_csv, load_csv)
+from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
+                                       get_datetime_s, get_dir, get_POSIX_path,
+                                       mk_new_dir)
+import os
 logger = getLogger(__name__)
 
 # Matlab_FILENAME= f'metrics{FileExt.mat}'
 Pickle_FILENAME= f'metrics{FileExt.pkl}'
 # Txt_FILENAME= f'metrics{FileExt.txt}'
 Csv_FILENAME=f'metrics{FileExt.csv}'
+
 @dataclass
 class ImageEIT(object):
     data:np.ndarray=np.array([])
@@ -89,6 +98,49 @@ class EvalResults(object):
         save_as_csv(csv_name, self.indicators)
         
 
+    def save(self, file_path: str=None, export_csv: bool=True):
+            """save itself as a pickle and make optional export as txt"""
+            # indicators = {k:v.tolist() for k,v in self.indicators.items()}
+            # if not self.dir_path:
+            #     return
+            file_path=file_path
+            time = get_datetime_s()
+            # matlab_name=os.path.join(dir_path,f'{time}_{Matlab_FILENAME}')
+            pickle_name=os.path.join(file_path,f'{time}_{Pickle_FILENAME}')
+            # txt_name=os.path.join(dir_path,f'{time}_{Txt_FILENAME}')
+            
+            
+            # save_as_mat(matlab_name, indicators)
+            save_as_pickle(pickle_name, self.indicators)
+            # save_as_txt(txt_name,indicators)
+            
+            if export_csv:
+                self.export_as_csv(file_path = file_path )
+            
+    def load_csv(self, file_path: str):
+        """load itself and set indicator"""
+        if not os.path.isdir(file_path):
+            title= 'Select directory of model to evaluate'
+            try: 
+                file_path=dialog_get_file_with_ext(
+                    title=f'Please select *csv files',
+                    file_types=[(f"*metrics.csv-files",f"*metrics.csv")]
+                )
+            except OpenDialogDirCancelledException as e:
+                logger.critical('User cancelled the loading')
+        
+        var = load_csv(file_path=file_path)
+        return var
+        
+
+    def export_as_csv(self, file_path: str):
+        """export data as csv"""
+        file_path=file_path
+        time = get_datetime_s()
+        csv_name=os.path.join(file_path,f'{time}_{Csv_FILENAME}')
+        save_as_csv(csv_name, self.indicators)
+            
+    
 def EIT_mse(y_true, y_pred):
     return mean_squared_error(y_true, y_pred, multioutput='raw_values').T
 
@@ -191,6 +243,7 @@ if __name__ == "__main__":
     # Evalres.save(dir_path='C:/Users/ryanzzzjw/Desktop/eit_ai/metrics_result')         
     var = Evalres.load_csv('')
     print(var.items())
+
 
 
 

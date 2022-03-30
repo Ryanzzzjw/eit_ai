@@ -7,7 +7,7 @@ from glob_utils.files.files import FileExt, OpenDialogFileCancelledException
 from numpy import ndarray
 from eit_ai.raw_data.matlab import load_mat_file
 from eit_ai.train_utils.metadata import MetaData
-from eit_ai.train_utils.dataset import scale_prepocess
+from eit_ai.train_utils.dataset import scale_preprocess
 
 logger = getLogger(__name__)
 
@@ -40,7 +40,7 @@ def load_eidors_solution(
             title= f'Select {FileExt.mat}-file of eidors solution #{i+1}'
             pred, file_path=load_mat_file(initialdir=initialdir, title=title)
             file_name= os.path.splitext(os.path.split(file_path)[1])[0]
-            pred_eidors_i= scale_prepocess(
+            pred_eidors_i= scale_preprocess(
                 pred[var_name].T,
                 metadata.normalize[1])
             pred_eidors.append([pred_eidors_i, file_name])

@@ -110,6 +110,7 @@ class MatlabSamples(RawSamples):
         self.dir_path = os.path.split(file_path)[0]
 
         m= glob_utils.files.matlabfile.MatFileStruct()
+
         struct= m._extract_matfile(var_dict, file_path)
         self.dataset= struct['eit_dataset']
         self.fwd_model= struct['fwd_model']
@@ -119,11 +120,12 @@ class MatlabSamples(RawSamples):
         self.fwd_model['elems']= self.fwd_model['elems']-int(1) 
 
 
-        # logger.debug(f'Keys of dataset: {list(self.dataset.keys())}')
-        # logger.debug(f'Keys of fwd_model:{list(self.fwd_model.keys())}')
-        # logger.debug(f'Keys of user_entry:{list(self.user_entry.keys())}')
-        # logger.debug(f'Keys of setup:{list(self.setup.keys())}')
+        logger.debug(f'Keys of dataset: {list(self.dataset.keys())}')
+        logger.debug(f'Keys of fwd_model:{list(self.fwd_model.keys())}')
+        logger.debug(f'Keys of user_entry:{list(self.user_entry.keys())}')
+        logger.debug(f'Keys of setup:{list(self.setup.keys())}')
         # logger.debug(f'electrode:{self.fwd_model["electrode_001"]}')
+
 
     def _load_samples(self, nb_samples:int=0, var_keys=MATLAB_DATASET_VAR_KEYS)->None:
         """Load the samples from each batch samples mat-files
@@ -297,7 +299,6 @@ class MatlabSamples(RawSamples):
             batch_file_paths (list[str]): batch samples files paths
             keys (list[str]): variables keys to load
         """ 
-
         batch_file=load_mat(batch_file_paths[0],logging=False)
         keys_batch_file= list(batch_file.keys())
         # check if each keys is in the keys_batch_file available

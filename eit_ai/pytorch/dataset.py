@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 import sklearn.model_selection
 from eit_ai.train_utils.dataset import (AiDataset, StdAiDatasetHandler, convert_vec_to_int,
-                                        scale_prepocess)
+                                        scale_preprocess)
 from eit_ai.train_utils.lists import ListPytorchDatasetHandlers
 from eit_ai.train_utils.metadata import MetaData
 from sklearn import model_selection
@@ -43,7 +43,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             raise TypeError(
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
-        self.X = x
+        self.X = -x
         self.Y = y
 
     def __len__(self):
@@ -95,7 +95,7 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
         self.X = x
-        self.X_conv= reshape_4_1Dconv(x) # special reshape for conv Ai
+        self.X_conv= reshape_4_1Dconv(-x) # special reshape for conv Ai
         self.Y = y
 
     def __len__(self):
@@ -144,7 +144,7 @@ class DataloaderGenerator(object):
         Returns:
             torch.utils.data.DataLoader: [description]
         """        
-        return DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0)
+        return DataLoader(getattr(dataset,part), batch_size=metadata.batch_size, shuffle=True, num_workers=0,drop_last=True)
     
     
 
