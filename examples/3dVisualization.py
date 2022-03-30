@@ -107,7 +107,6 @@ def plot_3d(fwd_model, perm, U):
     #                        outline=True,)
     p.show()
 
-
 if __name__ == "__main__":
     from glob_utils.log.log import change_level_logging, main_log
     import logging

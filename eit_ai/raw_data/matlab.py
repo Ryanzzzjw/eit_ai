@@ -110,7 +110,8 @@ class MatlabSamples(RawSamples):
         self.dir_path = os.path.split(file_path)[0]
 
         m= glob_utils.files.matlabfile.MatFileStruct()
-        struct= m._extract_matfile(var_dict, True)
+
+        struct= m._extract_matfile(var_dict, file_path)
         self.dataset= struct['eit_dataset']
         self.fwd_model= struct['fwd_model']
         self.user_entry= struct['user_entry']
@@ -124,6 +125,7 @@ class MatlabSamples(RawSamples):
         logger.debug(f'Keys of user_entry:{list(self.user_entry.keys())}')
         logger.debug(f'Keys of setup:{list(self.setup.keys())}')
         # logger.debug(f'electrode:{self.fwd_model["electrode_001"]}')
+
 
     def _load_samples(self, nb_samples:int=0, var_keys=MATLAB_DATASET_VAR_KEYS)->None:
         """Load the samples from each batch samples mat-files

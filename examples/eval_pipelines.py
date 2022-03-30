@@ -12,9 +12,12 @@ from eit_ai.train_utils.metadata import reload_metadata
 from eit_ai.train_utils.select_workspace import select_workspace
 from glob_utils.files.files import (FileExt, find_file, is_file, read_txt,
                                     save_as_mat, save_as_pickle, save_as_txt, )
+from torch.utils.tensorboard import SummaryWriter
 from logging import getLogger
 
 logger = getLogger(__name__)
+writer = SummaryWriter()
+
 
 def eval_pipeline(dir_path:str=''):
     logger.info('### Start standard evaluation ###')
@@ -53,6 +56,7 @@ def eval_pipeline(dir_path:str=''):
     plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
     # plot_real_NN_EIDORS(gen.getattr_dataset('fwd_model'), true_img_data[randnlist,:].T, nn_img_data[randnlist,:].T)
     plot_eval_results(results, axis='linear')
+
 
 
 def test_single_predict(dir_path:str=''):
