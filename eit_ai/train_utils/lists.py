@@ -54,8 +54,7 @@ class ListModels(ExtendedEnum):
     """"""
 class ListKerasModels(ListModels):
     StdKerasModel='StdKerasModel'
-class ListAutokerasModels(ListModels):
-    StdAutokerasModel='StdAutokerasModel'
+    StdAutoKerasModel='StdAutoKerasModel'
 class ListPytorchModels(ListModels):
     StdPytorchModel='StdPytorchModel'
     Conv1dNet='Conv1dNet'
