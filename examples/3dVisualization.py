@@ -92,7 +92,7 @@ def plot_3d(fwd_model, perm, U):
     # p.subplot(0, 0)
     p.add_mesh(mesh, scalars=colors,
                nan_color= 'white',
-               nan_opacity=0.1
+               nan_opacity=0.1,
           )
     # p.subplot(0, 1)
     # slicing = mesh.slice_orthogonal()

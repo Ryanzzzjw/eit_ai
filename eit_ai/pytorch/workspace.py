@@ -92,6 +92,7 @@ class PyTorchWorkspace(AiWorkspace):
         **kwargs)-> np.ndarray:
 
         X_pred=self.dataset_handler.get_X('test')
+        # TODO move it to dataset of to model
         if metadata.model_type == 'Conv1dNet':
             X_pred = np.reshape(X_pred,(-1, 1, 256))
         
