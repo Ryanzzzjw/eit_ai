@@ -44,6 +44,7 @@ class AiDatasetHandler(ABC):
         self.ouput_size:int= 0
         
         self.fwd_model:dict={}
+        self.sim:dict={}
         
         self._post_init()
 
@@ -63,6 +64,7 @@ class AiDatasetHandler(ABC):
         X=raw_samples.X
         Y=raw_samples.Y
         self.fwd_model= raw_samples.fwd_model
+        self.sim= raw_samples.sim
         metadata._nb_samples= raw_samples.nb_samples
 
         self._set_sizes_dataset(X, Y, metadata)
