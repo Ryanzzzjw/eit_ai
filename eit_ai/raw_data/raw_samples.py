@@ -21,6 +21,7 @@ class RawSamples(ABC):
         self.fwd_model= {}
         self.user_entry = {}
         self.setup = {}
+        self.sim = {}
         self.samples = {}
         self.X= []
         self.Y=[]
@@ -46,6 +47,7 @@ class RawSamples(ABC):
         self.dataset
         self.fwd_model
         self.user_entry
+        self.sim
         self.setup
         self.samples
         self.X: ArrayLike(n_samples, n_features)
