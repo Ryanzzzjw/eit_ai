@@ -146,7 +146,7 @@ def plot_compare_samples(
     
     idx_list= generate_nb_samples2plot(image_data, nb_samples, rand)
     logger.debug(f'{idx_list=}, {idx_list.__len__()=}')
-    img2plot= [ImageDataset(id.data[idx_list,:], id.label, id.fwd_model) for id in image_data]
+    img2plot= [ImageDataset(id.data[idx_list,:], id.label, id.fwd_model, id.sim) for id in image_data]
 
     n_img= len(img2plot)
     n_samples= len(idx_list)

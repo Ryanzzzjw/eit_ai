@@ -31,13 +31,15 @@ class ImageEIT(object):
     data:np.ndarray=np.array([])
     label:str=''
     fwd_model:dict=None
+    sim: dict=None
 @dataclass
 class ImageDataset(object):
     data:np.ndarray=np.array([])
     label:str=''
     fwd_model:dict=None
+    sim: dict=None
     def get_single(self, idx)-> ImageEIT:
-        return ImageEIT(self.data[idx,:], f'{self.label} #{idx}', self.fwd_model)
+        return ImageEIT(self.data[idx,:], f'{self.label} #{idx}', self.fwd_model, self.sim)
 
 class EvalResults(object):
     indicators:dict={}
@@ -225,7 +227,7 @@ def trunc_img_data_nb_samples(image_data:list[ImageDataset], max_nb:int=None)-> 
     max_samples=max(lens)
     max_samples= max_nb if isinstance(max_nb, int) and max_nb<max_samples else max_samples
     
-    trunced_img_data= [ImageDataset(row.data[:max_samples,:], row.label, row.fwd_model) for row in image_data]
+    trunced_img_data= [ImageDataset(row.data[:max_samples,:], row.label, row.fwd_model, row.sim) for row in image_data]
     logger.debug(f'nb image trunc to : {max_samples}')
     return trunced_img_data
 
