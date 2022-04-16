@@ -55,6 +55,7 @@ class TypicalPytorchModel(ABC):
         # logger.debug(f'foward, {x.shape=}')
         return self.net(x)
 
+
     def train_single_epoch(self, dataloader:DataLoader)->Any:
         self.net.train()
         # logger.debug(f'run_single_epoch')

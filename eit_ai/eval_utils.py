@@ -1,6 +1,14 @@
 from random import random
+import sys
 import numpy as np
 from sklearn.metrics import mean_squared_error
+from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
+from glob_utils.files.files import (FileExt, dialog_get_file_with_ext, find_file, is_file, read_txt,
+                                    save_as_mat, save_as_pickle, save_as_txt, save_as_csv, load_csv)
+from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
+                                       get_datetime_s, get_dir, get_POSIX_path,
+                                       mk_new_dir)
+import os
 from logging import getLogger
 from dataclasses import dataclass
 import sys
@@ -18,23 +26,26 @@ Pickle_FILENAME= f'metrics{FileExt.pkl}'
 # Txt_FILENAME= f'metrics{FileExt.txt}'
 Csv_FILENAME=f'metrics{FileExt.csv}'
 
-
 @dataclass
 class ImageEIT(object):
     data:np.ndarray=np.array([])
     label:str=''
     fwd_model:dict=None
+    sim: dict=None
 @dataclass
 class ImageDataset(object):
     data:np.ndarray=np.array([])
     label:str=''
     fwd_model:dict=None
+    sim: dict=None
     def get_single(self, idx)-> ImageEIT:
-        return ImageEIT(self.data[idx,:], f'{self.label} #{idx}', self.fwd_model)
+        return ImageEIT(self.data[idx,:], f'{self.label} #{idx}', self.fwd_model, self.sim)
 
 class EvalResults(object):
     indicators:dict={}
     info:str=None
+    metrics_name: str=None
+    dir_path: str=None
     def __init__(self,mse, rie, icc, info) -> None:
         super().__init__()
         self.set_values(mse, rie, icc, info)
@@ -44,6 +55,50 @@ class EvalResults(object):
         self.indicators['rie']=rie
         self.indicators['icc']=icc
         self.info = info
+    
+        
+    def save(self, file_path: str=None, export_csv: bool=True):
+        """save itself as a pickle and make optional export as txt"""
+        # indicators = {k:v.tolist() for k,v in self.indicators.items()}
+        # if not self.dir_path:
+        #     return
+        file_path=file_path
+        time = get_datetime_s()
+        # matlab_name=os.path.join(dir_path,f'{time}_{Matlab_FILENAME}')
+        pickle_name=os.path.join(file_path,f'{time}_{Pickle_FILENAME}')
+        # txt_name=os.path.join(dir_path,f'{time}_{Txt_FILENAME}')
+        
+        
+        # save_as_mat(matlab_name, indicators)
+        save_as_pickle(pickle_name, self.indicators)
+        # save_as_txt(txt_name,indicators)
+        
+        if export_csv:
+            self.export_as_csv(file_path = file_path )
+        
+    def load_csv(self, file_path: str):
+        """load itself and set indicator"""
+        if not os.path.isdir(file_path):
+            title= 'Select directory of model to evaluate'
+            try: 
+                file_path=dialog_get_file_with_ext(
+                    title=f'Please select *csv files',
+                    file_types=[(f"*metrics.csv-files",f"*metrics.csv")]
+                )
+            except OpenDialogDirCancelledException as e:
+                logger.critical('User cancelled the loading')
+          
+        var = load_csv(file_path=file_path)
+        return var
+        
+
+    def export_as_csv(self, file_path: str):
+        """export data as txt"""
+        file_path=file_path
+        time = get_datetime_s()
+        csv_name=os.path.join(file_path,f'{time}_{Csv_FILENAME}')
+        save_as_csv(csv_name, self.indicators)
+        
 
     def save(self, file_path: str=None, export_csv: bool=True):
             """save itself as a pickle and make optional export as txt"""
@@ -172,7 +227,7 @@ def trunc_img_data_nb_samples(image_data:list[ImageDataset], max_nb:int=None)-> 
     max_samples=max(lens)
     max_samples= max_nb if isinstance(max_nb, int) and max_nb<max_samples else max_samples
     
-    trunced_img_data= [ImageDataset(row.data[:max_samples,:], row.label, row.fwd_model) for row in image_data]
+    trunced_img_data= [ImageDataset(row.data[:max_samples,:], row.label, row.fwd_model, row.sim) for row in image_data]
     logger.debug(f'nb image trunc to : {max_samples}')
     return trunced_img_data
 
@@ -183,15 +238,6 @@ if __name__ == "__main__":
 
     main_log()
     change_level_logging(logging.DEBUG)
-
-    a= None
-    print(1 if isinstance(a, int) and a>12 else None)
-    # a= np.array([[1 ,2 ,3 ,5, 5, 3], [1 ,2 ,3 ,4, 4, 4],[1 ,2 ,3 ,6, 6, 3]])
-    # b= np.array([[1 ,2 ,3 ,3, 3, 3], [1 ,2 ,3 ,3, 4, 3],[1 ,2 ,3 ,3, 6, 3]])
-    # print(a.shape, b.shape)
-
-    # error_eval(a,b,True, axis_samples=0)
-
 
     a = np.array([1,3,5,6,7])
     b = np.array([2,5,9,6,4])

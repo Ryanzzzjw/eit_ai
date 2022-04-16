@@ -110,20 +110,24 @@ class MatlabSamples(RawSamples):
         self.dir_path = os.path.split(file_path)[0]
 
         m= glob_utils.files.matlabfile.MatFileStruct()
-        struct= m._extract_matfile(var_dict, True)
+
+        struct= m._extract_matfile(var_dict, file_path)
         self.dataset= struct['eit_dataset']
         self.fwd_model= struct['fwd_model']
         self.user_entry= struct['user_entry']
         self.setup= struct['setup']
+        self.sim = struct['sim']
         # Matlab used a one indexing system
         self.fwd_model['elems']= self.fwd_model['elems']-int(1) 
 
 
         logger.debug(f'Keys of dataset: {list(self.dataset.keys())}')
         logger.debug(f'Keys of fwd_model:{list(self.fwd_model.keys())}')
+        logger.debug(f'Keys of sim:{list(self.sim.keys())}')
         logger.debug(f'Keys of user_entry:{list(self.user_entry.keys())}')
         logger.debug(f'Keys of setup:{list(self.setup.keys())}')
         # logger.debug(f'electrode:{self.fwd_model["electrode_001"]}')
+
 
     def _load_samples(self, nb_samples:int=0, var_keys=MATLAB_DATASET_VAR_KEYS)->None:
         """Load the samples from each batch samples mat-files
@@ -354,7 +358,7 @@ if __name__ == "__main__":
     change_level_logging(logging.DEBUG)
 
     # # load_mat_file()
-    file_path = r'C:\Users\ryanzzzjw\Desktop\eit_ai\datasets\20220313_182045_TestDataSet\TestDataSet_infos2py.mat'
+    file_path = r'C:\Users\ryanzzzjw\Desktop\eit_ai\datasets\20220329_001820_2D_cell1_layer1\2D_cell1_layer1_infos2py.mat'
     MetaData()
     r= MatlabSamples()
     r.load(file_path)
