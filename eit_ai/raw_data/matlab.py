@@ -103,7 +103,7 @@ class MatlabSamples(RawSamples):
         var_dict, file_path = load_mat_file(
             file_path=file_path,
             title='Please select *infos2py.mat-files from a matlab dataset',
-            file_types=[("*infos2py.mat-files", "*infos2py.mat")],
+            file_types=[("*infos2py.mat-files", ".mat")],
         )
 
         self.file_path= file_path
@@ -217,13 +217,13 @@ class MatlabSamples(RawSamples):
 
         Y['Yih-Yh']= Y['Yih']-Y['Yh']
 
-        # here we create the differences normalized
-        X['Xih-Xh/Xh']= np.true_divide(X['Xih-Xh'],X['Xh'])
-        X['Xhn-Xh/Xh']=np.true_divide(X['Xhn-Xh'],X['Xh'])
-        X['Xihn-Xh/Xh']= np.true_divide(X['Xihn-Xh'],X['Xh'])
-        X['Xihn-Xhn/Xhn']=np.true_divide(X['Xihn-Xhn'],X['Xhn'])
+        # # here we create the differences normalized
+        # X['Xih-Xh/Xh']= np.true_divide(X['Xih-Xh'],X['Xh'])
+        # X['Xhn-Xh/Xh']=np.true_divide(X['Xhn-Xh'],X['Xh'])
+        # X['Xihn-Xh/Xh']= np.true_divide(X['Xihn-Xh'],X['Xh'])
+        # X['Xihn-Xhn/Xhn']=np.true_divide(X['Xihn-Xhn'],X['Xhn'])
 
-        Y['Yih-Yh/Yh']= np.true_divide(Y['Yih-Yh'],Y['Yh'])
+        # Y['Yih-Yh/Yh']= np.true_divide(Y['Yih-Yh'],Y['Yh'])
 
         ## control input
         if data_sel[0] not in X.keys() or data_sel[1] not in Y.keys():

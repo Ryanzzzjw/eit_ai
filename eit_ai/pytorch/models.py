@@ -118,23 +118,21 @@ class StdPytorchModel(TypicalPytorchModel):
         in_size=metadata.input_size
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
-        self.net = nn.Sequential(nn.Linear(in_size,512),
-                                nn.ReLU(),
-                                nn.Dropout(0.2),
-                                nn.Linear(512, 512),
-                                nn.ReLU(),
-                                nn.Dropout(0.5),
-                                nn.Linear(512, out_size),
+        self.net = nn.Sequential(nn.Linear(in_size,1024),
+                                nn.BatchNorm1d(1024),
+                                nn.ReLU(True),
+                                # nn.Dropout(0.2),
+                                nn.Linear(1024, 128),
+                                nn.BatchNorm1d(128),
+                                nn.ReLU(True),
+                                # nn.Dropout(0.5),
+                                nn.Linear(128, 1024),
+                                nn.BatchNorm1d(1024),
+                                nn.ReLU(True),
+                                nn.Linear(1024, out_size),
                                 nn.Sigmoid()
                                 )
-        # self.net.add_module('dense1', nn.Linear(in_size, 512))
-        # self.net.add_module('relu', nn.ReLU())
-        # self.net.add_module('dense2', nn.Linear(512, 512))
-        # self.net.add_module('relu', nn.ReLU())
-        # # self.net.add_module('dense2', nn.Linear(512, 1024))
-        # # self.net.add_module('relu', nn.ReLU())
-        # self.net.add_module('dense4', nn.Linear(512, out_size))
-        # self.net.add_module('relu', nn.Sigmoid())
+       
         self.net.to(device=0)
 
 class Conv1dNet(TypicalPytorchModel):

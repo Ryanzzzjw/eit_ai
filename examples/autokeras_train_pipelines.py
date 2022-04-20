@@ -11,6 +11,7 @@ from eit_ai.draw_data import plot_EIT_samples
 from eit_ai.keras.workspace import KerasWorkspace
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.raw_data.raw_samples import load_samples
+from eit_ai.train_utils.lists import ListKerasModels
 from eit_ai.train_utils.workspace import AiWorkspace
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.keras.tensorboard_k import mk_callback_tensorboard
@@ -29,6 +30,7 @@ def std_auto_pipeline(path=''):
     gen.select_model_dataset(
         model_handler=ListKerasModelHandlers.AutokerasModelHandler,
         dataset_handler=ListKerasDatasetHandlers.KerasDatasetHandler,
+        model=ListKerasModels.StdAutokerasModel,
         metadata=metadata)
     metadata.set_ouput_dir(training_name='Std_autokeras_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])

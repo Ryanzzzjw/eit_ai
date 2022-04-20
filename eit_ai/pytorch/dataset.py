@@ -1,4 +1,4 @@
-from array import array
+from operator import mod
 import random
 from logging import getLogger
 from typing import Tuple, Union
@@ -7,7 +7,7 @@ import numpy as np
 import sklearn.model_selection
 from eit_ai.train_utils.dataset import (AiDataset, StdAiDatasetHandler, convert_vec_to_int,
                                         scale_preprocess)
-from eit_ai.train_utils.lists import ListPytorchDatasetHandlers
+from eit_ai.train_utils.lists import ListPytorchDatasetHandlers, ListPytorchModelHandlers, ListPytorchModels
 from eit_ai.train_utils.metadata import MetaData
 from sklearn import model_selection
 import torch
@@ -129,7 +129,7 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
         """        
         return self.X, self.Y
 
-class PytorchConv1dDatasetHandler(StdAiDatasetHandler):
+class PytorchUxyzDatasetHandler(StdAiDatasetHandler):
 
     def _post_init(self):
         self.dataset_cls=PytorchUxyzDataset
@@ -183,7 +183,12 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         self._new_X= np.array([]) # [U, x,y,z] (N*n_pos, n_meas+3)
         self._new_Y= np.array([])# conductitiy for n postions (N*n_pos, 1)
 
-        logger.debug("Generation of positions - Start ...")  
+        logger.debug("Generation of positions - Start ...")
+        self.pts = fwd_model['nodes']
+        self.tri = fwd_model['elems']
+        self.center_e = np.mean(self.pts[self.tri], axis=1)
+        self.n_pos=len(self.center_e)
+          
         #TODO Generation of pos and c
         self.pos= np.array([]) # (n_pos, 3, N)
         self.cpos= np.array([]) # (n_pos, 1, N)
@@ -194,7 +199,7 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         Returns:
             [type]: [description]
         """        
-        return len(self.X)
+        return len(self.X)*self.n_pos
 
     def __getitem__(
         self,
@@ -221,11 +226,16 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
 
     def build_Uxyz_c(self, idx:Union[int, list[int]])-> Tuple[torch.Tensor, torch.Tensor]:
         self.pos_batch, self.cpos_batch= self.get_pos_c_batch(idx)
+        
+        m_pos = mod(idx, self.n_pos)
+        n_samples=idx//self.n_pos
+        self._new_Y=self.Y[n_samples, m_pos]
+        self._new_X=np.hstack((self.X[n_samples,:], self.center_e[m_pos,:]))
         # here use idx, self.X , self.Y, self.pos_batch, self.cpos_batch
         # to build  self._new_X , self._new_Y
         return self._new_X , self._new_Y# conductitiy for n postions (N*n_pos, 1)
 
-    def get_pos_c_batch(self, idx:Union[int, list[int]])-> None:
+    # def get_pos_c_batch(self, idx:Union[int, list[int]])-> None:
         # here set self.pos_batch, self.cpos_batch
         pos_batch, cpos_batch= None, None
         return pos_batch, cpos_batch
@@ -256,6 +266,8 @@ class DataloaderGenerator(object):
 PYTORCH_DATASET_HANDLERS={
     ListPytorchDatasetHandlers.StdPytorchDatasetHandler: StdPytorchDatasetHandler,
     ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler: PytorchConv1dDatasetHandler,
+    ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler: PytorchUxyzDatasetHandler,
+    
 }
 
 def reshape_4_1Dconv(x:np.ndarray, channel:int=1)-> np.ndarray:
@@ -278,18 +290,26 @@ if __name__ == "__main__":
     from glob_utils.log.log import change_level_logging, main_log
     main_log()
     change_level_logging(logging.DEBUG)
+    
+    from eit_ai.pytorch.workspace import PyTorchWorkspace
+    from eit_ai.raw_data.matlab import MatlabSamples
+    from eit_ai.raw_data.raw_samples import load_samples
+    # X = np.random.randn(100, 4)
+    # Y = np.random.randn(100)
+    # Y = Y[:, np.newaxis]
+    path=''
+    metadata = MetaData()
+    ws = PyTorchWorkspace()
+    ws.select_model_dataset(
+        model_handler=ListPytorchModelHandlers.PytorchModelHandler,
+        dataset_handler=ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler,
+        model=ListPytorchModels.StdPytorchModel,
+        metadata=metadata
+    )
 
-    # X = np.array([[random.randint(0, 100) for _ in range(4)] for _ in range(100)])
-    # Y = np.array([random.randint(0, 100) for _ in range(100)])
-    # print(f'{X}; {X.shape}\n; {Y}; {Y.shape}')
-    
-    X = np.random.randn(100, 4)
-    Y = np.random.randn(100)
-    Y = Y[:, np.newaxis]
-    
-    rdn_dataset = PytorchDataset(X, Y)
-    
-    datatset = StdPytorchDatasetHandler()
+    raw_samples=load_samples(MatlabSamples(), path, metadata)
+    metadata.set_4_dataset(batch_size=1)
+    ws.build_dataset(raw_samples, metadata)
 
 
 

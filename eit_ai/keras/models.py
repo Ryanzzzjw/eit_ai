@@ -78,6 +78,23 @@ class StdKerasModel(TypicalKerasModelGenerator):
         self.model.add(keras.layers.Dense(out_size)) 
         self.model.add(keras.layers.Activation(tf.nn.sigmoid))
 
+class StdAutoKerasModel(TypicalKerasModelGenerator):
+    """Define a Standard
+    """
+    def _set_layers(self, metadata:MetaData)->None:
+        self.name = "std_autokeras"
+        self.model = ak.StructuredDataRegressor(
+            max_trials = metadata.max_trials_autokeras, 
+            overwrite=True, 
+            directory=metadata.dir_path)
+
+    def _set_layers(self, metadata:MetaData)->None:
+        self.name = "std_autokeras"
+        self.model = ak.StructuredDataRegressor(
+            max_trials = metadata.max_trials_autokeras, 
+            overwrite=True, 
+            directory=metadata.dir_path)
+
 
 ################################################################################
 # Std Keras Model Handler
@@ -143,11 +160,12 @@ class StdKerasModelHandler(AiModelHandler):
 ################################################################################
 class StdAutokerasModelHandler(AiModelHandler):
     def _define_model(self, metadata:MetaData)-> None:
-        self.name = "std_autokeras"
-        self.model = ak.StructuredDataRegressor(
-            max_trials = metadata.max_trials_autokeras, 
-            overwrite=True, 
-            directory=metadata.dir_path)
+        gen_cls = get_from_dict(
+            metadata.model_type, KERAS_MODELS, ListKerasModels
+        )
+        gen=gen_cls(metadata)
+        self.mdoel=gen.get_model()
+        self.name =gen.get_name()
     def _get_specific_var(self, metadata:MetaData)-> None:
         """"""
     def _prepare_model(self)-> None:
@@ -299,7 +317,8 @@ KERAS_MODEL_HANDLERS={
 }
 
 KERAS_MODELS={
-    ListKerasModels.StdKerasModel: StdKerasModel
+    ListKerasModels.StdKerasModel: StdKerasModel,
+    ListKerasModels.StdAutoKerasModel: StdAutoKerasModel,
 }
 
 if __name__ == "__main__":
