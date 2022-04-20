@@ -54,7 +54,7 @@ class ListModels(ExtendedEnum):
     """"""
 class ListKerasModels(ListModels):
     StdKerasModel='StdKerasModel'
-    StdAutoKerasModel='StdAutoKerasModel'
+    StdAutokerasModel='StdAutokerasModel'
 class ListPytorchModels(ListModels):
     StdPytorchModel='StdPytorchModel'
     Conv1dNet='Conv1dNet'
@@ -84,6 +84,7 @@ class ListKerasDatasetHandlers(ListDatasetHandlers):
 class ListPytorchDatasetHandlers(ListDatasetHandlers):
     StdPytorchDatasetHandler='StdPytorchDatasetHandler'
     PytorchConv1dDatasetHandler='PytorchConv1dDatasetHandler'
+    PytorchUxyzDatasetHandler= 'PytorchUxyzDatasetHandler'
 
 ################################################################################
 # Optimizers

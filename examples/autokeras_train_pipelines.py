@@ -30,7 +30,7 @@ def std_auto_pipeline(path=''):
     gen.select_model_dataset(
         model_handler=ListKerasModelHandlers.AutokerasModelHandler,
         dataset_handler=ListKerasDatasetHandlers.KerasDatasetHandler,
-        model=ListKerasModels.StdAutoKerasModel,
+        model=ListKerasModels.StdAutokerasModel,
         metadata=metadata)
     metadata.set_ouput_dir(training_name='Std_autokeras_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])

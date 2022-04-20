@@ -2,7 +2,7 @@
 from logging import getLogger
 
 import numpy as np
-from eit_ai.keras.dataset import KERAS_DATASET_HANDLERS
+from eit_ai.keras.dataset import KERAS_DATASET_HANDLERS, KerasDatasetHandler
 from eit_ai.keras.models import KERAS_MODEL_HANDLERS, KERAS_MODELS
 from eit_ai.raw_data.raw_samples import RawSamples
 from eit_ai.train_utils.dataset import AiDatasetHandler
