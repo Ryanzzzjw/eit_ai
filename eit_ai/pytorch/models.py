@@ -119,7 +119,7 @@ class StdPytorchModel(TypicalPytorchModel):
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
         self.net = nn.Sequential(nn.Linear(in_size,1024),
-                                 nn.BatchNorm1d(1024),
+                                nn.BatchNorm1d(1024),
                                 nn.ReLU(True),
                                 # nn.Dropout(0.2),
                                 nn.Linear(1024, 128),
