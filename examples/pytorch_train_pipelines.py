@@ -121,6 +121,34 @@ def build_train_save_model(ws:AiWorkspace, metadata:MetaData)-> tuple[AiWorkspac
     metadata.callbacks=True # final saving
     return ws, metadata
 
+def Uxyz_pytorch_train_pipeline(path:str= ''):
+    logger.info('### Start standard pytorch training ###')
+
+    metadata=MetaData()
+    ws = PyTorchWorkspace()# Create a model generator
+    ws.select_model_dataset(
+        model_handler=ListPytorchModelHandlers.PytorchModelHandler,
+        dataset_handler=ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler,
+        model=ListPytorchModels.StdPytorchModel,
+        metadata=metadata)
+
+    metadata.set_ouput_dir(training_name='MLP_PyTorch_test', append_date_time= True)
+    metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
+    metadata._nb_samples = 10
+    raw_samples=load_samples(MatlabSamples(), path, metadata)
+    metadata.set_4_dataset(batch_size=2)
+    ws.build_dataset(raw_samples, metadata)
+
+    # samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
+    # plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
+        
+    metadata.set_4_model(epoch=1,
+                         metrics=['mse'], 
+                         optimizer=ListPyTorchOptimizers.Adam,
+                         loss=ListPyTorchLosses.CrossEntropyLoss,
+                        #  callbacks=[run_tensorboard]
+                         )
+    build_train_save_model(ws, metadata)
 
 if __name__ == "__main__":
     import logging
@@ -138,6 +166,7 @@ if __name__ == "__main__":
         path= ''
 
     # std_pytorch_train_pipeline(path=path)
-    Auto_Encoder_train_pipeline(path=path)
+    # Auto_Encoder_train_pipeline(path=path)
     # Conv1d_pytorch_train_pipeline(path=path)
+    Uxyz_pytorch_train_pipeline(path=path)
     # plt.show()
