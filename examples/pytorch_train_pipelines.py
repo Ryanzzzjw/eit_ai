@@ -3,6 +3,7 @@
 
 import logging
 from logging import getLogger
+from eit_ai.draw_3d import plot_3d
 
 from eit_ai.draw_data import *
 from eit_ai.pytorch.tensorboard_torch import run_tensorboard
@@ -71,12 +72,13 @@ def Auto_Encoder_train_pipeline(path:str= ''):
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
-    plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
+    # plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
+    plot_3d(ws.getattr_dataset('fwd_model'), ws.getattr_dataset('sim'), samples_y)
         
     metadata.set_4_model(epoch=100,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
-                         loss=ListPyTorchLosses.CrossEntropyLoss,
+                         loss=ListPyTorchLosses.MSELoss,
                         #  callbacks=[run_tensorboard]
                          )
     build_train_save_model(ws, metadata)
@@ -138,4 +140,4 @@ if __name__ == "__main__":
     # std_pytorch_train_pipeline(path=path)
     Auto_Encoder_train_pipeline(path=path)
     # Conv1d_pytorch_train_pipeline(path=path)
-    plt.show()
+    # plt.show()
