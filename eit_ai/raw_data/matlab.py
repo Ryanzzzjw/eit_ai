@@ -210,20 +210,20 @@ class MatlabSamples(RawSamples):
             'Yih': self.samples['y'][:,:,1] 
         }
         # here we create the differences
-        X['Xih-Xh']= X['Xih']-X['Xh']
-        X['Xhn-Xh']= X['Xhn']-X['Xh']
-        X['Xihn-Xh']= X['Xihn']-X['Xh']
-        X['Xihn-Xhn']= X['Xihn']-X['Xhn']
+        # X['Xih-Xh']= X['Xih']-X['Xh']
+        # X['Xhn-Xh']= X['Xhn']-X['Xh']
+        # X['Xihn-Xh']= X['Xihn']-X['Xh']
+        # X['Xihn-Xhn']= X['Xihn']-X['Xhn']
 
-        Y['Yih-Yh']= Y['Yih']-Y['Yh']
+        # Y['Yih-Yh']= Y['Yih']-Y['Yh']
 
         # here we create the differences normalized
-        X['Xih-Xh/Xh']= np.true_divide(X['Xih-Xh'],X['Xh'])
-        X['Xhn-Xh/Xh']=np.true_divide(X['Xhn-Xh'],X['Xh'])
-        X['Xihn-Xh/Xh']= np.true_divide(X['Xihn-Xh'],X['Xh'])
-        X['Xihn-Xhn/Xhn']=np.true_divide(X['Xihn-Xhn'],X['Xhn'])
+        # X['Xih-Xh/Xh']= np.true_divide(X['Xih-Xh'],X['Xh'])
+        # X['Xhn-Xh/Xh']=np.true_divide(X['Xhn-Xh'],X['Xh'])
+        # X['Xihn-Xh/Xh']= np.true_divide(X['Xihn-Xh'],X['Xh'])
+        # X['Xihn-Xhn/Xhn']=np.true_divide(X['Xihn-Xhn'],X['Xhn'])
 
-        Y['Yih-Yh/Yh']= np.true_divide(Y['Yih-Yh'],Y['Yh'])
+        # Y['Yih-Yh/Yh']= np.true_divide(Y['Yih-Yh'],Y['Yh'])
 
         ## control input
         if data_sel[0] not in X.keys() or data_sel[1] not in Y.keys():

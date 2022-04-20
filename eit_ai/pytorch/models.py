@@ -5,7 +5,7 @@ from typing import Any
 from contextlib import redirect_stdout
 from torchinfo import summary
 
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 import torch
@@ -27,7 +27,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 logger = getLogger(__name__)
-# writer = SummaryWriter()
+writer = SummaryWriter()
 
 class TypicalPytorchModel(ABC):
     """Define a standard pytorch Model
@@ -50,7 +50,7 @@ class TypicalPytorchModel(ABC):
     def prepare(self, op:torch.optim.Optimizer, loss):
         self.optimizer= op
         self.loss= loss
-        
+    
     def forward(self, x:torch.Tensor)-> torch.Tensor:
         # logger.debug(f'foward, {x.shape=}')
         return self.net(x)
@@ -93,6 +93,8 @@ class TypicalPytorchModel(ABC):
                 
                 loss_value = self.loss(y_pred, labels)
                 val_loss += loss_value.item()
+                
+                
         return val_loss / len(dataloader) 
 
     def get_name(self)->str:
@@ -118,23 +120,20 @@ class StdPytorchModel(TypicalPytorchModel):
         in_size=metadata.input_size
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
-        self.net = nn.Sequential(nn.Linear(in_size,512),
-                                nn.ReLU(),
-                                nn.Dropout(0.2),
-                                nn.Linear(512, 512),
-                                nn.ReLU(),
-                                nn.Dropout(0.5),
-                                nn.Linear(512, out_size),
+        self.net = nn.Sequential(nn.Linear(in_size, 1024),
+                                nn.BatchNorm1d(1024),
+                                nn.ReLU(True),
+                                # nn.Dropout(0.2),
+                                nn.Linear(1024, 128),
+                                nn.BatchNorm1d(128),
+                                nn.ReLU(True),
+                                nn.Linear(128, 1024),
+                                nn.BatchNorm1d(1024),
+                                nn.ReLU(True),
+                                # nn.Dropout(0.2),
+                                nn.Linear(1024, out_size),
                                 nn.Sigmoid()
                                 )
-        # self.net.add_module('dense1', nn.Linear(in_size, 512))
-        # self.net.add_module('relu', nn.ReLU())
-        # self.net.add_module('dense2', nn.Linear(512, 512))
-        # self.net.add_module('relu', nn.ReLU())
-        # # self.net.add_module('dense2', nn.Linear(512, 1024))
-        # # self.net.add_module('relu', nn.ReLU())
-        # self.net.add_module('dense4', nn.Linear(512, out_size))
-        # self.net.add_module('relu', nn.Sigmoid())
         self.net.to(device=0)
 
 class Conv1dNet(TypicalPytorchModel):
@@ -169,30 +168,31 @@ class AutoEncoder(TypicalPytorchModel):
         self.name = "AutoEncoder"
         self.net = torch.nn.Sequential()
         
-        encoder = nn.Sequential(
+        self.encoder = nn.Sequential(
             nn.Linear(in_size, 128),
             nn.ReLU(True),
             nn.Linear(128, 64),
             nn.ReLU(True),
-            nn.Linear(64, 16),  
+            nn.Linear(64, 32),
+            nn.ReLU(True),
+            nn.Linear(32, 16),
             )
         
-        decoder = nn.Sequential(
-            nn.Linear(16, 128),
+        self.decoder = nn.Sequential(
+            nn.Linear(16, 64),
             nn.ReLU(True),
-            nn.Linear(128, 512),
+            nn.Linear(64, 512),
             nn.ReLU(True),
-            nn.Linear(512, 2048),
+            nn.Linear(512, 512),
             nn.ReLU(True),
-            nn.Linear(2048, out_size),
+            nn.Linear(512, out_size),
             nn.Sigmoid(),
             )
         
-        
-        self.net.add_module('encoder', encoder)
-        self.net.add_module('decoder', decoder)
-        
+        self.net.add_module('Encoder', self.encoder)
+        self.net.add_module('Decoder', self.decoder)
         self.net.to(device=0)
+        
         
 ################################################################################
 # Std PyTorch ModelManager
@@ -233,8 +233,9 @@ class StdPytorchModelHandler(AiModelHandler):
             logger.info(f'Epoch #{epoch+1}/{metadata.epoch}')
             logger.info(f'train_loss = {train_loss}, val_loss = {val_loss}')
             
-            # writer.add_scalar("training_loss", loss, epoch+1)
-            # writer.close()   
+            writer.add_scalar("training_loss", train_loss, epoch+1)
+            writer.add_scalar("val_loss", val_loss, epoch+1)
+            writer.close()   
 
     def predict(
         self,
@@ -302,7 +303,7 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
         return op_cls(net.parameters(), lr= metadata.learning_rate)
     
     logger.warning('Learningrate has been set to 0.001!!!')
-    return op_cls(net.parameters(), lr=0.0001)
+    return op_cls(net.parameters(), lr=0.001)
         
 
 def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:

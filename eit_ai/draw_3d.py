@@ -84,6 +84,7 @@ def plot_3d(fwd_model, sim, perm):
     
     pl.add_mesh(chamber, style='wireframe')
     pl.add_mesh(obj, color='blue')
+    pl.show()
     
 
 def plot_3d_compare_samples(

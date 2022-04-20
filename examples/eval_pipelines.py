@@ -58,8 +58,8 @@ def eval_pipeline(dir_path:str=''):
     
     plot_eval_results(results, axis='linear')
     # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Portrait)
-    # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
-    plot_3d_compare_samples(image_data=img_data, nb_samples=3)
+    plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
+    # plot_3d_compare_samples(image_data=img_data, nb_samples=3)
     # plot_real_NN_EIDORS(gen.getattr_dataset('fwd_model'), true_img_data[randnlist,:].T, nn_img_data[randnlist,:].T)
 
 

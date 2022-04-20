@@ -40,7 +40,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             raise TypeError(
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
-        self.X = -x
+        self.X = x
         self.Y = y
 
     def __len__(self):
@@ -129,7 +129,7 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
         """        
         return self.X, self.Y
 
-class PytorchConv1dDatasetHandler(StdAiDatasetHandler):
+class PytorchUxyzDatasetHandler(StdAiDatasetHandler):
 
     def _post_init(self):
         self.dataset_cls=PytorchUxyzDataset
