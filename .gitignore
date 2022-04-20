@@ -131,8 +131,10 @@ dmypy.json
 
 # eit_ai specific
 _test_scripts
+metrics_result
 datasets
 outputs
+metrics_result
 *default_dirs.txt
 runs
 .vscode/

@@ -1,3 +1,4 @@
+from math import nan
 from numpy.core.fromnumeric import ndim
 from numpy.core.shape_base import block
 from pyvista.plotting import scalar_bars
@@ -47,7 +48,7 @@ def format_inputs(fwd_model, data):
     if data.ndim == 2:
         tri = np.array(fwd_model['elems'])
         pts = np.array(fwd_model['nodes'])
-        if data.shape[1]==pts.shape[0] or data.shape[1]==tri.shape[0]:
+        if data.shape[1] in [pts.shape[0], tri.shape[0]]:
             data= data.T
     return data
     
@@ -74,29 +75,25 @@ def plot_3d(fwd_model, perm, U):
     mesh = pv.PolyData(pts, elements)
     
     colors = np.real(data[key])
+    colors[colors == 1] = nan
     
-    mesh.plot(scalars=colors,
-          opacity = 0.5,
-          cmap='jet',
-          show_scalar_bar=True,
-          background='black')
+    # mesh.plot(scalars=colors,
+    #       opacity = 0.5,
+    #       cmap='jet',
+    #       show_scalar_bar=True,
+    #       background='black')
     
-    slicing = mesh.slice_along_axis(n=10, axis='z')
-    slicing.plot(
-          opacity = 0.5,
-          cmap='jet',
-          show_scalar_bar=True,
-          background='black')
+    # slicing = mesh.slice_along_axis(n=10, axis='z')
+    # slicing.plot(opacity = 0.5,cmap='jet',show_scalar_bar=True,background='black')
     
-    # p = Plotter(shape=(1, 2), border=False)
+    p = Plotter()
     
-    # pv.set_plot_theme("dark")
+    # pv.set_plot_theme("white")
     # p.subplot(0, 0)
-    # p.add_mesh(mesh,
-    #       opacity = 0.3,
-    #       cmap='coolwarm',
-    #       show_scalar_bar= True,
-    #       )
+    p.add_mesh(mesh, scalars=colors,
+               nan_color= 'white',
+               nan_opacity=0.1,
+          )
     # p.subplot(0, 1)
     # slicing = mesh.slice_orthogonal()
     # p.add_mesh(slicing,
@@ -108,8 +105,7 @@ def plot_3d(fwd_model, perm, U):
     #                        title_font_size=35,
     #                        label_font_size=30,
     #                        outline=True,)
-    # p.show()
-
+    p.show()
 
 if __name__ == "__main__":
     from glob_utils.log.log import change_level_logging, main_log
@@ -120,8 +116,7 @@ if __name__ == "__main__":
     debug = True
 
     if debug:
-        path = r'C:\Users\ryanzzzjw\Downloads/eit_ai/datasets/20210929_082223_2D_16e_adad_cell3_SNR20dB_50k_dataset' \
-               '/2D_16e_adad_cell3_SNR20dB_50k_infos2py.mat '
+        path = r'C:\Users\ryanzzzjw\Desktop\eit_ai\datasets\20220313_182045_TestDataSet\TestDataSet_infos2py.mat'
     else:
         path = ''
     
@@ -135,9 +130,9 @@ if __name__ == "__main__":
 
     metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
-    # metadata._nb_samples = 10000
+    metadata._nb_samples = 10
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1000)
+    metadata.set_4_dataset(batch_size=10)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
