@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from logging import getLogger
+import logging
 
 from eit_ai.train_utils.metadata import MetaData
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 ################################################################################

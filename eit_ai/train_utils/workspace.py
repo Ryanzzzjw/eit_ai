@@ -1,7 +1,7 @@
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from logging import getLogger
+import logging
 import time
 from typing import Any, Union
 import numpy as np
@@ -13,7 +13,7 @@ from eit_ai.train_utils.lists import ListModelHandlers, ListDatasetHandlers, Lis
 from eit_ai.raw_data.raw_samples import RawSamples
 from glob_utils.args.kwargs import kwargs_extract
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class WrongModelError(Exception):

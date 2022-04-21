@@ -1,15 +1,15 @@
 
 
 import os
-from logging import getLogger
+import logging
 
-from glob_utils.files.files import FileExt, OpenDialogFileCancelledException
+from glob_utils.file.utils import FileExt, OpenDialogFileCancelledException
 from numpy import ndarray
 from eit_ai.raw_data.matlab import load_mat_file
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.dataset import scale_preprocess
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 ################################################################################
 # Loading of Eidors solution

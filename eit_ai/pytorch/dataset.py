@@ -1,6 +1,6 @@
 from operator import mod
 import random
-from logging import getLogger
+import logging
 from typing import Tuple, Union
 
 import numpy as np
@@ -14,7 +14,7 @@ import torch
 from torch.utils.data import DataLoader
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class StdPytorchDatasetHandler(StdAiDatasetHandler):
 

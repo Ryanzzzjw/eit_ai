@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 import os
 from contextlib import redirect_stdout
-from logging import error, getLogger
+import logging
 from typing import Any
 
 import autokeras as ak
@@ -23,7 +23,7 @@ from eit_ai.train_utils.models import (MODEL_SUMMARY_FILENAME,
                                        WrongMetricsError, WrongOptimizerError)
 from genericpath import isdir
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 

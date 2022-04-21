@@ -3,18 +3,18 @@
 import os
 import sys
 import traceback
-from logging import getLogger
+import logging
 
-import glob_utils.files.matlabfile
+import glob_utils.file.mat_utils
 import numpy as np
 from eit_ai.default.set_default_dir import AI_DIRS, AiDirs
 from eit_ai.raw_data.raw_samples import RawSamples
-from glob_utils.files.files import (FileExt, NotFileError,
+from glob_utils.file.utils import (FileExt, NotFileError,
                                     OpenDialogFileCancelledException,
                                     WrongFileExtError, check_file,
-                                    dialog_get_file_with_ext, load_mat)
+                                    dialog_get_file_with_ext)
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 ################################################################################
 # Matlab Samples 
@@ -109,7 +109,7 @@ class MatlabSamples(RawSamples):
         self.file_path= file_path
         self.dir_path = os.path.split(file_path)[0]
 
-        m= glob_utils.files.matlabfile.MatFileStruct()
+        m= glob_utils.file.mat_utils.MatFileStruct()
 
         struct= m._extract_matfile(var_dict, file_path)
         self.dataset= struct['eit_dataset']
@@ -155,7 +155,7 @@ class MatlabSamples(RawSamples):
             batch_file_path= samples_batch_paths[idx_batch]
             logger.info(
                 f'Loading batch samples file : ...{batch_file_path[-50:]}')
-            batch_file=load_mat(batch_file_path, logging=False)
+            batch_file=glob_utils.file.mat_utils.load_mat(batch_file_path, logging=False)
             for key in self.samples.keys():
                 if idx_batch==0:
                     if idx_batch==idx_batch_file:
@@ -344,7 +344,7 @@ def load_mat_file(file_path:str=None,**kwargs)-> tuple[dict, str]:
             ext=FileExt.mat,
             initialdir=AI_DIRS.get(AiDirs.matlab_datasets.value),
             **kwargs)
-    var_dict= load_mat(file_path)
+    var_dict= glob_utils.file.mat_utils.load_mat(file_path)
     return var_dict, file_path
 
 

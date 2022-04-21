@@ -1,6 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from logging import getLogger
+import logging
 from typing import Any
 from contextlib import redirect_stdout
 from torchinfo import summary
@@ -26,7 +26,7 @@ from genericpath import isdir, isfile
 from torch import nn
 from torch.utils.data import DataLoader
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 # writer = SummaryWriter()
 
 class TypicalPytorchModel(ABC):

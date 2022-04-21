@@ -15,7 +15,7 @@ from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.workspace import AiWorkspace
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def std_pytorch_train_pipeline(path:str= ''):
     logger.info('### Start standard pytorch training ###')

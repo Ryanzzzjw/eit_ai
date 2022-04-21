@@ -7,8 +7,8 @@ from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.dataset import AiDatasetHandler
 from enum import Enum
 
-from logging import getLogger
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 MODEL_SUMMARY_FILENAME='model_summary'
 

@@ -2,10 +2,10 @@ from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.raw_data.raw_samples import load_samples
 from eit_ai.train_utils.metadata import MetaData
 import matplotlib.pyplot as plt
-from logging import getLogger
+import logging
 import seaborn as sns
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def eval_dataset() -> None:

@@ -1,7 +1,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from logging import getLogger
+import logging
 from typing import Any, Union
 
 import numpy as np
@@ -12,7 +12,7 @@ from eit_ai.train_utils.metadata import MetaData
 from scipy.stats import zscore
 from sklearn.preprocessing import MaxAbsScaler, MinMaxScaler
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 ################################################################################
 # Custom Exeptions/Errors for Dataset
 ################################################################################
