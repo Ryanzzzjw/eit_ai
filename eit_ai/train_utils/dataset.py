@@ -89,20 +89,29 @@ class AiDatasetHandler(ABC):
             Y ([type]): [description]
             metadata (MetaData): [description]
         """ 
-        logger.debug(f'Size of X and Y: {X.shape=}, {Y.shape=}')       
-        self._nb_samples= np.shape(X)[0]
-        if metadata._nb_samples != self._nb_samples:
-            raise TypeError(f'wrong shape {X=}, {X.shape=}; {Y=}, {Y.shape=}')
         self._batch_size = metadata.batch_size
         self._test_ratio= metadata.test_ratio
         self._val_ratio = metadata.val_ratio
-        self.input_size= np.shape(X)[1]
-        self.ouput_size= np.shape(Y)[1]
+        
 
     def _compute_sizes(self):
-        self._train_len=self.get_X('train').shape[0]
-        self._val_len=self.get_X('val').shape[0]
-        self._test_len= self.get_X('test').shape[0]
+        
+        # logger.debug(f'Size of X and Y: {X.shape=}, {Y.shape=}')       
+        # if metadata._nb_samples != self._nb_samples:
+        #     raise TypeError(f'wrong shape {X=}, {X.shape=}; {Y=}, {Y.shape=}')
+        
+        # self.input_size= self.get_X('train').shape[1]
+        self.input_size, self.ouput_size= self.train.get_inout_sizes()
+        # self.ouput_size= self.get_Y('train').shape[1]
+        
+        self._train_len=len(self.train)
+        self._val_len=len(self.val)
+        self._test_len= len(self.test)
+        self._nb_samples= self._train_len + self._val_len + self._test_len
+        
+        logger.info(f'{self._nb_samples=}')
+        logger.info(f'{self.ouput_size=}')
+        logger.info(f'{self.input_size=}')
         logger.info(f'Length of train: {self._train_len}')
         logger.info(f'Length of val: {self._val_len}' )
         logger.info(f'Length of test: {self._test_len}')
@@ -173,7 +182,16 @@ class AiDataset(ABC):
     should contain x and y of the dataset
     also the creator should be AiDataset(x, y)
     """    
+    
+    
 
+    @abstractmethod
+    def __len__(self):
+        """"""
+        
+    @abstractmethod
+    def get_inout_sizes(self):
+        """"""
     @abstractmethod
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ Return the x and y of the dataset
@@ -196,8 +214,15 @@ class SimpleDataset(AiDataset):
         self._x=x
         self._y=y
 
+    def __len__(self):
+        return len(self._x)
+    
+    def get_inout_sizes(self):
+        return self._x.shape[1], self._y.shape[1]
+    
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         return self._x, self._y
+    
     
 ################################################################################
 # Custom standard Datasethandler

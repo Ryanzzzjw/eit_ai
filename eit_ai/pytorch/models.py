@@ -63,8 +63,8 @@ class TypicalPytorchModel(ABC):
             # logger.debug(f'Batch #{idx}')
             train_loss = 0
             inputs, labels = data_i
-            inputs = inputs.to(device=0)
-            labels = labels.to(device=0)
+            # inputs = inputs.to(device=0)
+            # labels = labels.to(device=0)
             y_pred = self.net(inputs)
             #loss
             loss_value = self.loss(y_pred, labels)
@@ -87,8 +87,8 @@ class TypicalPytorchModel(ABC):
             for idx, data_i in enumerate(dataloader):
                 
                 inputs, labels = data_i
-                inputs = inputs.to(device=0)
-                labels = labels.to(device=0)
+                # inputs = inputs.to(device=0)
+                # labels = labels.to(device=0)
                 y_pred = self.net(inputs)
                 
                 loss_value = self.loss(y_pred, labels)
@@ -119,21 +119,21 @@ class StdPytorchModel(TypicalPytorchModel):
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
         self.net = nn.Sequential(nn.Linear(in_size,1024),
-                                nn.BatchNorm1d(1024),
+                                nn.BatchNorm1d(1),
                                 nn.ReLU(True),
                                 # nn.Dropout(0.2),
                                 nn.Linear(1024, 128),
-                                nn.BatchNorm1d(128),
+                                # nn.BatchNorm1d(128),
                                 nn.ReLU(True),
                                 # nn.Dropout(0.5),
                                 nn.Linear(128, 1024),
-                                nn.BatchNorm1d(1024),
+                                # nn.BatchNorm1d(1024),
                                 nn.ReLU(True),
                                 nn.Linear(1024, out_size),
                                 nn.Sigmoid()
                                 )
        
-        self.net.to(device=0)
+        # self.net.to(device=0)
 
 class Conv1dNet(TypicalPytorchModel):
     

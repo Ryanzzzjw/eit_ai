@@ -213,16 +213,20 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
         # x,y= torch.Tensor(self.X_conv[idx]).float(), torch.Tensor(self.Y[idx]).float()
-        new_X = np.empty((0,259))
-        new_Y = np.empty((0,1))
-        for i in range(idx+1):
-            temp_x, temp_y = self.build_Uxyz_c(i)
-            np.vstack((new_X, temp_x))
-            np.vstack((new_Y, temp_y))
-        logger.debug(f'newY ={new_X}, newY shape={new_X.shape}')
-        logger.debug(f'newY ={new_Y}, newY shape={new_Y.shape}')
+        # new_X = np.empty((0,259))
+        # new_Y = np.empty((0,1))
+        new_X, new_Y = self.build_Uxyz_c(idx)
+        # for i in idx:
+        #     temp_x, temp_y = self.build_Uxyz_c(i)
+        #     np.vstack((new_X, temp_x))
+        #     np.vstack((new_Y, temp_y))
+        logger.debug(f'{new_X=}, {new_X.shape=}')
+        logger.debug(f'{new_Y=}, {new_Y.shape=}')
         
         return torch.Tensor(new_X).float(), torch.Tensor(new_Y).float()
+    
+    def get_inout_sizes(self):
+        return self.X.shape[1]+self.center_e.shape[1], 1
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ return X and Y separately.
@@ -233,16 +237,23 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         return self.X, self.Y
 
     def build_Uxyz_c(self, idx:Union[int, list[int]])-> Tuple[torch.Tensor, torch.Tensor]:
-        self.pos_batch, self.cpos_batch= self.get_pos_c_batch(idx)
+        # self.pos_batch, self.cpos_batch= self.get_pos_c_batch(idx)
         
         # here use idx, self.X , self.Y, self.pos_batch, self.cpos_batch
         # to build  self._new_X , self._new_Y
+        if not isinstance(idx, int):
+            raise TypeError("jaiwei said that idx is only int")
+        # idx= np.array(idx)
+        logger.debug(f"{idx=}")
         m_pos = mod(idx, self.n_pos)
         n_samples = idx // self.n_pos
+        logger.debug(f"{m_pos=}")
+        logger.debug(f"{n_samples=}")
+        
         self._new_Y=self.Y[n_samples, m_pos].reshape(1, -1)
         self._new_X=np.hstack((self.X[n_samples,:], self.center_e[m_pos,:])).reshape(1, -1)
-        logger.debug(f'newX ={self._new_X}, newY shape={self._new_X.shape}')
-        logger.debug(f'newY ={self._new_Y}, newY shape={self._new_Y.shape}')
+        logger.debug(f'{self._new_X=}, {self._new_X.shape=}')
+        logger.debug(f'{self._new_Y=}, {self._new_Y.shape=}')
         return self._new_X , self._new_Y# conductitiy for n postions (N*n_pos, 1)
 
     # def get_pos_c_batch(self, idx:Union[int, list[int]])-> None:

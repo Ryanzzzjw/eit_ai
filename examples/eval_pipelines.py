@@ -36,6 +36,8 @@ def eval_pipeline(dir_path:str=''):
     logger.info(f'Real perm shape: {true_img_data.shape}')
 
     nn_img_data = ws.get_prediction(metadata)
+    # TODO make a reshape of nn_img_data
+    nn_img_data=nn_img_data.reshape(true_img_data.shape)
     #plt.plot(nn_img_data.T)
     logger.info(f'Predicted perm shape: {nn_img_data.shape}')
     img_data.append(ImageDataset(nn_img_data, 'NN Predicted image',fwd_model, sim))
