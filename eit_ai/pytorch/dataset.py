@@ -40,7 +40,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             raise TypeError(
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
-        self.X = -x
+        self.X = x
         self.Y = y
 
     def __len__(self):
@@ -49,6 +49,9 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             [type]: [description]
         """        
         return len(self.X)
+    
+    def get_inout_sizes(self):
+        return self.X.shape[1], self.Y.shape[1]
 
     def __getitem__(
         self,
@@ -97,7 +100,7 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
         self.X = x
-        self.X_conv= reshape_4_1Dconv(-x) # special reshape for conv Ai
+        self.X_conv= reshape_4_1Dconv(x) # special reshape for conv Ai
         self.Y = y
 
     def __len__(self):
@@ -106,6 +109,10 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
             [type]: [description]
         """        
         return len(self.X)
+    
+    
+    def get_inout_sizes(self):
+        return self.X.shape[1], self.Y.shape[1]
 
     def __getitem__(
         self,

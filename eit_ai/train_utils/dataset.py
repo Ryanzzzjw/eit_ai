@@ -192,6 +192,7 @@ class AiDataset(ABC):
     @abstractmethod
     def get_inout_sizes(self):
         """"""
+        
     @abstractmethod
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ Return the x and y of the dataset

@@ -103,7 +103,7 @@ class MatlabSamples(RawSamples):
         var_dict, file_path = load_mat_file(
             file_path=file_path,
             title='Please select *infos2py.mat-files from a matlab dataset',
-            file_types=[("*infos2py.mat-files", ".mat")],
+            # file_types=[("*infos2py.mat-files", "*.mat")],
         )
 
         self.file_path= file_path
@@ -301,7 +301,7 @@ class MatlabSamples(RawSamples):
             batch_file_paths (list[str]): batch samples files paths
             keys (list[str]): variables keys to load
         """ 
-        batch_file=load_mat(batch_file_paths[0],logging=False)
+        batch_file=glob_utils.file.mat_utils.load_mat(batch_file_paths[0],logging=False)
         keys_batch_file= list(batch_file.keys())
         # check if each keys is in the keys_batch_file available
         keys_available=True
