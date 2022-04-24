@@ -187,19 +187,13 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         self.X = x # U (N, n_meas)
         self.Y = y # sigma elem_data (N, n_elem)
 
-        # self._new_X= np.array([]) # [U, x,y,z] (N*n_pos, n_meas+3)
-        # self._new_Y= np.array([])# conductitiy for n postions (N*n_pos, 1)
-
-        logger.debug("Generation of positions - Start ...")
+        logger.info("Generation of positions - Start ...")
         self.pts = fwd_model['nodes']
         self.tri = fwd_model['elems']
         self.center_e = np.mean(self.pts[self.tri], axis=1)
         self.n_pos=len(self.center_e)
           
-        #TODO Generation of pos and c
-        # self.pos= np.array([]) # (n_pos, 3, N)
-        # self.cpos= np.array([]) # (n_pos, 1, N)
-        logger.debug("Generation of positions - Done")  
+        logger.info("Generation of positions - Done")  
 
     def __len__(self):
         """ return the number of samples.
@@ -219,14 +213,7 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         Returns:
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
-        # x,y= torch.Tensor(self.X_conv[idx]).float(), torch.Tensor(self.Y[idx]).float()
-        # new_X = np.empty((0,259))
-        # new_Y = np.empty((0,1))
         new_X, new_Y = self.build_Uxyz_c(idx)
-        # for i in idx:
-        #     temp_x, temp_y = self.build_Uxyz_c(i)
-        #     np.vstack((new_X, temp_x))
-        #     np.vstack((new_Y, temp_y))
         logger.debug(f'{new_X=}, {new_X.shape=}')
         logger.debug(f'{new_Y=}, {new_Y.shape=}')
         

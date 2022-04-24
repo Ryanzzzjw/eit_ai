@@ -30,18 +30,18 @@ def std_pytorch_train_pipeline(path:str= ''):
 
     metadata.set_ouput_dir(training_name='MLP_PyTorch_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
-    metadata._nb_samples = 50000
+    metadata._nb_samples = 10000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=100)
+    metadata.set_4_dataset(batch_size=1000)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
     plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
         
-    metadata.set_4_model(epoch=100,
+    metadata.set_4_model(epoch=1,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
-                         loss=ListPyTorchLosses.CrossEntropyLoss,
+                         loss=ListPyTorchLosses.MSELoss,
                         #  callbacks=[run_tensorboard]
                          )
     build_train_save_model(ws, metadata)
@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
     from glob_utils.log.log import change_level_logging, main_log
     main_log()
-    change_level_logging(logging.DEBUG)
+    change_level_logging(logging.INFO)
 
     debug=True
 

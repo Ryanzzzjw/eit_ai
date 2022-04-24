@@ -1,22 +1,16 @@
-
-import matplotlib.pyplot as plt
-
 from eit_ai.draw_3d import *
-from numpy import block, ndarray
-from sklearn import metrics
 from eit_ai.draw_3d import plot_3d_compare_samples
 from eit_ai.draw_data import *
+import matplotlib.pyplot as plt
 from eit_ai.eval_utils import ImageDataset, compute_eval, trunc_img_data_nb_samples
 
 from eit_ai.raw_data.raw_samples import reload_samples
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.train_utils.metadata import reload_metadata
 from eit_ai.train_utils.select_workspace import select_workspace
-from torch.utils.tensorboard import SummaryWriter
 import logging
 
 logger = logging.getLogger(__name__)
-writer = SummaryWriter()
 
 
 def eval_pipeline(dir_path:str=''):
@@ -59,7 +53,7 @@ def eval_pipeline(dir_path:str=''):
     plot_eval_results(results, axis='linear')
     # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Portrait)
     # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
-    plot_3d_compare_samples(image_data=img_data, nb_samples=3)
+    plot_3d_compare_samples(image_data=img_data, nb_samples=1)
     # plot_real_NN_EIDORS(gen.getattr_dataset('fwd_model'), true_img_data[randnlist,:].T, nn_img_data[randnlist,:].T)
 
 

@@ -155,7 +155,7 @@ class MetaData(object):
             save_summary:bool=False)-> None:
         """ """
         if not self.batch_size:
-            error('call first set_4_dataset')
+            logging.error('call first set_4_dataset')
 
         self.epoch= epoch
         self.max_trials_autokeras=max_trials_autokeras
