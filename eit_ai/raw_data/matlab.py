@@ -231,7 +231,7 @@ class MatlabSamples(RawSamples):
             data_sel= ['Xih','Yih']
 
         self.data_sel= data_sel
-        logger.debug(f'Data "{self.data_sel}" used')
+        logger.info(f'Data "{self.data_sel}" used')
 
         self.X= X[self.data_sel[0]]
         self.Y= Y[self.data_sel[1]]
@@ -314,7 +314,7 @@ class MatlabSamples(RawSamples):
         if not keys_available: #keys_batch_file != keys: 
             keys=keys_batch_file
 
-        logger.debug(
+        logger.info(
             f'Variables: {keys} will be loaded from the batch samples files')
         for key in keys:
             self.samples[key]= np.array([])

@@ -153,7 +153,7 @@ def plot_3d_EIT_mesh(image:ImageEIT, pl:pv.Plotter)-> None:
     
     
     pl.add_mesh(chamber, style='wireframe')
-    pl.add_mesh(obj, color='blue')
+    pl.add_mesh(obj)
     pl.add_text(title, font_size=20)
     pl.add_axes(interactive=True)
     
@@ -165,39 +165,4 @@ if __name__ == "__main__":
     change_level_logging(logging.DEBUG)
 
 
-    import glob_utils.files.matlabfile
-    import glob_utils.files.files 
-
-    # debug = True
-
-    # if debug:
-    #     path = r'C:\Users\ryanzzzjw\Desktop\eit_ai\datasets\20220313_182045_TestDataSet\TestDataSet_infos2py.mat'
-    # else:
-    #     path = ''
     
-    metadata=MetaData()
-    ws = PyTorchWorkspace()# Create a model generator
-    ws.select_model_dataset(
-        model_handler=ListPytorchModelHandlers.PytorchModelHandler,
-        dataset_handler=ListPytorchDatasetHandlers.StdPytorchDatasetHandler,
-        model=ListPytorchModels.StdPytorchModel,
-        metadata=metadata)
-    
-    path = ''
-    metadata.set_ouput_dir(training_name='Std_PyTorch_test', append_date_time= True)
-    metadata.set_4_raw_samples(data_sel= ['Xih','Yih'])
-    metadata._nb_samples = 10
-    raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=10)
-    ws.build_dataset(raw_samples, metadata)
-    fwd_model=ws.getattr_dataset('fwd_model')
-    sim = ws.getattr_dataset('sim')
-    samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
-    plot_3d(fwd_model, sim,samples_y)
-    
-   
-   
-    
-
-    
-
