@@ -1,5 +1,5 @@
 
-from logging import getLogger
+import logging
 
 import numpy as np
 from eit_ai.pytorch.dataset import PYTORCH_DATASET_HANDLERS
@@ -15,7 +15,7 @@ from eit_ai.train_utils.metadata import MetaData
 from eit_ai.train_utils.workspace import (AiWorkspace, WrongDatasetError,
                                           WrongSingleXError, meas_duration)
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 ################################################################################
 # Pytorch Models

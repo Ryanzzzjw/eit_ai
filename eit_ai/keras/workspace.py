@@ -1,5 +1,5 @@
 
-from logging import getLogger
+import logging
 
 import numpy as np
 from eit_ai.keras.dataset import KERAS_DATASET_HANDLERS, KerasDatasetHandler
@@ -13,7 +13,7 @@ from eit_ai.train_utils.lists import (ListKerasModels, ListWorkspaces, ListKeras
 from eit_ai.train_utils.metadata import MetaData
 from glob_utils.args.kwargs import kwargs_extract
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 ################################################################################
 # Keras Models

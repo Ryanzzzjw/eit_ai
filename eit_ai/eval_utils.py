@@ -1,25 +1,16 @@
-from random import random
-import sys
-import numpy as np
-from sklearn.metrics import mean_squared_error
-from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
-from glob_utils.files.files import (FileExt, dialog_get_file_with_ext, find_file, is_file, read_txt,
-                                    save_as_mat, save_as_pickle, save_as_txt, save_as_csv, load_csv)
-from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
-                                       get_datetime_s, get_dir, get_POSIX_path,
-                                       mk_new_dir)
 import os
-from logging import getLogger
 from dataclasses import dataclass
-import sys
-from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
-from glob_utils.files.files import (FileExt, dialog_get_file_with_ext, find_file, is_file, read_txt,
-                                    save_as_mat, save_as_pickle, save_as_txt, save_as_csv, load_csv)
-from glob_utils.pth.path_utils import (OpenDialogDirCancelledException,
-                                       get_datetime_s, get_dir, get_POSIX_path,
-                                       mk_new_dir)
-import os
-logger = getLogger(__name__)
+import logging
+import numpy as np
+from glob_utils.file.csv_utils import load_csv, save_as_csv
+from glob_utils.file.pkl_utils import save_as_pickle
+from glob_utils.file.utils import FileExt, dialog_get_file_with_ext
+from glob_utils.directory.utils import OpenDialogDirCancelledException,get_datetime_s
+        
+from sklearn.metrics import mean_squared_error
+
+
+logger = logging.getLogger(__name__)
 
 # Matlab_FILENAME= f'metrics{FileExt.mat}'
 Pickle_FILENAME= f'metrics{FileExt.pkl}'
@@ -233,8 +224,9 @@ def trunc_img_data_nb_samples(image_data:list[ImageDataset], max_nb:int=None)-> 
 
 
 if __name__ == "__main__":
-    from glob_utils.log.log  import change_level_logging, main_log
     import logging
+
+    from glob_utils.log.log import change_level_logging, main_log
 
     main_log()
     change_level_logging(logging.DEBUG)

@@ -1,24 +1,16 @@
-import os
-import matplotlib.pyplot as plt
-from numpy import block, ndarray
-from sklearn import metrics
-from eit_ai.draw_3d import plot_3d_compare_samples
-import pyvista as pv
 from eit_ai.draw_3d import *
+from eit_ai.draw_3d import plot_3d_compare_samples
 from eit_ai.draw_data import *
+import matplotlib.pyplot as plt
 from eit_ai.eval_utils import ImageDataset, compute_eval, trunc_img_data_nb_samples
-from eit_ai.raw_data.load_eidors import load_eidors_solution
+
 from eit_ai.raw_data.raw_samples import reload_samples
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.train_utils.metadata import reload_metadata
 from eit_ai.train_utils.select_workspace import select_workspace
-from glob_utils.files.files import (FileExt, find_file, is_file, read_txt,
-                                    save_as_mat, save_as_pickle, save_as_txt, )
-from torch.utils.tensorboard import SummaryWriter
-from logging import getLogger
+import logging
 
-logger = getLogger(__name__)
-writer = SummaryWriter()
+logger = logging.getLogger(__name__)
 
 
 def eval_pipeline(dir_path:str=''):
@@ -38,6 +30,8 @@ def eval_pipeline(dir_path:str=''):
     logger.info(f'Real perm shape: {true_img_data.shape}')
 
     nn_img_data = ws.get_prediction(metadata)
+    # TODO make a reshape of nn_img_data
+    nn_img_data=nn_img_data.reshape(true_img_data.shape)
     #plt.plot(nn_img_data.T)
     logger.info(f'Predicted perm shape: {nn_img_data.shape}')
     img_data.append(ImageDataset(nn_img_data, 'NN Predicted image',fwd_model, sim))
@@ -59,7 +53,7 @@ def eval_pipeline(dir_path:str=''):
     plot_eval_results(results, axis='linear')
     # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Portrait)
     # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
-    plot_3d_compare_samples(image_data=img_data, nb_samples=3)
+    plot_3d_compare_samples(image_data=img_data, nb_samples=1)
     # plot_real_NN_EIDORS(gen.getattr_dataset('fwd_model'), true_img_data[randnlist,:].T, nn_img_data[randnlist,:].T)
 
 
@@ -119,7 +113,7 @@ def test_single_predict(dir_path:str=''):
 
 if __name__ == "__main__":
     from glob_utils.log.log  import change_level_logging, main_log
-    from glob_utils.pth.path_utils import get_POSIX_path    
+    from glob_utils.directory.utils import get_POSIX_path    
     import logging
     main_log()
     change_level_logging(logging.DEBUG)

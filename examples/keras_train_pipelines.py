@@ -17,9 +17,9 @@ from eit_ai.train_utils.metadata import MetaData
 from eit_ai.keras.tensorboard_k import mk_callback_tensorboard
 
 # from eit_ai.train_utils.dataloader import 
-from logging import getLogger
+import logging
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def std_keras_train_pipeline(path:str= ''):

@@ -1,6 +1,6 @@
 from operator import mod
 import random
-from logging import getLogger
+import logging
 from typing import Tuple, Union
 
 import numpy as np
@@ -14,7 +14,7 @@ import torch
 from torch.utils.data import DataLoader
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class StdPytorchDatasetHandler(StdAiDatasetHandler):
 
@@ -40,7 +40,7 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             raise TypeError(
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
-        self.X = -x
+        self.X = x
         self.Y = y
 
     def __len__(self):
@@ -49,6 +49,9 @@ class PytorchDataset(torch.utils.data.Dataset, AiDataset):
             [type]: [description]
         """        
         return len(self.X)
+    
+    def get_inout_sizes(self):
+        return self.X.shape[1], self.Y.shape[1]
 
     def __getitem__(
         self,
@@ -97,7 +100,7 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
         self.X = x
-        self.X_conv= reshape_4_1Dconv(-x) # special reshape for conv Ai
+        self.X_conv= reshape_4_1Dconv(x) # special reshape for conv Ai
         self.Y = y
 
     def __len__(self):
@@ -106,6 +109,10 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
             [type]: [description]
         """        
         return len(self.X)
+    
+    
+    def get_inout_sizes(self):
+        return self.X.shape[1], self.Y.shape[1]
 
     def __getitem__(
         self,
@@ -180,19 +187,13 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         self.X = x # U (N, n_meas)
         self.Y = y # sigma elem_data (N, n_elem)
 
-        self._new_X= np.array([]) # [U, x,y,z] (N*n_pos, n_meas+3)
-        self._new_Y= np.array([])# conductitiy for n postions (N*n_pos, 1)
-
-        logger.debug("Generation of positions - Start ...")
+        logger.info("Generation of positions - Start ...")
         self.pts = fwd_model['nodes']
         self.tri = fwd_model['elems']
         self.center_e = np.mean(self.pts[self.tri], axis=1)
         self.n_pos=len(self.center_e)
           
-        #TODO Generation of pos and c
-        self.pos= np.array([]) # (n_pos, 3, N)
-        self.cpos= np.array([]) # (n_pos, 1, N)
-        logger.debug("Generation of positions - Done")  
+        logger.info("Generation of positions - Done")  
 
     def __len__(self):
         """ return the number of samples.
@@ -212,9 +213,14 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         Returns:
             tuple[torch.Tensor,torch.Tensor]: [description]
         """        
-        # x,y= torch.Tensor(self.X_conv[idx]).float(), torch.Tensor(self.Y[idx]).float()
+        new_X, new_Y = self.build_Uxyz_c(idx)
+        logger.debug(f'{new_X=}, {new_X.shape=}')
+        logger.debug(f'{new_Y=}, {new_Y.shape=}')
         
-        return self.build_Uxyz_c(idx)
+        return torch.Tensor(new_X).float(), torch.Tensor(new_Y).float()
+    
+    def get_inout_sizes(self):
+        return self.X.shape[1]+self.center_e.shape[1], 1
         
     def get_set(self)->tuple[np.ndarray,np.ndarray]:
         """ return X and Y separately.
@@ -225,14 +231,23 @@ class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
         return self.X, self.Y
 
     def build_Uxyz_c(self, idx:Union[int, list[int]])-> Tuple[torch.Tensor, torch.Tensor]:
-        self.pos_batch, self.cpos_batch= self.get_pos_c_batch(idx)
+        # self.pos_batch, self.cpos_batch= self.get_pos_c_batch(idx)
         
-        m_pos = mod(idx, self.n_pos)
-        n_samples=idx//self.n_pos
-        self._new_Y=self.Y[n_samples, m_pos]
-        self._new_X=np.hstack((self.X[n_samples,:], self.center_e[m_pos,:]))
         # here use idx, self.X , self.Y, self.pos_batch, self.cpos_batch
         # to build  self._new_X , self._new_Y
+        if not isinstance(idx, int):
+            raise TypeError("jaiwei said that idx is only int")
+        # idx= np.array(idx)
+        logger.debug(f"{idx=}")
+        m_pos = mod(idx, self.n_pos)
+        n_samples = idx // self.n_pos
+        logger.debug(f"{m_pos=}")
+        logger.debug(f"{n_samples=}")
+        
+        self._new_Y=self.Y[n_samples, m_pos].reshape(1, -1)
+        self._new_X=np.hstack((self.X[n_samples,:], self.center_e[m_pos,:])).reshape(1, -1)
+        logger.debug(f'{self._new_X=}, {self._new_X.shape=}')
+        logger.debug(f'{self._new_Y=}, {self._new_Y.shape=}')
         return self._new_X , self._new_Y# conductitiy for n postions (N*n_pos, 1)
 
     # def get_pos_c_batch(self, idx:Union[int, list[int]])-> None:
@@ -291,25 +306,7 @@ if __name__ == "__main__":
     main_log()
     change_level_logging(logging.DEBUG)
     
-    from eit_ai.pytorch.workspace import PyTorchWorkspace
-    from eit_ai.raw_data.matlab import MatlabSamples
-    from eit_ai.raw_data.raw_samples import load_samples
-    # X = np.random.randn(100, 4)
-    # Y = np.random.randn(100)
-    # Y = Y[:, np.newaxis]
-    path=''
-    metadata = MetaData()
-    ws = PyTorchWorkspace()
-    ws.select_model_dataset(
-        model_handler=ListPytorchModelHandlers.PytorchModelHandler,
-        dataset_handler=ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler,
-        model=ListPytorchModels.StdPytorchModel,
-        metadata=metadata
-    )
 
-    raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1)
-    ws.build_dataset(raw_samples, metadata)
 
 
 

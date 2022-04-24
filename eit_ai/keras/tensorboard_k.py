@@ -1,5 +1,5 @@
 
-from logging import getLogger
+import logging
 import os
 from tensorboard import program
 from tensorflow.keras.callbacks import TensorBoard
@@ -7,7 +7,7 @@ from tensorflow.keras.callbacks import TensorBoard
 from eit_ai.train_utils.metadata import MetaData
 from glob_utils.log.msg_trans  import highlight_msg
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 TENSORBOARD_LOG_FOLDER ='log'
 

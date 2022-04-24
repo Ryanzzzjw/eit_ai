@@ -18,9 +18,9 @@ from eit_ai.keras.tensorboard_k import mk_callback_tensorboard
 from keras_train_pipelines import build_train_save_model
 
 # from eit_ai.train_utils.dataloader import 
-from logging import getLogger
+import logging
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def std_auto_pipeline(path=''):
     logger.info('### Start standard autokeras training ###')

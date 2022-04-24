@@ -2,7 +2,7 @@
 
 import random
 from enum import Enum, auto
-from logging import getLogger
+import logging
 from typing import Any, Union
 
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ from scipy.io import loadmat
 
 from eit_ai.eval_utils import EvalResults, ImageDataset, ImageEIT
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def get_elem_nodal_data(fwd_model, perm, compute:bool=False):
     """ check mesh (tri, pts) in fwd_model and provide elems_data and nodes_data """
