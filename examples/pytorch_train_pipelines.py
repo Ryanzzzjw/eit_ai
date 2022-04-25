@@ -1,6 +1,6 @@
 
 
-
+import matplotlib.pyplot as plt
 import logging
 from logging import getLogger
 from eit_ai.draw_3d import plot_3d
@@ -30,15 +30,15 @@ def std_pytorch_train_pipeline(path:str= ''):
 
     metadata.set_ouput_dir(training_name='MLP_PyTorch_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
-    metadata._nb_samples = 10000
+    metadata._nb_samples = 50000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1000)
+    metadata.set_4_dataset(batch_size=128)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
     plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
         
-    metadata.set_4_model(epoch=1,
+    metadata.set_4_model(epoch=600,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
                          loss=ListPyTorchLosses.MSELoss,
@@ -64,18 +64,18 @@ def Auto_Encoder_train_pipeline(path:str= ''):
         model=ListPytorchModels.AutoEncoder,
         metadata=metadata)
 
-    metadata.set_ouput_dir(training_name='MLP_PyTorch_test', append_date_time= True)
+    metadata.set_ouput_dir(training_name='AutoEncoder_test', append_date_time= True)
     metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
     metadata._nb_samples = 50000
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=100)
+    metadata.set_4_dataset(batch_size=128)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
-    # plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
-    plot_3d(ws.getattr_dataset('fwd_model'), ws.getattr_dataset('sim'), samples_y)
+    plot_EIT_samples(ws.getattr_dataset('fwd_model'), samples_y, samples_x)
+    # plot_3d(ws.getattr_dataset('fwd_model'), ws.getattr_dataset('sim'), samples_y)
         
-    metadata.set_4_model(epoch=100,
+    metadata.set_4_model(epoch=600,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
                          loss=ListPyTorchLosses.MSELoss,
@@ -145,7 +145,7 @@ def Uxyz_pytorch_train_pipeline(path:str= ''):
     metadata.set_4_model(epoch=1,
                          metrics=['mse'], 
                          optimizer=ListPyTorchOptimizers.Adam,
-                         loss=ListPyTorchLosses.CrossEntropyLoss,
+                         loss=ListPyTorchLosses.MSELoss,
                         #  callbacks=[run_tensorboard]
                          )
     build_train_save_model(ws, metadata)
@@ -169,4 +169,4 @@ if __name__ == "__main__":
     # Auto_Encoder_train_pipeline(path=path)
     # Conv1d_pytorch_train_pipeline(path=path)
     Uxyz_pytorch_train_pipeline(path=path)
-    # plt.show()
+    plt.show()
