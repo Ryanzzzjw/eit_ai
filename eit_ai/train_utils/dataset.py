@@ -444,9 +444,8 @@ if __name__ == "__main__":
     print(scaler.transform([[2, 2]]))
 
     rge=4
-    x= np.array(
-        [[random.random()*(row+1)+2 for col in range(100)] for row in range(rge)]
-    )
+    x = np.array([[random.random() * (row + 1) + 2 for _ in range(100)] for row in range(rge)])
+
     print(f'{x=}, {x.shape=}')
 
     for idx in range(rge):
