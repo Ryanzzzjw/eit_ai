@@ -218,7 +218,7 @@ class MatlabSamples(RawSamples):
         Y['Yih-Yh']= Y['Yih']-Y['Yh']
 
         # # here we create the differences normalized
-        # X['Xih-Xh/Xh']= np.true_divide(X['Xih-Xh'],X['Xh'])
+        X['Xih-Xh/Xh']= np.true_divide(X['Xih-Xh'],X['Xh'])
         # X['Xhn-Xh/Xh']=np.true_divide(X['Xhn-Xh'],X['Xh'])
         # X['Xihn-Xh/Xh']= np.true_divide(X['Xihn-Xh'],X['Xh'])
         X['Xihn-Xhn/Xhn']=np.true_divide(X['Xihn-Xhn'],X['Xhn'])
