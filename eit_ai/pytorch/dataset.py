@@ -281,7 +281,7 @@ class DataloaderGenerator(object):
 PYTORCH_DATASET_HANDLERS={
     ListPytorchDatasetHandlers.StdPytorchDatasetHandler: StdPytorchDatasetHandler,
     ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler: PytorchConv1dDatasetHandler,
-    ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler: PytorchUxyzDatasetHandler,
+    # ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler: PytorchUxyzDatasetHandler,
     
 }
 
