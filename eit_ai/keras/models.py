@@ -78,7 +78,7 @@ class StdKerasModel(TypicalKerasModelGenerator):
         self.model.add(keras.layers.Dense(out_size)) 
         self.model.add(keras.layers.Activation(tf.nn.sigmoid))
 
-class StdAutoKerasModel(TypicalKerasModelGenerator):
+class StdAutokerasModel(TypicalKerasModelGenerator):
     """Define a Standard
     """
     def _set_layers(self, metadata:MetaData)->None:
@@ -164,7 +164,7 @@ class StdAutokerasModelHandler(AiModelHandler):
             metadata.model_type, KERAS_MODELS, ListKerasModels
         )
         gen=gen_cls(metadata)
-        self.mdoel=gen.get_model()
+        self.model=gen.get_model()
         self.name =gen.get_name()
     def _get_specific_var(self, metadata:MetaData)-> None:
         """"""
@@ -318,7 +318,7 @@ KERAS_MODEL_HANDLERS={
 
 KERAS_MODELS={
     ListKerasModels.StdKerasModel: StdKerasModel,
-    ListKerasModels.StdAutoKerasModel: StdAutoKerasModel,
+    ListKerasModels.StdAutokerasModel: StdAutokerasModel,
 }
 
 if __name__ == "__main__":
