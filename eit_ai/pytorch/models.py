@@ -118,16 +118,16 @@ class StdPytorchModel(TypicalPytorchModel):
         in_size=metadata.input_size
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
-        self.net = nn.Sequential(nn.Linear(in_size,512),
+        self.net = nn.Sequential(nn.Linear(in_size,1024),
                                 nn.ReLU(True),
-                                nn.Dropout(0.5),
-                                nn.Linear(512, 1024),
+                                # nn.Dropout(0.5),
+                                nn.Linear(1024, 128),
                                 nn.ReLU(True),
-                                nn.Dropout(0.5),
-                                nn.Linear(1024, 2048),
+                                # nn.Dropout(0.5),
+                                nn.Linear(128, 1024),
                                 nn.ReLU(True),
-                                nn.Dropout(0.5),
-                                nn.Linear(2048, out_size),
+                                # nn.Dropout(0.5),
+                                nn.Linear(1024, out_size),
                                 nn.Sigmoid()
                                 )
        
@@ -298,7 +298,7 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
         return op_cls(net.parameters(), lr= metadata.learning_rate)
     
     logger.warning('Learningrate has been set to 0.001!!!')
-    return op_cls(net.parameters(), lr=0.0001)
+    return op_cls(net.parameters(), lr=0.001)
         
 
 def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:

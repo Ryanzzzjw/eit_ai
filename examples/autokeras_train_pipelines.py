@@ -33,19 +33,19 @@ def std_auto_pipeline(path=''):
         model=ListKerasModels.StdAutokerasModel,
         metadata=metadata)
     metadata.set_ouput_dir(training_name='Std_autokeras_test', append_date_time= True)
-    metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
+    metadata.set_4_raw_samples(data_sel= ['Xihn-Xhn/Xhn','Yih-Yh'])
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=1000,)
+    metadata.set_4_dataset(batch_size=128)
     gen.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = gen.extract_samples(dataset_part='train', idx_samples=None)
     plot_EIT_samples(gen.getattr_dataset('fwd_model'), samples_y, samples_x)
         
     metadata.set_4_model(
-        epoch=2,
+        epoch=100,
         callbacks=[mk_callback_tensorboard(metadata)],
         metrics=['mse'],
-        max_trials_autokeras=2)
+        max_trials_autokeras=100)
 
     build_train_save_model(gen, metadata)
 
