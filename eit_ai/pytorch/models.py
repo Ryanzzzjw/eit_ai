@@ -38,6 +38,7 @@ class TypicalPytorchModel(ABC):
     def __init__(self, metadata: MetaData) -> None:
         super().__init__()
         self._set_layers(metadata)
+        self.net.apply(self.init_weights)
     
     @abstractmethod
     def _set_layers(self, metadata:MetaData)-> None:
@@ -55,6 +56,11 @@ class TypicalPytorchModel(ABC):
         # logger.debug(f'foward, {x.shape=}')
         return self.net(x)
 
+    def init_weights(self,m):
+        if type(m) == nn.Linear or type(m) == nn.Conv1d:
+            torch.nn.init.xavier_uniform_(m.weight)
+            m.bias.data.fill_(0.01)
+
 
     def train_single_epoch(self, dataloader:DataLoader) -> Any:
         self.net.train()
@@ -65,19 +71,21 @@ class TypicalPytorchModel(ABC):
             inputs, labels = data_i
             inputs = inputs.to(device=0)
             labels = labels.to(device=0)
+            
+            # zero gradients for every batch
+            self.optimizer.zero_grad()
+
             y_pred = self.net(inputs)
+            
             #loss
             loss_value = self.loss(y_pred, labels)
-            train_loss += loss_value.item()
-            
-            #backward propagation
-            self.optimizer.zero_grad()
             loss_value.backward()
-            self.optimizer.step()  #update
-            
-            # logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
 
-        # logger.info(f'loss={train_loss:.6f}\n--------------------------')
+            # adjust learning weights
+            self.optimizer.step() 
+            
+            train_loss += loss_value.item()
+
         return train_loss / len(dataloader)
     
     def val_single_epoch(self, dataloader: DataLoader) -> Any:
@@ -140,18 +148,23 @@ class Conv1dNet(TypicalPytorchModel):
         out_size=metadata.output_size
         self.name = "1d CNN"
         self.net = torch.nn.Sequential(nn.Conv1d(in_channels= 1, out_channels= 8, kernel_size=8, stride=1, padding=0),
+                                       nn.BatchNorm1d(8),
                                        nn.ReLU(True),
                                        nn.MaxPool1d(kernel_size=2, stride=2),
                                        nn.Conv1d(8, 8, kernel_size=8, stride=1, padding=0),
+                                       nn.BatchNorm1d(8),
                                        nn.ReLU(True),
                                        nn.MaxPool1d(kernel_size=2, stride=2),
                                        nn.Conv1d(8, 16, kernel_size=16, stride=1, padding=0),
+                                       nn.BatchNorm1d(16),
                                        nn.ReLU(True),
                                        nn.MaxPool1d(kernel_size=2, stride=2),
                                        nn.Flatten(),
-                                       nn.Linear(512, 512),
+                                       nn.Linear(336, 512),
                                        nn.ReLU(True),
-                                       nn.Linear(512, out_size),
+                                       nn.Linear(512, 1024),
+                                       nn.ReLU(True),
+                                       nn.Linear(1024, out_size),
                                        nn.Sigmoid()
                                     )
         self.net.to(device=0)    
