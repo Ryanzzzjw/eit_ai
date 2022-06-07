@@ -134,126 +134,126 @@ class PytorchConv1dDataset(torch.utils.data.Dataset, AiDataset):
         Returns:
             tuple[np.ndarray,np.ndarray]: [description]
         """        
-        return self.X, self.Y
+        return self.X_conv, self.Y
 
-class PytorchUxyzDatasetHandler(StdAiDatasetHandler):
+# class PytorchUxyzDatasetHandler(StdAiDatasetHandler):
 
-    def _post_init(self):
-        self.dataset_cls=PytorchUxyzDataset
+#     def _post_init(self):
+#         self.dataset_cls=PytorchUxyzDataset
     
-    def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
-        """build the dataset"""
-        idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
-        X= np.concatenate(( X, idx ), axis=1)
-        x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y,test_size=self._test_ratio)
-        x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp, test_size=self._val_ratio)
+#     def _mk_dataset(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
+#         """build the dataset"""
+#         idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
+#         X= np.concatenate(( X, idx ), axis=1)
+#         x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y,test_size=self._test_ratio)
+#         x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp, test_size=self._val_ratio)
         
-        self._idx_train= x_train[:,-1].tolist()
-        self._idx_val= x_val[:,-1].tolist()
-        self._idx_test= x_test[:,-1].tolist()
-        metadata.set_idx_samples(self._idx_train, self._idx_val, self._idx_test)
+#         self._idx_train= x_train[:,-1].tolist()
+#         self._idx_val= x_val[:,-1].tolist()
+#         self._idx_test= x_test[:,-1].tolist()
+#         metadata.set_idx_samples(self._idx_train, self._idx_val, self._idx_test)
 
-        self.train=self.dataset_cls(x_train[:,:-1], y_train, self.fwd_model)
-        self.val=self.dataset_cls(x_val[:,:-1], y_val, self.fwd_model)
-        self.test=self.dataset_cls(x_test[:,:-1], y_test, self.fwd_model)
+#         self.train=self.dataset_cls(x_train[:,:-1], y_train, self.fwd_model)
+#         self.val=self.dataset_cls(x_val[:,:-1], y_val, self.fwd_model)
+#         self.test=self.dataset_cls(x_test[:,:-1], y_test, self.fwd_model)
 
-    def _mk_dataset_from_indexes(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
-        """rebuild the dataset with the indexes """
-        self._idx_train= convert_vec_to_int(metadata.idx_samples['idx_train'])
-        self._idx_val= convert_vec_to_int(metadata.idx_samples['idx_val'])
-        self._idx_test= convert_vec_to_int(metadata.idx_samples['idx_test'])   
-        self.train=self.dataset_cls(X[self._idx_train,:], Y[self._idx_train,:],self.fwd_model)
-        self.val=self.dataset_cls(X[self._idx_val,:], Y[self._idx_val,:], self.fwd_model)
-        self.test=self.dataset_cls(X[self._idx_test,:], Y[self._idx_test,:],self.fwd_model)    
+#     def _mk_dataset_from_indexes(self, X:np.ndarray, Y:np.ndarray, metadata:MetaData)-> None:
+#         """rebuild the dataset with the indexes """
+#         self._idx_train= convert_vec_to_int(metadata.idx_samples['idx_train'])
+#         self._idx_val= convert_vec_to_int(metadata.idx_samples['idx_val'])
+#         self._idx_test= convert_vec_to_int(metadata.idx_samples['idx_test'])   
+#         self.train=self.dataset_cls(X[self._idx_train,:], Y[self._idx_train,:],self.fwd_model)
+#         self.val=self.dataset_cls(X[self._idx_val,:], Y[self._idx_val,:], self.fwd_model)
+#         self.test=self.dataset_cls(X[self._idx_test,:], Y[self._idx_test,:],self.fwd_model)    
 
-class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
-    """ create the customized Pytorch dataset """    
+# class PytorchUxyzDataset(torch.utils.data.Dataset, AiDataset):
+#     """ create the customized Pytorch dataset """    
 
-    def __init__(self, x:np.ndarray, y:np.ndarray, fwd_model)-> None:
-        """ load the original X and Y.
+#     def __init__(self, x:np.ndarray, y:np.ndarray, fwd_model)-> None:
+#         """ load the original X and Y.
 
-        Args:
-            x (np.ndarray): [description]
-            y (np.ndarray): [description]
+#         Args:
+#             x (np.ndarray): [description]
+#             y (np.ndarray): [description]
 
-        Raises:
-            TypeError: [description]
-        """        
+#         Raises:
+#             TypeError: [description]
+#         """        
         
-        if x.shape[0]!=y.shape[0]:
-            raise TypeError(
-                f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
+#         if x.shape[0]!=y.shape[0]:
+#             raise TypeError(
+#                 f'shape not consistent {x.shape[0]}!={y.shape[0]=}, {x=}, {y=}')
             
-        self.X = x # U (N, n_meas)
-        self.Y = y # sigma elem_data (N, n_elem)
+#         self.X = x # U (N, n_meas)
+#         self.Y = y # sigma elem_data (N, n_elem)
 
-        logger.info("Generation of positions - Start ...")
-        self.pts = fwd_model['nodes']
-        self.tri = fwd_model['elems']
-        self.center_e = np.mean(self.pts[self.tri], axis=1)
-        self.n_pos=len(self.center_e)
+#         logger.info("Generation of positions - Start ...")
+#         self.pts = fwd_model['nodes']
+#         self.tri = fwd_model['elems']
+#         self.center_e = np.mean(self.pts[self.tri], axis=1)
+#         self.n_pos=len(self.center_e)
           
-        logger.info("Generation of positions - Done")  
+#         logger.info("Generation of positions - Done")  
 
-    def __len__(self):
-        """ return the number of samples.
-        Returns:
-            [type]: [description]
-        """        
-        return len(self.X)*self.n_pos
+#     def __len__(self):
+#         """ return the number of samples.
+#         Returns:
+#             [type]: [description]
+#         """        
+#         return len(self.X)*self.n_pos
 
-    def __getitem__(
-        self,
-        idx:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
-        """convert array to tensor. And allow to return a sample with the given index.
+#     def __getitem__(
+#         self,
+#         idx:Union[int, list[int]]=None)->tuple[torch.Tensor,torch.Tensor]:
+#         """convert array to tensor. And allow to return a sample with the given index.
 
-        Args:
-            idx (Union[int, list[int]], optional): [description]. Defaults to None.
+#         Args:
+#             idx (Union[int, list[int]], optional): [description]. Defaults to None.
 
-        Returns:
-            tuple[torch.Tensor,torch.Tensor]: [description]
-        """        
-        new_X, new_Y = self.build_Uxyz_c(idx)
-        logger.debug(f'{new_X=}, {new_X.shape=}')
-        logger.debug(f'{new_Y=}, {new_Y.shape=}')
+#         Returns:
+#             tuple[torch.Tensor,torch.Tensor]: [description]
+#         """        
+#         new_X, new_Y = self.build_Uxyz_c(idx)
+#         logger.debug(f'{new_X=}, {new_X.shape=}')
+#         logger.debug(f'{new_Y=}, {new_Y.shape=}')
         
-        return torch.Tensor(new_X).float(), torch.Tensor(new_Y).float()
+#         return torch.Tensor(new_X).float(), torch.Tensor(new_Y).float()
     
-    def get_inout_sizes(self):
-        return self.X.shape[1]+self.center_e.shape[1], 1
+#     def get_inout_sizes(self):
+#         return self.X.shape[1]+self.center_e.shape[1], 1
         
-    def get_set(self)->tuple[np.ndarray,np.ndarray]:
-        """ return X and Y separately.
+#     def get_set(self)->tuple[np.ndarray,np.ndarray]:
+#         """ return X and Y separately.
 
-        Returns:
-            tuple[np.ndarray,np.ndarray]: [description]
-        """        
-        return self.X, self.Y
+#         Returns:
+#             tuple[np.ndarray,np.ndarray]: [description]
+#         """        
+#         return self.X, self.Y
 
-    def build_Uxyz_c(self, idx:Union[int, list[int]])-> Tuple[torch.Tensor, torch.Tensor]:
-        # self.pos_batch, self.cpos_batch= self.get_pos_c_batch(idx)
+#     def build_Uxyz_c(self, idx:Union[int, list[int]])-> Tuple[torch.Tensor, torch.Tensor]:
+#         # self.pos_batch, self.cpos_batch= self.get_pos_c_batch(idx)
         
-        # here use idx, self.X , self.Y, self.pos_batch, self.cpos_batch
-        # to build  self._new_X , self._new_Y
-        if not isinstance(idx, int):
-            raise TypeError("jaiwei said that idx is only int")
-        # idx= np.array(idx)
-        logger.debug(f"{idx=}")
-        m_pos = mod(idx, self.n_pos)
-        n_samples = idx // self.n_pos
-        logger.debug(f"{m_pos=}")
-        logger.debug(f"{n_samples=}")
+#         # here use idx, self.X , self.Y, self.pos_batch, self.cpos_batch
+#         # to build  self._new_X , self._new_Y
+#         if not isinstance(idx, int):
+#             raise TypeError("jaiwei said that idx is only int")
+#         # idx= np.array(idx)
+#         logger.debug(f"{idx=}")
+#         m_pos = mod(idx, self.n_pos)
+#         n_samples = idx // self.n_pos
+#         logger.debug(f"{m_pos=}")
+#         logger.debug(f"{n_samples=}")
         
-        self._new_Y=self.Y[n_samples, m_pos].reshape(1, -1)
-        self._new_X=np.hstack((self.X[n_samples,:], self.center_e[m_pos,:])).reshape(1, -1)
-        logger.debug(f'{self._new_X=}, {self._new_X.shape=}')
-        logger.debug(f'{self._new_Y=}, {self._new_Y.shape=}')
-        return self._new_X , self._new_Y# conductitiy for n postions (N*n_pos, 1)
+#         self._new_Y=self.Y[n_samples, m_pos].reshape(1, -1)
+#         self._new_X=np.hstack((self.X[n_samples,:], self.center_e[m_pos,:])).reshape(1, -1)
+#         logger.debug(f'{self._new_X=}, {self._new_X.shape=}')
+#         logger.debug(f'{self._new_Y=}, {self._new_Y.shape=}')
+#         return self._new_X , self._new_Y# conductitiy for n postions (N*n_pos, 1)
 
-    # def get_pos_c_batch(self, idx:Union[int, list[int]])-> None:
-        # here set self.pos_batch, self.cpos_batch
-        pos_batch, cpos_batch= None, None
-        return pos_batch, cpos_batch
+#     # def get_pos_c_batch(self, idx:Union[int, list[int]])-> None:
+#         # here set self.pos_batch, self.cpos_batch
+#         pos_batch, cpos_batch= None, None
+#         return pos_batch, cpos_batch
 
 
 class DataloaderGenerator(object):
@@ -281,7 +281,7 @@ class DataloaderGenerator(object):
 PYTORCH_DATASET_HANDLERS={
     ListPytorchDatasetHandlers.StdPytorchDatasetHandler: StdPytorchDatasetHandler,
     ListPytorchDatasetHandlers.PytorchConv1dDatasetHandler: PytorchConv1dDatasetHandler,
-    ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler: PytorchUxyzDatasetHandler,
+    # ListPytorchDatasetHandlers.PytorchUxyzDatasetHandler: PytorchUxyzDatasetHandler,
     
 }
 

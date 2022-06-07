@@ -113,7 +113,7 @@ class AiDatasetHandler(ABC):
         logger.info(f'{self.ouput_size=}')
         logger.info(f'{self.input_size=}')
         logger.info(f'Length of train: {self._train_len}')
-        logger.info(f'Length of val: {self._val_len}' )
+        logger.info(f'Length of val: {self._val_len}')
         logger.info(f'Length of test: {self._test_len}')
 
     def _is_indexes(self, metadata:MetaData):
@@ -214,6 +214,12 @@ class SimpleDataset(AiDataset):
         super().__init__()
         self._x=x
         self._y=y
+        
+    def __len__(self):
+        return len(self._x)
+    
+    def get_inout_size(self):
+        return self._x.shape[1], self._y.shape[1]
 
     def __len__(self):
         return len(self._x)
@@ -438,9 +444,8 @@ if __name__ == "__main__":
     print(scaler.transform([[2, 2]]))
 
     rge=4
-    x= np.array(
-        [[random.random()*(row+1)+2 for col in range(100)] for row in range(rge)]
-    )
+    x = np.array([[random.random() * (row + 1) + 2 for _ in range(100)] for row in range(rge)])
+
     print(f'{x=}, {x.shape=}')
 
     for idx in range(rge):

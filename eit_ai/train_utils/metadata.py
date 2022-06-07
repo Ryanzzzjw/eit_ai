@@ -9,9 +9,10 @@ from eit_ai.default.set_default_dir import AI_DIRS, AiDirs, set_ai_default_dir
 from eit_ai.train_utils.lists import (ListDatasetHandlers, ListModels, ListWorkspaces, ListLosses,
                                       ListModelHandlers, ListOptimizers,ListNormalizations)
 from glob_utils.file.utils import FileExt, find_file, is_file
-from glob_utils.file.txt_utils import read_txt, save_as_txt
+from glob_utils.file.json_utils import read_json, save_to_json
 from glob_utils.file.pkl_utils import save_as_pickle
 from glob_utils.file.mat_utils import save_as_mat
+import glob_utils.types.dict
                                    
 from glob_utils.log.msg_trans import highlight_msg
 from glob_utils.directory.utils import (OpenDialogDirCancelledException,
@@ -204,7 +205,7 @@ class MetaData(object):
         path =  os.path.join(self.dir_path, f'{IDX_FILENAME}_{time}')
         save_as_mat(path, indexes)
         save_as_pickle(path, indexes)
-        save_as_txt(path,indexes)
+        save_to_json(path,indexes)
         self.set_idx_samples_file(path)
 
     def set_training_duration(self, duration:str=''):
@@ -233,13 +234,15 @@ class MetaData(object):
                 setattr(copy, key, l)
             else:
                 setattr(copy, key, val)
-        save_as_txt(filename, copy)
+                
+        copy = glob_utils.types.dict.dict_nested(copy,ignore_private=False)
+        save_to_json(filename, copy)
         logger.info(highlight_msg(f'Metadata saved in: {filename}'))
         
         
     def read(self, path):
         
-        load_dict=read_txt(path)
+        load_dict=read_json(path)
         for key in load_dict.keys():
             if key in self.__dict__.keys():
                 setattr(self,key, load_dict[key])

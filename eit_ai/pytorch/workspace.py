@@ -91,10 +91,6 @@ class PyTorchWorkspace(AiWorkspace):
         single_X:np.ndarray= None,
         **kwargs)-> np.ndarray:
 
-        X_pred=self.dataset_handler.get_X('test')
-        # TODO move it to dataset of to model
-        if metadata.model_type == 'Conv1dNet':
-            X_pred = np.reshape(X_pred,(-1, 1, 256))
         
         # another dataset can be here predicted (only test part)
         if dataset is not None:
@@ -103,11 +99,14 @@ class PyTorchWorkspace(AiWorkspace):
                     f'{dataset= } and {self.dataset_handler} dont have same type...')
             X_pred=dataset.get_X('test')
         # Single passed X can be here predicted, after been formated
-        if single_X is not None:
+        elif single_X is not None:
             if not isinstance(single_X, np.ndarray):
                 raise WrongSingleXError(f'{single_X= } is not an np.ndarray ')
             X_pred= self.dataset_handler.format_single_X(single_X, metadata)
             
+        else:
+            
+            X_pred=self.dataset_handler.get_X('test')   
         return self.model_handler.predict(X_pred=X_pred, metadata=metadata, **kwargs)
         
 

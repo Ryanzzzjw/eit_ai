@@ -56,7 +56,7 @@ class TypicalPytorchModel(ABC):
         return self.net(x)
 
 
-    def train_single_epoch(self, dataloader:DataLoader)->Any:
+    def train_single_epoch(self, dataloader:DataLoader) -> Any:
         self.net.train()
         # logger.debug(f'run_single_epoch')
         for idx, data_i in enumerate(dataloader):
@@ -80,7 +80,7 @@ class TypicalPytorchModel(ABC):
         # logger.info(f'loss={train_loss:.6f}\n--------------------------')
         return train_loss / len(dataloader)
     
-    def val_single_epoch(self, dataloader: DataLoader)->Any:
+    def val_single_epoch(self, dataloader: DataLoader) -> Any:
         # logger.debug(f'run_single_validation_epoch')
         val_loss = 0
         with torch.no_grad():
@@ -119,18 +119,15 @@ class StdPytorchModel(TypicalPytorchModel):
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
         self.net = nn.Sequential(nn.Linear(in_size,512),
-                                # nn.BatchNorm1d(512),
                                 nn.ReLU(True),
-                                # nn.Dropout(0.2),
-                                nn.Linear(512, 128),
-                                # nn.BatchNorm1d(128),
+                                nn.Dropout(0.5),
+                                nn.Linear(512, 1024),
                                 nn.ReLU(True),
-                                # nn.Dropout(0.5),
-                                nn.Linear(128, 512),
-                                # nn.BatchNorm1d(512),
+                                nn.Dropout(0.5),
+                                nn.Linear(1024, 2048),
                                 nn.ReLU(True),
-                                # nn.Dropout(0.5),
-                                nn.Linear(512, out_size),
+                                nn.Dropout(0.5),
+                                nn.Linear(2048, out_size),
                                 nn.Sigmoid()
                                 )
        

@@ -155,7 +155,7 @@ def normalized(y_true, y_pred):
     #y_true = tf.keras.utils.normalize(y_true, axis=1) #if I normalize like this, then it is normalized too much (like to 0.02.., not 1), maybe because of [3054, 1]
     y_true = [(y_true-min(y_true))/(max(y_true)-min(y_true))] #normalize 
 
-    print('Real normalized values: ' + str(y_true) + '; Solved normalized values: ' + str(y_pred))
+    print(f'Real normalized values: {y_true}; Solved normalized values: {str(y_pred)}')
 
 def format_inputs_for_error_eval(y_true:np.ndarray, y_pred:np.ndarray, axis_samples:int):
     logger.debug(f'shape of y_true, y_pred :{y_true.shape}, {y_pred.shape}')  
