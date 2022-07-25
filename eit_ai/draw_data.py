@@ -47,7 +47,7 @@ def format_inputs(fwd_model, data):
     if data.ndim==2:
         tri = np.array(fwd_model['elems'])
         pts = np.array(fwd_model['nodes'])
-        if data.shape[1]==pts.shape[0] or data.shape[1]==tri.shape[0]:
+        if data.shape[1] in [pts.shape[0], tri.shape[0]]:
             data= data.T
     if data.ndim==3:
         data = np.reshape(data,(1, 256))
@@ -60,47 +60,35 @@ def plot_EIT_samples(fwd_model, perm, U):
 
     tri, pts, data= get_elem_nodal_data(fwd_model, perm)
 
-    if perm.shape[0]==pts.shape[0]:
-        key= 'nodes_data'
-    else:
-        key= 'elems_data'
-
+    key = 'nodes_data' if perm.shape[0]==pts.shape[0] else 'elems_data'
     fig, ax = plt.subplots(1,2)
     im = ax[0].tripcolor(pts[:,0], pts[:,1], tri, np.real(data[key]),shading='flat', vmin=None,vmax=None)
-    title= key
+    title = key + ('\nNormalized conductivity distribution' if np.all(perm <= 1) else '\nConductivity distribution')
 
-    if np.all(perm <= 1):
-        title= title +'\nNormalized conductivity distribution'
-    else:
-        title= title +'\nConductivity distribution'
     ax[0].set_title(title)
     ax[0].set_xlabel("X axis")
     ax[0].set_ylabel("Y axis")
-        
+
     ax[0].axis("equal")
     fig.colorbar(im,ax=ax[0])
 
     ax[1].plot(U.T)
-    
+
     plt.show(block=False)
 
 def plot_real_NN_EIDORS(fwd_model, perm_real,*argv):
 
-    _perm= list()
-    _perm.append(perm_real)
-
+    _perm = [perm_real]
     for arg in argv:
         if _perm[0].shape==arg.shape:
             _perm.append(arg)
 
-    perm=list()
+    perm = []
     if perm_real.ndim > 1:
         n_row=  perm_real.shape[1]
-        for p in _perm:
-            perm.append(p)
+        perm.extend(iter(_perm))
     else:
-        for p in _perm:
-            perm.append(p.reshape((p.shape[0],1)))
+        perm.extend(p.reshape((p.shape[0],1)) for p in _perm)
         n_row= 1
     n_col = len(perm)
 
@@ -108,16 +96,16 @@ def plot_real_NN_EIDORS(fwd_model, perm_real,*argv):
     if ax.ndim==1:
         ax=ax.reshape((ax.shape[0],1)).T
 
+    key= 'elems_data'
     for row in range(ax.shape[0]):
 
         data= [dict() for _ in range(n_col)]
         for i, p in enumerate(perm):
             tri, pts, data[i]= get_elem_nodal_data(fwd_model, p[:, row])
-        key= 'elems_data'
         for col in range(n_col):
             print(row, col)
             im = ax[row, col].tripcolor(pts[:,0], pts[:,1], tri, np.real(data[col][key]),shading='flat', vmin=None,vmax=None)
-            title= key + f'#{row}'
+            title = f'{key}#{row}'
 
             # if np.all(perm <= 1):
             #     title= title +'\nNormalized conductivity distribution'
@@ -126,7 +114,7 @@ def plot_real_NN_EIDORS(fwd_model, perm_real,*argv):
             ax[row, col].set_title(title)
             ax[row, col].set_xlabel("X axis")
             ax[row, col].set_ylabel("Y axis")
-                
+
             ax[row, col].axis("equal")
             fig.colorbar(im,ax=ax[row, col])
 
@@ -275,16 +263,15 @@ def plot_eval_results(results:list[EvalResults], axis='linear', plot_type=None):
         for res in results:
             tmp.append(np.reshape(res.indicators[indic], (len(res.indicators[indic]),)))
             labels.append(res.info)
-        
         bp = ax[indx].boxplot(tmp, labels=labels, showmeans=True)
         
-        means = [round(item.get_ydata()[0], 3) for item in bp['means']]
-        medians = [round(item.get_ydata()[0], 3) for item in bp['medians']]
+        # means = [round(item.get_ydata()[0], 3) for item in bp['means']]
+        # medians = [round(item.get_ydata()[0], 3) for item in bp['medians']]
         
-        for i, line in enumerate(bp['medians']):
-            x, y = line.get_xydata()[1]
-            text = ' mean={:.3f}\n med={:.3f}'.format(means[0], medians[0])
-            ax[indx].annotate(text, xy=(x, y))
+        # for i, line in enumerate(bp['medians']):
+        #     x, y = line.get_xydata()[1]
+        #     text = ' mean={:.3f}\n med={:.3f}'.format(means[0], medians[0])
+        #     ax[indx].annotate(text, xy=(x, y))
         # ax[1,indx].plot(np.array(tmp).T, label=labels)
         # ax[1,indx].legend()
     

@@ -118,7 +118,7 @@ class MatlabSamples(RawSamples):
         self.setup= struct['setup']
         self.sim = struct['sim']
         # Matlab used a one indexing system
-        self.fwd_model['elems']= self.fwd_model['elems']-int(1) 
+        self.fwd_model['elems'] = self.fwd_model['elems'] - 1 
 
 
         logger.debug(f'Keys of dataset: {list(self.dataset.keys())}')
@@ -338,11 +338,11 @@ def load_mat_file(file_path:str=None,**kwargs)-> tuple[dict, str]:
     Returns:
         tuple[dict, str]: variables dict and file path
     """   
-
+    
     if check_file(file_path,ext=FileExt.mat) is None:
         file_path= dialog_get_file_with_ext(
-            ext=FileExt.mat,
-            initialdir=AI_DIRS.get(AiDirs.matlab_datasets.value),
+            ext=kwargs.pop('ext', FileExt.mat),
+            initialdir= kwargs.pop('initialdir', AI_DIRS.get(AiDirs.matlab_datasets.value)),
             **kwargs)
     var_dict= glob_utils.file.mat_utils.load_mat(file_path)
     return var_dict, file_path

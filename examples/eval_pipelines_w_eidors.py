@@ -49,7 +49,7 @@ def eval_pipeline(dir_path:str=''):
 
     img_data = trunc_img_data_nb_samples(img_data, max_nb=50) 
     results = compute_eval(img_data)
-    a=[res.save(f'res_{res.info}') for res in results]
+    
     
     # results[0].save(file_path='C:/Users/ryanzzzjw/Desktop/eit_ai/metrics_result')
     # print(results[0].indicators['mse'])

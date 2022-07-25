@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
     x = {}
     y = {'b': 10, 'c': 11}
-    print({**x, **y})
+    print(x | y)
 
     
 
