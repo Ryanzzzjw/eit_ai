@@ -139,7 +139,7 @@ class StdPytorchModel(TypicalPytorchModel):
                                 nn.Sigmoid()
                                 )
        
-        self.net.to(device=0)
+        self.net.to(device='cpu')
 
 class Conv1dNet(TypicalPytorchModel):
     
@@ -167,7 +167,7 @@ class Conv1dNet(TypicalPytorchModel):
                                        nn.Linear(1024, out_size),
                                        nn.Sigmoid()
                                     )
-        self.net.to(device=0)    
+        self.net.to(device='cpu')    
 
 class AutoEncoder(TypicalPytorchModel):  
       
@@ -199,7 +199,7 @@ class AutoEncoder(TypicalPytorchModel):
         self.net.add_module('encoder', encoder)
         self.net.add_module('decoder', decoder)
         
-        self.net.to(device=0)
+        self.net.to(device='cpu')
         
 ################################################################################
 # Std PyTorch ModelManager
@@ -208,7 +208,8 @@ class StdPytorchModelHandler(AiModelHandler):
 
     def _define_model(self, metadata:MetaData)-> None:
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cpu")
         logger.info(f"Device Cuda: {device}")
 
         model_cls=get_from_dict(
@@ -354,7 +355,7 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loading - failed, {PYTORCH_MODEL_SAVE_FOLDERNAME} do not exist in {dir_path}')
         return None
     try:
-        net = torch.load(model_path)
+        net = torch.load(model_path,map_location='cpu')
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
         if metadata.model_type == 'Conv1dNet':
