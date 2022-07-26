@@ -18,7 +18,8 @@ KERAS_OPTIMIZERS={
 """ Dictionary listing all Keras losses available
 """
 KERAS_LOSSES={
-    ListKerasLosses.CategoricalCrossentropy:keras.losses.CategoricalCrossentropy
+    ListKerasLosses.CategoricalCrossentropy:keras.losses.CategoricalCrossentropy,
+    ListKerasLosses.MeanSquaredError:keras.losses.MeanSquaredError
 }
 
 if __name__ == "__main__":

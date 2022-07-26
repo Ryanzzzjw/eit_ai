@@ -24,7 +24,7 @@ from glob_utils.directory.utils import (OpenDialogDirCancelledException,
 
 logger = logging.getLogger(__name__)
 
-METADATA_FILENAME= f'metadata{FileExt.txt}'
+METADATA_FILENAME= f'metadata{FileExt.json}'
 IDX_FILENAME= 'idx_samples'
 
 ################################################################################
@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
     x = {}
     y = {'b': 10, 'c': 11}
-    print({**x, **y})
+    print(x | y)
 
     
 

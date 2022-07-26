@@ -38,6 +38,7 @@ class TypicalPytorchModel(ABC):
     def __init__(self, metadata: MetaData) -> None:
         super().__init__()
         self._set_layers(metadata)
+        self.net.apply(self.init_weights)
     
     @abstractmethod
     def _set_layers(self, metadata:MetaData)-> None:
@@ -55,6 +56,11 @@ class TypicalPytorchModel(ABC):
         # logger.debug(f'foward, {x.shape=}')
         return self.net(x)
 
+    def init_weights(self,m):
+        if type(m) == nn.Linear or type(m) == nn.Conv1d:
+            torch.nn.init.xavier_uniform_(m.weight)
+            m.bias.data.fill_(0.01)
+
 
     def train_single_epoch(self, dataloader:DataLoader) -> Any:
         self.net.train()
@@ -65,19 +71,21 @@ class TypicalPytorchModel(ABC):
             inputs, labels = data_i
             inputs = inputs.to(device=0)
             labels = labels.to(device=0)
+            
+            # zero gradients for every batch
+            self.optimizer.zero_grad()
+
             y_pred = self.net(inputs)
+            
             #loss
             loss_value = self.loss(y_pred, labels)
-            train_loss += loss_value.item()
-            
-            #backward propagation
-            self.optimizer.zero_grad()
             loss_value.backward()
-            self.optimizer.step()  #update
-            
-            # logger.debug(f'Batch #{idx}: loss={loss_value.item():.6f}')
 
-        # logger.info(f'loss={train_loss:.6f}\n--------------------------')
+            # adjust learning weights
+            self.optimizer.step() 
+            
+            train_loss += loss_value.item()
+
         return train_loss / len(dataloader)
     
     def val_single_epoch(self, dataloader: DataLoader) -> Any:
@@ -118,20 +126,20 @@ class StdPytorchModel(TypicalPytorchModel):
         in_size=metadata.input_size
         out_size=metadata.output_size
         self.name= "MLP with 3 layers"
-        self.net = nn.Sequential(nn.Linear(in_size,512),
+        self.net = nn.Sequential(nn.Linear(in_size,1024),
                                 nn.ReLU(True),
-                                nn.Dropout(0.5),
-                                nn.Linear(512, 1024),
+                                # nn.Dropout(0.5),
+                                nn.Linear(1024, 128),
                                 nn.ReLU(True),
-                                nn.Dropout(0.5),
-                                nn.Linear(1024, 2048),
+                                # nn.Dropout(0.5),
+                                nn.Linear(128, 1024),
                                 nn.ReLU(True),
-                                nn.Dropout(0.5),
-                                nn.Linear(2048, out_size),
+                                # nn.Dropout(0.5),
+                                nn.Linear(1024, out_size),
                                 nn.Sigmoid()
                                 )
        
-        self.net.to(device=0)
+        self.net.to(device='cpu')
 
 class Conv1dNet(TypicalPytorchModel):
     
@@ -140,21 +148,26 @@ class Conv1dNet(TypicalPytorchModel):
         out_size=metadata.output_size
         self.name = "1d CNN"
         self.net = torch.nn.Sequential(nn.Conv1d(in_channels= 1, out_channels= 8, kernel_size=8, stride=1, padding=0),
+                                       nn.BatchNorm1d(8),
                                        nn.ReLU(True),
                                        nn.MaxPool1d(kernel_size=2, stride=2),
                                        nn.Conv1d(8, 8, kernel_size=8, stride=1, padding=0),
+                                       nn.BatchNorm1d(8),
                                        nn.ReLU(True),
                                        nn.MaxPool1d(kernel_size=2, stride=2),
                                        nn.Conv1d(8, 16, kernel_size=16, stride=1, padding=0),
+                                       nn.BatchNorm1d(16),
                                        nn.ReLU(True),
                                        nn.MaxPool1d(kernel_size=2, stride=2),
                                        nn.Flatten(),
-                                       nn.Linear(512, 512),
+                                       nn.Linear(336, 512),
                                        nn.ReLU(True),
-                                       nn.Linear(512, out_size),
+                                       nn.Linear(512, 1024),
+                                       nn.ReLU(True),
+                                       nn.Linear(1024, out_size),
                                        nn.Sigmoid()
                                     )
-        self.net.to(device=0)    
+        self.net.to(device='cpu')    
 
 class AutoEncoder(TypicalPytorchModel):  
       
@@ -186,7 +199,7 @@ class AutoEncoder(TypicalPytorchModel):
         self.net.add_module('encoder', encoder)
         self.net.add_module('decoder', decoder)
         
-        self.net.to(device=0)
+        self.net.to(device='cpu')
         
 ################################################################################
 # Std PyTorch ModelManager
@@ -195,7 +208,8 @@ class StdPytorchModelHandler(AiModelHandler):
 
     def _define_model(self, metadata:MetaData)-> None:
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cpu")
         logger.info(f"Device Cuda: {device}")
 
         model_cls=get_from_dict(
@@ -298,7 +312,7 @@ def get_pytorch_optimizer(metadata:MetaData, net:nn.Module)-> torch.optim.Optimi
         return op_cls(net.parameters(), lr= metadata.learning_rate)
     
     logger.warning('Learningrate has been set to 0.001!!!')
-    return op_cls(net.parameters(), lr=0.0001)
+    return op_cls(net.parameters(), lr=0.001)
         
 
 def get_pytorch_loss(metadata:MetaData)->nn.modules.loss:
@@ -341,7 +355,7 @@ def load_pytorch_model(dir_path:str='') -> nn.Module:
         logger.info(f'pytorch model loading - failed, {PYTORCH_MODEL_SAVE_FOLDERNAME} do not exist in {dir_path}')
         return None
     try:
-        net = torch.load(model_path)
+        net = torch.load(model_path,map_location='cpu')
         logger.info(f'pytorch model loaded: {model_path}')
         logger.info('pytorch model summary:')
         if metadata.model_type == 'Conv1dNet':

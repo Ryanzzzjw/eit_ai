@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 Pickle_FILENAME= f'metrics{FileExt.pkl}'
 # Txt_FILENAME= f'metrics{FileExt.txt}'
 Csv_FILENAME=f'metrics{FileExt.csv}'
+from glob_utils.file.json_utils import save_to_json
 
 @dataclass
 class ImageEIT(object):
@@ -23,9 +24,10 @@ class ImageEIT(object):
     label:str=''
     fwd_model:dict=None
     sim: dict=None
+
 @dataclass
 class ImageDataset(object):
-    data:np.ndarray=np.array([])
+    data:np.ndarray
     label:str=''
     fwd_model:dict=None
     sim: dict=None
@@ -33,7 +35,7 @@ class ImageDataset(object):
         return ImageEIT(self.data[idx,:], f'{self.label} #{idx}', self.fwd_model, self.sim)
 
 class EvalResults(object):
-    indicators:dict={}
+    indicators:dict
     info:str=None
     metrics_name: str=None
     dir_path: str=None
@@ -42,28 +44,17 @@ class EvalResults(object):
         self.set_values(mse, rie, icc, info)
 
     def set_values(self, mse, rie, icc, info='values set')-> None:
-        self.indicators['mse']=mse
-        self.indicators['rie']=rie
-        self.indicators['icc']=icc
+        self.indicators= {
+            'mse':mse,
+            'rie':rie,
+            'icc':icc
+        }
         self.info = info
     
-        
-    def save(self, file_path: str=None, export_csv: bool=True):
+    def save(self, file_path: str=None, export_csv: bool=False):
         """save itself as a pickle and make optional export as txt"""
-        # indicators = {k:v.tolist() for k,v in self.indicators.items()}
-        # if not self.dir_path:
-        #     return
-        file_path=file_path
         time = get_datetime_s()
-        # matlab_name=os.path.join(dir_path,f'{time}_{Matlab_FILENAME}')
-        pickle_name=os.path.join(file_path,f'{time}_{Pickle_FILENAME}')
-        # txt_name=os.path.join(dir_path,f'{time}_{Txt_FILENAME}')
-        
-        
-        # save_as_mat(matlab_name, indicators)
-        save_as_pickle(pickle_name, self.indicators)
-        # save_as_txt(txt_name,indicators)
-        
+        save_to_json(f'{file_path}_{time}', self.indicators)
         if export_csv:
             self.export_as_csv(file_path = file_path )
         
@@ -72,15 +63,11 @@ class EvalResults(object):
         if not os.path.isdir(file_path):
             title= 'Select directory of model to evaluate'
             try: 
-                file_path=dialog_get_file_with_ext(
-                    title=f'Please select *csv files',
-                    file_types=[(f"*metrics.csv-files",f"*metrics.csv")]
-                )
+                file_path = dialog_get_file_with_ext(title='Please select *csv files', file_types=[("*metrics.csv-files", "*metrics.csv")])
+
             except OpenDialogDirCancelledException as e:
                 logger.critical('User cancelled the loading')
-          
-        var = load_csv(file_path=file_path)
-        return var
+        return load_csv(file_path=file_path)
         
 
     def export_as_csv(self, file_path: str):
@@ -89,41 +76,18 @@ class EvalResults(object):
         time = get_datetime_s()
         csv_name=os.path.join(file_path,f'{time}_{Csv_FILENAME}')
         save_as_csv(csv_name, self.indicators)
-        
 
-    def save(self, file_path: str=None, export_csv: bool=True):
-            """save itself as a pickle and make optional export as txt"""
-            # indicators = {k:v.tolist() for k,v in self.indicators.items()}
-            # if not self.dir_path:
-            #     return
-            file_path=file_path
-            time = get_datetime_s()
-            # matlab_name=os.path.join(dir_path,f'{time}_{Matlab_FILENAME}')
-            pickle_name=os.path.join(file_path,f'{time}_{Pickle_FILENAME}')
-            # txt_name=os.path.join(dir_path,f'{time}_{Txt_FILENAME}')
-            
-            
-            # save_as_mat(matlab_name, indicators)
-            save_as_pickle(pickle_name, self.indicators)
-            # save_as_txt(txt_name,indicators)
-            
-            if export_csv:
-                self.export_as_csv(file_path = file_path )
             
     def load_csv(self, file_path: str):
         """load itself and set indicator"""
         if not os.path.isdir(file_path):
             title= 'Select directory of model to evaluate'
             try: 
-                file_path=dialog_get_file_with_ext(
-                    title=f'Please select *csv files',
-                    file_types=[(f"*metrics.csv-files",f"*metrics.csv")]
-                )
+                file_path = dialog_get_file_with_ext(title='Please select *csv files', file_types=[("*metrics.csv-files", "*metrics.csv")])
+
             except OpenDialogDirCancelledException as e:
                 logger.critical('User cancelled the loading')
-        
-        var = load_csv(file_path=file_path)
-        return var
+        return load_csv(file_path=file_path)
         
 
     def export_as_csv(self, file_path: str):
@@ -205,9 +169,10 @@ def compute_eval(image_data:list[ImageDataset])-> list[EvalResults]:
     true= image_data[0]
     results= []
     for pred in image_data[1:]:
-        logger.debug(f'Computing evalutaion results: {true.label} VS {pred.label}')
-        res=error_eval(true.data, pred.data,info=pred.label)
-        results.append(res)
+        logger.debug(f'Computing evaluation results: {true.label} VS {pred.label}')
+        # res=error_eval(true.data, pred.data,info=pred.label)
+        results.append(error_eval(true.data, pred.data,info=pred.label))
+        logger.debug(f'{results[0].indicators["mse"]}')
     return results
 
 def get_xshape(n):

@@ -11,7 +11,7 @@ from eit_ai.draw_data import plot_EIT_samples
 from eit_ai.keras.workspace import KerasWorkspace
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.raw_data.raw_samples import load_samples
-from eit_ai.train_utils.lists import ListKerasModels
+from eit_ai.train_utils.lists import ListKerasLosses, ListKerasModels
 from eit_ai.train_utils.workspace import AiWorkspace
 from eit_ai.train_utils.metadata import MetaData
 from eit_ai.keras.tensorboard_k import mk_callback_tensorboard
@@ -34,9 +34,9 @@ def std_keras_train_pipeline(path:str= ''):
         metadata=metadata)
 
     metadata.set_ouput_dir(training_name='Std_keras_test', append_date_time= True)
-    metadata.set_4_raw_samples(data_sel= ['Xih-Xh','Yih-Yh'])
+    metadata.set_4_raw_samples(data_sel= ['Xih-Xh/Xh','Yih-Yh'])
     raw_samples=load_samples(MatlabSamples(), path, metadata)
-    metadata.set_4_dataset(batch_size=500)
+    metadata.set_4_dataset(batch_size=128)
     ws.build_dataset(raw_samples, metadata)
 
     samples_x, samples_y = ws.extract_samples(dataset_part='train', idx_samples=None)
@@ -46,7 +46,8 @@ def std_keras_train_pipeline(path:str= ''):
         epoch=100,
         callbacks=[mk_callback_tensorboard(metadata)],
         metrics=['mse'],
-        optimizer=ListKerasOptimizers.Adam)
+        optimizer=ListKerasOptimizers.Adam,
+        loss=ListKerasLosses.MeanSquaredError)
 
     build_train_save_model(ws, metadata)
 

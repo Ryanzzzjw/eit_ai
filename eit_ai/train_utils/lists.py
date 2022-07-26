@@ -106,6 +106,7 @@ class ListLosses(ExtendedEnum):
     """"""
 class ListKerasLosses(ListLosses):
     CategoricalCrossentropy='CategoricalCrossentropy'
+    MeanSquaredError='MeanSquaredError'
 
 class ListPyTorchLosses(ListLosses):
     MSELoss='MSELoss'
