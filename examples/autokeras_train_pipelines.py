@@ -33,7 +33,7 @@ def std_auto_pipeline(path=''):
         model=ListKerasModels.StdAutokerasModel,
         metadata=metadata)
     metadata.set_ouput_dir(training_name='Std_autokeras_test', append_date_time= True)
-    metadata.set_4_raw_samples(data_sel= ['Xihn-Xhn/Xhn','Yih-Yh'])
+    metadata.set_4_raw_samples(data_sel= ['Xih-Xh/Xh','Yih-Yh'])
     raw_samples=load_samples(MatlabSamples(), path, metadata)
     metadata.set_4_dataset(batch_size=128)
     gen.build_dataset(raw_samples, metadata)
