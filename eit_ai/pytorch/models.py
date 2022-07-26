@@ -128,13 +128,13 @@ class StdPytorchModel(TypicalPytorchModel):
         self.name= "MLP with 3 layers"
         self.net = nn.Sequential(nn.Linear(in_size,1024),
                                 nn.ReLU(True),
-                                # nn.Dropout(0.5),
+                                nn.Dropout(0.5),
                                 nn.Linear(1024, 128),
                                 nn.ReLU(True),
                                 # nn.Dropout(0.5),
                                 nn.Linear(128, 1024),
                                 nn.ReLU(True),
-                                # nn.Dropout(0.5),
+                                nn.Dropout(0.5),
                                 nn.Linear(1024, out_size),
                                 nn.Sigmoid()
                                 )
@@ -147,24 +147,27 @@ class Conv1dNet(TypicalPytorchModel):
 
         out_size=metadata.output_size
         self.name = "1d CNN"
-        self.net = torch.nn.Sequential(nn.Conv1d(in_channels= 1, out_channels= 8, kernel_size=8, stride=1, padding=0),
-                                       nn.BatchNorm1d(8),
+        self.net = torch.nn.Sequential(nn.Conv1d(in_channels= 1, out_channels= 18, kernel_size=8, stride=1, padding="same"),
+                                       nn.BatchNorm1d(18),
                                        nn.ReLU(True),
-                                       nn.MaxPool1d(kernel_size=2, stride=2),
-                                       nn.Conv1d(8, 8, kernel_size=8, stride=1, padding=0),
-                                       nn.BatchNorm1d(8),
+                                       nn.MaxPool1d(kernel_size=2, stride=1),
+                                       nn.Conv1d(18, 12, kernel_size=8, stride=1, padding="same"),
+                                       nn.BatchNorm1d(12),
                                        nn.ReLU(True),
-                                       nn.MaxPool1d(kernel_size=2, stride=2),
-                                       nn.Conv1d(8, 16, kernel_size=16, stride=1, padding=0),
-                                       nn.BatchNorm1d(16),
+                                       nn.MaxPool1d(kernel_size=2, stride=1),
+                                       nn.Conv1d(12, 6, kernel_size=16, stride=1, padding="same"),
+                                       nn.BatchNorm1d(6),
                                        nn.ReLU(True),
-                                       nn.MaxPool1d(kernel_size=2, stride=2),
+                                       nn.MaxPool1d(kernel_size=2, stride=1),
+                                       nn.Conv1d(6, 4, kernel_size=16, stride=1, padding="same"),
+                                       nn.BatchNorm1d(4),
+                                       nn.ReLU(True),
+                                       nn.MaxPool1d(kernel_size=2, stride=1),
                                        nn.Flatten(),
-                                       nn.Linear(336, 512),
+                                       nn.Linear(1008, 2048),
                                        nn.ReLU(True),
-                                       nn.Linear(512, 1024),
-                                       nn.ReLU(True),
-                                       nn.Linear(1024, out_size),
+                                       nn.Dropout(0.5),
+                                       nn.Linear(2048, out_size),
                                        nn.Sigmoid()
                                     )
         self.net.to(device=0)    
@@ -179,25 +182,29 @@ class AutoEncoder(TypicalPytorchModel):
         self.net = torch.nn.Sequential()
         
         encoder = nn.Sequential(
-            nn.Linear(in_size, 128),
-            nn.ReLU(True),
-            nn.Linear(128, 64),
+            nn.Linear(in_size, 64),
             nn.ReLU(True),
             nn.Linear(64, 16),  
             )
         
         decoder = nn.Sequential(
-            nn.Linear(16, 128),
+            nn.Linear(16, 64),
             nn.ReLU(True),
-            nn.Linear(128, 512),
-            nn.ReLU(True),
-            nn.Linear(512, out_size),
-            nn.Sigmoid(),
+            nn.Linear(64, 256),
             )
+
+        dense = nn.Sequential(
+            nn.Linear(256, 2048),
+            nn.ReLU(True),
+            nn.Dropout(0.5),
+            nn.Linear(2048, out_size),
+            nn.Sigmoid(),
+        )
         
         
         self.net.add_module('encoder', encoder)
         self.net.add_module('decoder', decoder)
+        self.net.add_module('dense_layer', dense)
         
         self.net.to(device=0)
         

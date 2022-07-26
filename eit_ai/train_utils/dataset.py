@@ -138,8 +138,12 @@ class AiDatasetHandler(ABC):
         formated_X= np.reshape(formated_X,(1, self.input_size))
         logger.debug(f'{formated_X=}, {formated_X.shape=}')
         if not preprocess:
+            if metadata.model_type == 'Conv1dNet':
+                formated_X= np.reshape(formated_X,(-1, 1, self.input_size))
             return formated_X
         prepro_X= self._preprocess(formated_X, None, metadata)[0]
+        if metadata.model_type == 'Conv1dNet':
+            prepro_X= np.reshape(prepro_X,(-1, 1, self.input_size))
         logger.debug(f'{prepro_X=}, {prepro_X.shape=}')
         return prepro_X
 
@@ -277,8 +281,8 @@ class StdAiDatasetHandler(AiDatasetHandler):
         """build the dataset"""
         idx=np.reshape(range(X.shape[0]),(X.shape[0],1))
         X= np.concatenate(( X, idx ), axis=1)
-        x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y,test_size=self._test_ratio)
-        x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp, test_size=self._val_ratio)
+        x_tmp, x_test, y_tmp, y_test = sklearn.model_selection.train_test_split(X, Y,test_size=self._test_ratio,random_state=42)
+        x_train, x_val, y_train, y_val = sklearn.model_selection.train_test_split(x_tmp, y_tmp, test_size=self._val_ratio,random_state=42)
         
         self._idx_train= x_train[:,-1].tolist()
         self._idx_val= x_val[:,-1].tolist()
