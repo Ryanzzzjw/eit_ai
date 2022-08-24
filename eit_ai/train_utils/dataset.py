@@ -124,8 +124,8 @@ class AiDatasetHandler(ABC):
 
         Returns:
             [type]: [description]
-        """        
-        return metadata.idx_samples['idx_train']
+        """
+        return metadata.idx_samples is not None
     
     def format_single_X(self, single_X:np.ndarray, metadata:MetaData, preprocess:bool=False)->np.ndarray:
 
