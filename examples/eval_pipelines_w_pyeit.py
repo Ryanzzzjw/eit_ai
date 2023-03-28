@@ -1,3 +1,4 @@
+from numpy import ndarray
 from eit_ai.draw_3d import *
 from eit_ai.draw_3d import plot_3d_compare_samples
 from eit_ai.draw_data import *
@@ -8,12 +9,81 @@ from eit_ai.raw_data.raw_samples import reload_samples
 from eit_ai.raw_data.matlab import MatlabSamples
 from eit_ai.train_utils.metadata import reload_metadata
 from eit_ai.train_utils.select_workspace import select_workspace
+from eit_model.model import EITModel
+from eit_model.data import EITFrameMeasuredChannelVoltage
+from eit_model.reconstruction import EITReconstruction, EITReconstructionData
+from eit_model.solver_pyeit import PyEitRecParams, SolverPyEIT
+from eit_model.plot import EITImage2DPlot
+from eit_model.imaging import build_EITImaging
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+
+def set_pyeit(model_path:str= None) -> EITReconstruction:
+
+    params= PyEitRecParams(
+        mesh_generation_mode_2D=True,
+        normalize=False # true data are already normalized
+        
+    )
+    
+    rec= EITReconstruction()
+    eit_mdl = EITModel()
+    # eit_mdl.load_matfile(model_path)
+    eit_mdl.load_defaultmatfile()
+    eit_mdl.set_refinement(0.2)
+    rec.init_eit_model(eit_mdl)
+    rec.init_solver(SolverPyEIT, params)
+    rec.imaging= build_EITImaging(eit_imaging= "Time difference imaging", transform="Real", show_abs= False)
+
+    return rec
+
+def rec_image(rec:EITReconstruction, X_data:ndarray, nb:int= 1000 )-> ImageDataset:
+
+    rec.enable_rec()
+    data= np.zeros((nb, rec.eit_model.fem.elems.shape[0]))
+    for i in range(nb):
+        raw_voltage=X_data[i,:]
+        logger.info(f"{raw_voltage=}")
+        raw_voltage= raw_voltage.reshape((16,16))
+        logger.info(f"{raw_voltage=}")
+        raw_voltage= np.concatenate((raw_voltage, np.zeros_like(raw_voltage)), axis =1)
+        logger.info(f"{raw_voltage=}")
+        raw_voltage= raw_voltage.reshape((16,32))
+        logger.info(f"{raw_voltage=}")
+        ref_frame= EITFrameMeasuredChannelVoltage(np.zeros_like(raw_voltage),f"refFrame {i}")
+        meas_frame= EITFrameMeasuredChannelVoltage(raw_voltage,f"measFrame {i}")
+        d=EITReconstructionData(ref_frame, meas_frame)
+        rec.rec_process(d)
+        eit_img, _, _=rec.imaging_results()
+        plot(eit_img)
+        data[i,:]= eit_img.data.reshape((1,-1))
+
+    
+
+    fwd_model= {
+        'elems':eit_img.elems,
+        'nodes': eit_img.nodes,
+    }
+    sim= {}
+
+    return ImageDataset(np.array(data).reshape(nb, -1), "PyEIT", fwd_model, sim)
+
+def plot(img_rec):
+
+    fig, ax = plt.subplots(1,1)
+    img_graph= EITImage2DPlot()
+    img_graph.plot(fig,ax,img_rec)
+    plt.show(block= False)
+
+
+
 def eval_pipeline(dir_path:str=''):
+    
+    rec = set_pyeit()
+
     logger.info('### Start standard evaluation ###')
     
     metadata = reload_metadata(dir_path=dir_path)
@@ -26,10 +96,15 @@ def eval_pipeline(dir_path:str=''):
     img_data=[]
     fwd_model=ws.getattr_dataset('fwd_model')
     sim=ws.getattr_dataset('sim')
-    _, true_img_data=ws.extract_samples(dataset_part='test', idx_samples='all')
+    true_data, true_img_data=ws.extract_samples(dataset_part='test', idx_samples='all')
     img_data.append(ImageDataset(true_img_data, 'True image',fwd_model, sim))
     logger.info(f'Real perm shape: {true_img_data.shape}')
+    logger.info(f'Data shape: {true_data.shape}')
 
+    img_dataset= rec_image(rec, true_data, nb= 5)
+    # img_data.append(img_dataset)
+
+    
     nn_img_data = ws.get_prediction(metadata)
     # TODO make a reshape of nn_img_data
     nn_img_data=nn_img_data.reshape(true_img_data.shape)
@@ -39,13 +114,13 @@ def eval_pipeline(dir_path:str=''):
 
 
 
-    img_data = trunc_img_data_nb_samples(img_data, max_nb=1000) 
-    results = compute_eval(img_data)
-    
+    img_data = trunc_img_data_nb_samples(img_data, max_nb=5) 
+    # results = compute_eval(img_data)
+
     # results[0].save(file_path='C:/Users/ryanzzzjw/Desktop/eit_ai/metrics_result')
     # print(results[0].indicators['mse'])
     
-    plot_eval_results(results, axis='linear')
+    # plot_eval_results(results, axis='linear')
     plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Portrait)
     # plot_compare_samples(image_data=img_data, nb_samples=5, orient=Orientation.Landscape)
     # plot_3d_compare_samples(image_data=img_data, nb_samples=1)
@@ -104,7 +179,7 @@ if __name__ == "__main__":
     from glob_utils.directory.utils import get_POSIX_path    
     import logging
     main_log()
-    change_level_logging(logging.DEBUG)
+    change_level_logging(logging.INFO)
 
     eval_pipeline('')
     # dir_path= 'E:\EIT_Project\05_Engineering\04_Software\Python\eit_ai\outputs\Std_keras_test_20211117_165710'

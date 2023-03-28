@@ -253,6 +253,7 @@ class MetaData(object):
         self.dir_path=os.path.split(path)[0]
         self.check_raw_src_file()
         
+        
 
     def check_raw_src_file(self)->None:
 
